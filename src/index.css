@@ -1,0 +1,369 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── RoadAxis — "Graphite / Orange" ─────────────────────────────────────────
+   Not invented. Measured out of the client's own platform brochure by painted
+   area: #FF7A00 accent, #0E1621 ink, #1A232C raised, #F8FAFC / #F3F4F6 grounds,
+   #E5E7EB hairline, #111827 / #374151 / #6B7280 text. Graphite and orange is a
+   genuine automotive-trade palette and is nothing like the blue every SaaS
+   template defaults to.
+
+   Colour does one of two jobs here and never a third: it says what something IS
+   (status) or that you can ACT on it (orange). See DESIGN.md.
+─────────────────────────────────────────────────────────────────────────── */
+
+@layer base {
+  :root,
+  .light {
+    --background: 210 40% 98%; /* #F8FAFC */
+    --foreground: 221 39% 11%; /* #111827 */
+    --card: 0 0% 100%;
+    --card-foreground: 221 39% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 221 39% 11%;
+
+    /**
+     * RoadAxis orange, as a FILL.
+     *
+     * --primary-foreground is ink, not white, and that is not a stylistic
+     * preference. #FF7A00 carries 2.61:1 against white — a failure of WCAG AA
+     * on the product's primary action, on every screen at once, on an interface
+     * read outdoors. Against the brand's own ink it carries 6.86:1.
+     */
+    --primary: 29 100% 50%; /* #FF7A00 */
+    --primary-foreground: 215 40% 9%; /* #0E1621 — ink on orange */
+    /**
+     * The same orange, as TEXT on a light ground.
+     *
+     * 38% was the first guess and measured 3.92:1 against the #F8FAFC ground —
+     * a near miss, and exactly the kind that ships because it looks fine. 33%
+     * measures 5.22:1. The e2e contrast check is what caught it.
+     */
+    --primary-text: 29 100% 33%;
+
+    --secondary: 220 14% 96%; /* #F3F4F6 */
+    --secondary-foreground: 221 39% 11%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%; /* #6B7280 */
+
+    --accent: 220 14% 93%;
+    --accent-foreground: 217 19% 27%; /* #374151 */
+
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 152 62% 28%; /* verified, open, delivered */
+    --success-foreground: 0 0% 100%;
+
+    --warning: 32 95% 38%; /* pending claim, delivery unknown */
+    --warning-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%; /* #E5E7EB — the brochure's only border */
+    --input: 220 13% 91%;
+    --ring: 29 100% 45%;
+    --radius: 0.625rem;
+
+    /* The rail stays brand-dark in both themes, exactly as the brochure is. */
+    --sidebar: 215 40% 9%;
+    --sidebar-foreground: 220 14% 84%;
+    --sidebar-primary: 29 100% 50%;
+    --sidebar-primary-foreground: 215 40% 9%;
+    --sidebar-accent: 210 26% 14%;
+    --sidebar-accent-foreground: 220 14% 93%;
+    --sidebar-border: 210 22% 20%;
+    --sidebar-ring: 29 100% 50%;
+  }
+
+  .dark {
+    --background: 215 40% 9%; /* #0E1621 */
+    --foreground: 210 20% 92%;
+    --card: 210 26% 14%; /* #1A232C */
+    --card-foreground: 210 20% 92%;
+    --popover: 210 26% 14%;
+    --popover-foreground: 210 20% 92%;
+
+    --primary: 29 100% 52%;
+    --primary-foreground: 215 45% 8%;
+    /* On ink, full-strength orange already passes; a touch lighter reads better. */
+    --primary-text: 29 100% 58%;
+
+    --secondary: 210 22% 18%;
+    --secondary-foreground: 210 20% 92%;
+
+    --muted: 210 22% 18%;
+    --muted-foreground: 215 15% 66%;
+
+    --accent: 210 24% 18%;
+    --accent-foreground: 210 20% 95%;
+
+    --destructive: 0 72% 58%;
+    --destructive-foreground: 215 45% 8%;
+
+    --success: 152 52% 48%;
+    --success-foreground: 215 45% 8%;
+
+    --warning: 35 92% 55%;
+    --warning-foreground: 215 45% 8%;
+
+    --border: 210 20% 20%;
+    --input: 210 20% 20%;
+    --ring: 29 100% 52%;
+
+    --sidebar: 215 45% 7%;
+    --sidebar-foreground: 220 14% 84%;
+    --sidebar-primary: 29 100% 52%;
+    --sidebar-primary-foreground: 215 45% 8%;
+    --sidebar-accent: 210 26% 13%;
+    --sidebar-accent-foreground: 220 14% 93%;
+    --sidebar-border: 210 22% 16%;
+    --sidebar-ring: 29 100% 52%;
+  }
+
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+  html {
+    font-family: "Inter Tight", system-ui, -apple-system, sans-serif;
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* ── Rhythm ────────────────────────────────────────────────────────────────
+   Two densities, one system. `.ra-page` is the dense authenticated tool;
+   `.ra-public` is the consumer surface, which gets room because a driver reads
+   it once under stress rather than forty times a day. Neither animates on
+   mount — see DESIGN.md.
+─────────────────────────────────────────────────────────────────────────── */
+.ra-page {
+  @apply space-y-5;
+}
+.ra-public {
+  @apply space-y-6 md:space-y-8;
+}
+
+/* Ledger numerals, so a column of distances lines up digit over digit.
+   Applied to tables automatically because the portal is mostly tables. */
+table,
+.ra-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* ── The four surfaces ─────────────────────────────────────────────────────
+   Every panel in the product is one of these. A screen that needs a fifth is a
+   wrong screen. Elevation is a signal that something is modal to the page, not
+   a texture: a panel that sits IN the page never takes a shadow.
+─────────────────────────────────────────────────────────────────────────── */
+
+/** Any in-page container — tables, stat tiles. A boundary, not an object. */
+.ra-panel {
+  @apply rounded-lg border border-border bg-card;
+}
+
+/** As above, padded — prose or a chart. */
+.ra-tile {
+  @apply rounded-lg border border-border bg-card p-4;
+}
+
+/**
+ * A public business card. Larger radius than portal chrome because it holds
+ * photography and sits on a generous grid; still a hairline and still no
+ * elevation, because it is not floating.
+ *
+ * `relative` is load-bearing, not tidiness. The card's title carries a
+ * stretched link (`after:absolute after:inset-0`) so the whole card is
+ * clickable while the anchor stays a real `<a href>`. Without a positioning
+ * context here, that pseudo-element resolves against the viewport instead of
+ * the card — an invisible overlay across the entire page that silently ate
+ * every click on the filter buttons above the results.
+ */
+.ra-card {
+  @apply relative overflow-hidden rounded-xl border border-border bg-card transition-colors;
+}
+.ra-card:active {
+  @apply bg-accent/40;
+}
+
+/** Genuinely floats and is modal to the page: dialog, menu, sheet, palette. */
+.ra-overlay {
+  @apply rounded-xl border border-border bg-popover shadow-2xl;
+}
+
+/**
+ * Sticky column headers inside scrolling tables. Fully opaque, deliberately —
+ * a translucent sticky header lets rows stay half-visible through the column
+ * names, and at speed the header looks like it is vibrating.
+ */
+.ra-thead {
+  @apply sticky top-0 z-10 bg-muted;
+}
+
+/* ── Trust row ─────────────────────────────────────────────────────────────
+   The same four facts, in the same order, everywhere a business appears:
+   Verified · Rating · Open now · Distance. One position per fact, so the eye
+   learns it once. Absence is silent: a business with no reviews shows no
+   rating, never "0 ★" — it is new, not bad. See DESIGN.md.
+─────────────────────────────────────────────────────────────────────────── */
+.ra-trust {
+  @apply flex flex-wrap items-center gap-x-3 gap-y-1 text-sm;
+}
+.ra-trust-item {
+  @apply inline-flex items-center gap-1 text-muted-foreground;
+}
+
+/* ── Mobile ────────────────────────────────────────────────────────────────
+   A phone has three constraints a desktop does not, and each has a rule here:
+   the thumb (navigation at the bottom edge), the notch and home indicator
+   (safe-area insets), and the 44px finger (a minimum hit box).
+─────────────────────────────────────────────────────────────────────────── */
+
+.ra-safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.ra-safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/**
+ * Minimum touch target. Apple and Google both specify ~44px / 48dp; an icon
+ * button at `p-1.5` around a 14px glyph is 26px, well under half that area.
+ * Only the hit box grows — the glyph looks the same size.
+ */
+.ra-tap {
+  @apply relative;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/**
+ * Bottom navigation. Fixed to the bottom edge because it is the only part of a
+ * 6" screen a right thumb reaches without regripping — the hamburger it
+ * replaces sits in the top-left corner, the single furthest point from it.
+ * Opaque with a hairline: cards sliding under a translucent bar read as smears
+ * and force a compositing layer on every scroll frame.
+ */
+.ra-bottombar {
+  @apply fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background;
+}
+
+/**
+ * Bottom sheet — mobile's answer to the centred modal. A `max-w-lg` dialog
+ * centred in a 390px viewport leaves ~350px of usable width and puts Save in
+ * the vertical middle, the part of the screen a thumb reaches last. A sheet
+ * gets full width and rises from the edge the thumb is already near. It
+ * genuinely floats, so unlike an in-page panel it has earned its shadow.
+ */
+.ra-sheet {
+  @apply flex max-h-[92vh] w-full flex-col rounded-t-2xl border-t border-border bg-popover shadow-2xl;
+}
+/** Purely an affordance: it says the sheet can be dragged away, not only closed. */
+.ra-sheet-grip {
+  @apply mx-auto my-2.5 h-1 w-9 shrink-0 rounded-full bg-muted-foreground/30;
+}
+
+/**
+ * Horizontal chip strip — category filters, record tabs. Scrolls rather than
+ * wraps: a wrapped row of category chips costs vertical space on every screen,
+ * a scrolling one costs a gesture on the rare occasion you need the last chip.
+ * The scrollbar is hidden because on a touch device it is noise.
+ */
+.ra-chips {
+  @apply -mx-4 flex gap-2 overflow-x-auto px-4 pb-0.5;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.ra-chips::-webkit-scrollbar {
+  display: none;
+}
+.ra-chip {
+  @apply inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-border bg-card px-3.5 py-2 text-sm font-medium text-muted-foreground transition-colors;
+  min-height: 40px;
+}
+.ra-chip[aria-pressed="true"],
+.ra-chip[data-active="true"] {
+  @apply border-primary bg-primary text-primary-foreground;
+}
+
+/**
+ * Identity disc — initials, standing in for the anchor column a table would
+ * have given us. Deliberately `bg-muted` and never a tinted pastel: a coloured
+ * disc per record is the banned decorative icon tile in a new costume, and it
+ * spends colour on ornament where colour means status.
+ */
+.ra-disc {
+  @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-xs font-semibold uppercase text-muted-foreground;
+}
+
+/**
+ * Floating action button — the screen's one primary create action. Exactly one
+ * per screen; a second means the screen has no primary action and the pattern
+ * is wrong for it.
+ */
+.ra-fab {
+  @apply fixed right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-colors;
+  bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+}
+.ra-fab:active {
+  @apply bg-primary/90;
+}
+
+/* Thin scrollbars — the portal is table-heavy and the default Windows bar eats
+   horizontal room in dense grids. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-muted-foreground/30;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/50;
+}
+
+/**
+ * iOS zooms the page when a focused input's font-size is below 16px, and then
+ * leaves it zoomed — which is how a form ends up horizontally scrolled after
+ * one tap. The interface uses 14px throughout, so the floor is set on the
+ * controls themselves rather than by inflating the type everywhere.
+ */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/** Momentum scrolling for chip strips and any remaining sideways scroller. */
+@media (hover: none) {
+  .ra-chips,
+  .ra-hscroll {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/**
+ * Honour the OS setting. Someone who has asked their device to stop moving
+ * things has usually asked for a reason — vestibular disorder, migraine — and
+ * none of this product's motion carries meaning that the stillness loses.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,286 @@
+import { Link, useParams } from "react-router-dom";
+import { Navigation, Phone, Globe, MapPin, Store, ArrowLeft, SearchX } from "lucide-react";
+import { TrustRow } from "@/shared/components/TrustRow";
+import { Badge } from "@/shared/components/Badge";
+import { EmptyState } from "@/shared/components/EmptyState";
+import { PageLoader } from "@/shared/components/PageLoader";
+import { formatCurrency } from "@/shared/lib/format";
+import { PhotoGallery } from "../components/PhotoGallery";
+import { OpeningHours } from "../components/OpeningHours";
+import { useBusiness } from "../hooks/useBusinesses";
+
+/**
+ * The business profile.
+ *
+ * Ordered by the questions a driver actually asks, in the order they ask them:
+ * is this the right place · can I trust it · is it open · what do they do ·
+ * how do I reach them · how do I get there.
+ *
+ * The two actions are pinned to the bottom of the screen on a phone. Someone
+ * reading this is nearly always about to do one of them, and making them scroll
+ * back up past the opening hours to find "Directions" is the difference between
+ * a useful page and a brochure.
+ */
+export function BusinessProfilePage() {
+  const { slug } = useParams<{ slug: string }>();
+  const { data: business, isLoading, error } = useBusiness(slug);
+
+  if (isLoading) return <PageLoader />;
+
+  if (error || !business) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-16">
+        <EmptyState
+          icon={SearchX}
+          title="We couldn't find that business"
+          description="It may have been removed, or the link may be out of date."
+          action={
+            <Link
+              to="/search"
+              className="ra-tap flex items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              Find a service
+            </Link>
+          }
+        />
+      </div>
+    );
+  }
+
+  const address = [
+    business.address.line1,
+    business.address.line2,
+    business.address.city,
+    business.address.postcode,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  return (
+    <div className="mx-auto max-w-4xl px-4 py-5 pb-28 md:py-8 md:pb-8">
+      <div className="ra-public">
+        <Link
+          to="/search"
+          className="ra-tap -ms-2 inline-flex w-fit items-center gap-1.5 rounded-lg px-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Back to search
+        </Link>
+
+        {/* ── Identity and trust ───────────────────────────────────────── */}
+        <header>
+          <div className="flex items-start gap-3">
+            {business.logo && (
+              <img
+                src={business.logo.thumbnailUrl ?? business.logo.url}
+                alt={`${business.name} logo`}
+                className="h-14 w-14 shrink-0 rounded-lg border border-border object-contain"
+              />
+            )}
+            <div className="min-w-0 flex-1">
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
+                {business.name}
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {business.categories.map((c) => c.name).join(" · ")}
+              </p>
+            </div>
+          </div>
+
+          <TrustRow
+            className="mt-3"
+            verified={business.isVerified}
+            averageRating={business.averageRating}
+            reviewCount={business.reviewCount}
+            isOpen={business.isOpen ?? undefined}
+          />
+
+          {/*
+            Addressed to the owner, not the driver. It is an invitation with an
+            action attached, styled as neutral information — an unclaimed listing
+            says nothing bad about the business, only that nobody has taken it
+            over yet.
+          */}
+          {business.claimStatus === "unclaimed" && (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 px-4 py-3">
+              <div className="flex items-center gap-2 text-sm">
+                <Store className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                <span className="text-muted-foreground">
+                  Is this your business? Claim it to manage the listing.
+                </span>
+              </div>
+              <Link
+                to={`/business/${business.slug}/claim`}
+                className="ra-tap flex items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              >
+                Claim Your Business
+              </Link>
+            </div>
+          )}
+        </header>
+
+        {business.photos.length > 0 && (
+          <section aria-label="Photos">
+            <PhotoGallery photos={business.photos} businessName={business.name} />
+          </section>
+        )}
+
+        {business.description && (
+          <section>
+            <p className="whitespace-pre-line text-[15px] leading-relaxed text-foreground">
+              {business.description}
+            </p>
+          </section>
+        )}
+
+        <div className="grid gap-5 md:grid-cols-3 md:gap-6">
+          <div className="space-y-5 md:col-span-2">
+            {business.services.length > 0 && (
+              <section aria-labelledby="services">
+                <h2 id="services" className="text-base font-semibold text-foreground">
+                  Services
+                </h2>
+                <ul className="mt-3 divide-y divide-border rounded-lg border border-border">
+                  {business.services.map((s) => (
+                    <li key={s.name} className="flex items-start justify-between gap-4 px-4 py-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground">{s.name}</p>
+                        {s.description && (
+                          <p className="mt-0.5 text-sm text-muted-foreground">{s.description}</p>
+                        )}
+                      </div>
+                      {/*
+                        "from", never a flat price. There is no payment in this
+                        product and a firm figure on a listing is a promise the
+                        platform cannot keep on the business's behalf.
+                      */}
+                      {s.priceFrom !== null && (
+                        <p className="shrink-0 text-sm text-muted-foreground">
+                          from{" "}
+                          <span className="font-mono tabular-nums text-foreground">
+                            {formatCurrency(s.priceFrom)}
+                          </span>
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {business.customServices.length > 0 && (
+              <section aria-labelledby="also">
+                <h2 id="also" className="text-base font-semibold text-foreground">
+                  They also do
+                </h2>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {business.customServices.map((s) => (
+                    <Badge key={s}>{s}</Badge>
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+
+          <div className="space-y-5">
+            <section aria-labelledby="hours" className="ra-tile">
+              <h2 id="hours" className="mb-2 text-base font-semibold text-foreground">
+                Opening hours
+              </h2>
+              {business.workingHours.length > 0 ? (
+                <OpeningHours hours={business.workingHours} timezone={business.timezone} />
+              ) : (
+                // Unknown is not the same as closed, and saying "Closed" here
+                // would send drivers away from a business that is open.
+                <p className="text-sm text-muted-foreground">Not listed yet.</p>
+              )}
+            </section>
+
+            <section aria-labelledby="contact" className="ra-tile">
+              <h2 id="contact" className="mb-3 text-base font-semibold text-foreground">
+                Find them
+              </h2>
+              <address className="space-y-3 not-italic text-sm">
+                <p className="flex items-start gap-2 text-muted-foreground">
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span>{address}</span>
+                </p>
+                {business.phone && (
+                  <p className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                    <a
+                      href={`tel:${business.phone}`}
+                      className="font-mono tabular-nums text-primary-text hover:underline"
+                    >
+                      {business.phoneFormatted}
+                    </a>
+                  </p>
+                )}
+                {business.website && (
+                  <p className="flex items-center gap-2">
+                    <Globe className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                    <a
+                      href={business.website}
+                      target="_blank"
+                      rel="noopener noreferrer nofollow"
+                      className="truncate text-primary-text hover:underline"
+                    >
+                      {business.website.replace(/^https?:\/\//, "")}
+                    </a>
+                  </p>
+                )}
+              </address>
+            </section>
+          </div>
+        </div>
+      </div>
+
+      {/*
+        The actions, pinned above the tab bar on a phone and inline on desktop.
+        Someone on this page is nearly always about to do one of these two
+        things, and making them scroll back up past the opening hours to find
+        Directions is the difference between a useful page and a brochure.
+      */}
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background p-3 md:hidden">
+        <div className="ra-safe-bottom flex gap-2">
+          <ProfileActions business={business} />
+        </div>
+      </div>
+      <div className="mt-6 hidden gap-2 md:flex">
+        <ProfileActions business={business} />
+      </div>
+    </div>
+  );
+}
+
+function ProfileActions({
+  business,
+}: {
+  business: { name: string; phone: string | null; directionsUrl: string | null };
+}) {
+  return (
+    <>
+      {business.phone && (
+        <a
+          href={`tel:${business.phone}`}
+          className="ra-tap flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 md:flex-none"
+        >
+          <Phone className="h-4 w-4" aria-hidden="true" />
+          Call
+        </a>
+      )}
+      {business.directionsUrl && (
+        <a
+          href={business.directionsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="ra-tap flex flex-1 items-center justify-center gap-2 rounded-lg border border-border px-4 text-sm font-medium transition-colors hover:bg-accent md:flex-none"
+        >
+          <Navigation className="h-4 w-4" aria-hidden="true" />
+          Directions
+          <span className="sr-only">to {business.name}, opens Google Maps</span>
+        </a>
+      )}
+    </>
+  );
+}
