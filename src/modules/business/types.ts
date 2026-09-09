@@ -78,6 +78,14 @@ export interface Business extends Trust {
   phoneFormatted: string | null;
   email: string | null;
   website: string | null;
+  /**
+   * Active numbers only, each with a ready-made `wa.me` link.
+   *
+   * No `isPrimary`: which number a business routes automatic requests to is its
+   * internal arrangement, and surfacing it would nudge every driver onto the
+   * same one — the opposite of why there are two.
+   */
+  whatsappNumbers: Array<{ id: string; label: string; phoneFormatted: string; waLink: string }>;
   workingHours: WorkingHoursDay[];
   timezone: string;
   logo: { id: string; url: string; thumbnailUrl: string | null } | null;

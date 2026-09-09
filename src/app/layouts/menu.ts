@@ -1,17 +1,4 @@
-import {
-  LayoutDashboard,
-  Store,
-  ClipboardCheck,
-  CalendarClock,
-  MessageSquare,
-  Tags,
-  Users,
-  BarChart3,
-  ScrollText,
-  Settings,
-  Image,
-  Star,
-} from "lucide-react";
+import { LayoutDashboard, Store, ClipboardCheck, MessageSquare, Tags, ScrollText } from "lucide-react";
 import type { Role } from "@/modules/auth/authSlice";
 
 export type MenuItem = {
@@ -42,6 +29,18 @@ export type MenuSection = {
  * who cannot reach a page they are entitled to. Empty sections are dropped, so
  * an owner never sees an "Administration" heading with nothing under it.
  */
+/**
+ * Only destinations that exist.
+ *
+ * Items are added with the phase that builds them, exactly as routes are in
+ * App.tsx and endpoints are in the API's `routes/index.js`. A menu advertising
+ * screens that 404 is worse than a short menu: it teaches people the navigation
+ * is unreliable, and the first thing they do with an unreliable menu is stop
+ * reading it.
+ *
+ * Phase 5 → Booking Requests (portal and console), WhatsApp Logs
+ * Phase 6 → Reviews, Analytics, Users
+ */
 const SECTIONS: MenuSection[] = [
   {
     items: [{ label: "Overview", to: "/portal", icon: LayoutDashboard }],
@@ -50,35 +49,10 @@ const SECTIONS: MenuSection[] = [
     heading: "My business",
     items: [
       {
-        label: "Profile",
-        to: "/portal/profile",
-        icon: Store,
-        roles: ["business_owner"],
-      },
-      {
-        label: "Photos",
-        to: "/portal/photos",
-        icon: Image,
-        roles: ["business_owner"],
-      },
-      {
         label: "WhatsApp Numbers",
         shortLabel: "WhatsApp",
         to: "/portal/whatsapp",
         icon: MessageSquare,
-        roles: ["business_owner"],
-      },
-      {
-        label: "Booking Requests",
-        shortLabel: "Requests",
-        to: "/portal/requests",
-        icon: CalendarClock,
-        roles: ["business_owner"],
-      },
-      {
-        label: "Reviews",
-        to: "/portal/reviews",
-        icon: Star,
         roles: ["business_owner"],
       },
     ],
@@ -92,31 +66,15 @@ const SECTIONS: MenuSection[] = [
     ],
   },
   {
-    heading: "Operations",
-    items: [
-      {
-        label: "Booking Requests",
-        shortLabel: "Requests",
-        to: "/admin/requests",
-        icon: CalendarClock,
-        roles: ["admin"],
-      },
-      {
-        label: "WhatsApp Logs",
-        shortLabel: "Logs",
-        to: "/admin/whatsapp-logs",
-        icon: MessageSquare,
-        roles: ["admin"],
-      },
-      { label: "Analytics", to: "/admin/analytics", icon: BarChart3, roles: ["admin"] },
-    ],
-  },
-  {
     heading: "Administration",
     items: [
-      { label: "Users", to: "/admin/users", icon: Users, roles: ["admin"] },
-      { label: "Audit Log", shortLabel: "Audit", to: "/admin/audit", icon: ScrollText, roles: ["admin"] },
-      { label: "Settings", to: "/portal/settings", icon: Settings },
+      {
+        label: "Audit Log",
+        shortLabel: "Audit",
+        to: "/admin/audit",
+        icon: ScrollText,
+        roles: ["admin"],
+      },
     ],
   },
 ];
@@ -152,13 +110,11 @@ export { SECTIONS };
  */
 const MOBILE_TAB_ORDER = [
   "/portal",
-  "/portal/requests",
   "/admin/claims",
-  "/admin/requests",
   "/admin/businesses",
   "/portal/whatsapp",
-  "/portal/profile",
-  "/admin/whatsapp-logs",
+  "/admin/categories",
+  "/admin/audit",
 ];
 
 /**

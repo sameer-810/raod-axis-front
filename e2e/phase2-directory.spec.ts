@@ -387,7 +387,10 @@ test.describe("Phase 2 · Administration", () => {
     await page.getByLabel("Category name").fill(name);
     await page.getByRole("button", { name: /add category/i }).click();
 
-    await expect(page.getByText(name)).toBeVisible();
+    // `exact`, because the confirmation toast is still on screen and contains
+    // the same name inside a longer sentence — as does the row's own
+    // screen-reader label.
+    await expect(page.getByText(name, { exact: true })).toBeVisible();
 
     // FR-ADM-05 is only met if a change reaches the public filter without a
     // deploy, so this checks the other side of it.
@@ -400,7 +403,7 @@ test.describe("Phase 2 · Administration", () => {
     // Clean up: an unused category deletes cleanly.
     await page.goto("/admin/categories");
     await page.getByRole("button", { name: `Delete ${name}` }).click();
-    await expect(page.getByText(name)).toHaveCount(0);
+    await expect(page.getByText(name, { exact: true })).toHaveCount(0);
   });
 
   test("deleting a category that is in use is refused with a count", async ({ page }) => {

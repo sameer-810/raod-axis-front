@@ -1,5 +1,14 @@
 import { Link, useParams } from "react-router-dom";
-import { Navigation, Phone, Globe, MapPin, Store, ArrowLeft, SearchX } from "lucide-react";
+import {
+  Navigation,
+  Phone,
+  Globe,
+  MapPin,
+  Store,
+  ArrowLeft,
+  SearchX,
+  MessageCircle,
+} from "lucide-react";
 import { TrustRow } from "@/shared/components/TrustRow";
 import { Badge } from "@/shared/components/Badge";
 import { EmptyState } from "@/shared/components/EmptyState";
@@ -195,6 +204,46 @@ export function BusinessProfilePage() {
                 <p className="text-sm text-muted-foreground">Not listed yet.</p>
               )}
             </section>
+
+            {/*
+              WhatsApp, offered per labelled number — FR-PRO-04.
+
+              The driver picks; the *automatic* booking request goes to the
+              business's primary number instead (DECISIONS.md D-006). Those are
+              two different actions, and choosing "Emergency" over "Customer
+              Support" is the entire reason a business has two numbers.
+            */}
+            {business.whatsappNumbers.length > 0 && (
+              <section aria-labelledby="whatsapp" className="ra-tile">
+                <h2 id="whatsapp" className="mb-3 text-base font-semibold text-foreground">
+                  Message them
+                </h2>
+                <ul className="space-y-2">
+                  {business.whatsappNumbers.map((number) => (
+                    <li key={number.id}>
+                      <a
+                        href={number.waLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ra-tap flex items-center justify-between gap-3 rounded-lg border border-border px-3 text-sm transition-colors hover:bg-accent"
+                      >
+                        <span className="min-w-0">
+                          <span className="block font-medium text-foreground">{number.label}</span>
+                          <span className="block font-mono text-xs tabular-nums text-muted-foreground">
+                            {number.phoneFormatted}
+                          </span>
+                        </span>
+                        <MessageCircle
+                          className="h-5 w-5 shrink-0 text-success"
+                          aria-hidden="true"
+                        />
+                        <span className="sr-only">on WhatsApp, opens in a new tab</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
 
             <section aria-labelledby="contact" className="ra-tile">
               <h2 id="contact" className="mb-3 text-base font-semibold text-foreground">

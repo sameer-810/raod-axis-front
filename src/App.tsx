@@ -64,6 +64,14 @@ const PortalOverviewPage = lazy(() =>
     default: m.PortalOverviewPage,
   })),
 );
+const PortalWhatsAppPage = lazy(() =>
+  import("./modules/portal/pages/PortalWhatsAppPage").then((m) => ({
+    default: m.PortalWhatsAppPage,
+  })),
+);
+const AdminAuditPage = lazy(() =>
+  import("./modules/admin/pages/AdminAuditPage").then((m) => ({ default: m.AdminAuditPage })),
+);
 const AdminBusinessesPage = lazy(() =>
   import("./modules/admin/pages/AdminBusinessesPage").then((m) => ({
     default: m.AdminBusinessesPage,
@@ -125,6 +133,7 @@ export default function App() {
           }
         >
           <Route index element={<PortalOverviewPage />} />
+          <Route path="whatsapp" element={<PortalWhatsAppPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
 
@@ -143,6 +152,7 @@ export default function App() {
           <Route path="businesses/:id" element={<AdminBusinessFormPage />} />
           <Route path="claims" element={<AdminClaimsPage />} />
           <Route path="categories" element={<AdminCategoriesPage />} />
+          <Route path="audit" element={<AdminAuditPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

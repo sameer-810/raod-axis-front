@@ -277,11 +277,11 @@ test.describe("Phase 1 · Staff sign-in", () => {
     await page.getByRole("button", { name: /^sign in$/i }).click();
 
     await page.waitForURL(/\/portal/);
-    await expect(page.getByRole("heading", { name: /welcome back/i })).toBeVisible();
-    // Scoped to the page body. The top bar also names the signed-in user, but
-    // hides it below `md` where the row has no space for it — an unscoped match
-    // resolves to that hidden element first and fails on a phone.
-    await expect(page.getByRole("main").getByText("E2E Owner")).toBeVisible();
+    // The greeting carries the identity. Asserted on the heading rather than on
+    // a field somewhere in the body: the dashboard's content is owned by
+    // whichever phase last rebuilt it, and this test is about having arrived as
+    // the right person.
+    await expect(page.getByRole("heading", { name: /welcome back, E2E/i })).toBeVisible();
   });
 
   test("a wrong password says so without saying whether the account exists", async ({ page }) => {

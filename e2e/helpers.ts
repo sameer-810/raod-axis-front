@@ -80,6 +80,19 @@ export async function expectTouchTargets(page: Page, context = "") {
           return false;
         }
         if (el.tagName === "A" && getComputedStyle(el).display === "inline") return false;
+        /**
+         * A control wrapped in a label that is itself large enough.
+         *
+         * A 16px checkbox inside a 44px `<label>` has a 44px hit area — the
+         * label is what receives the tap, which is the whole reason for
+         * wrapping it. Measuring the input alone reports a failure with no
+         * user behind it.
+         */
+        const label = el.closest("label");
+        if (label) {
+          const lr = label.getBoundingClientRect();
+          if (lr.height >= 40 && lr.width >= 40) return false;
+        }
         return r.height < 40 || r.width < 40;
       })
       .map(

@@ -7,6 +7,7 @@ import { Field } from "@/shared/components/Field";
 import { PageLoader } from "@/shared/components/PageLoader";
 import { geocodeUk } from "@/shared/lib/geocode";
 import { useCategories } from "@/modules/business/hooks/useBusinesses";
+import { WhatsAppNumbers } from "@/modules/whatsapp/components/WhatsAppNumbers";
 import { adminBusinessApi } from "../api/adminApi";
 import { useAdminBusiness, useCreateBusiness, useUpdateBusiness } from "../hooks/useAdmin";
 
@@ -375,6 +376,23 @@ export function AdminBusinessFormPage() {
           >
             {formError}
           </p>
+        )}
+
+        {/*
+          Only on an existing record: numbers belong to a business, and there is
+          nothing to attach them to until it has been created.
+
+          `asAdmin` is what requires a reason before switching somebody else's
+          number off — the owner reads that reason in their portal.
+        */}
+        {isEdit && id && (
+          <section className="ra-tile">
+            <h2 className="mb-1 text-sm font-semibold text-foreground">WhatsApp numbers</h2>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Changes here are recorded in the audit log and are visible to the owner.
+            </p>
+            <WhatsAppNumbers businessId={id} asAdmin />
+          </section>
         )}
 
         <div className="flex gap-2">

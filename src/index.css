@@ -344,6 +344,24 @@ table,
   }
 }
 
+/**
+ * The toast's dismiss button.
+ *
+ * Sonner draws it at 20px, which is under half the touch floor — and a toast
+ * appears *over* the content, so one that cannot be dismissed by thumb sits
+ * there covering something until it times out. The glyph keeps its size; only
+ * the hit box grows, which is the same trade `.ra-tap` makes everywhere else.
+ */
+@media (max-width: 767px) {
+  [data-sonner-toast] [data-close-button] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
 /** Momentum scrolling for chip strips and any remaining sideways scroller. */
 @media (hover: none) {
   .ra-chips,
