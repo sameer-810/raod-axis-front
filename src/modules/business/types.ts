@@ -54,6 +54,12 @@ export interface BusinessCard extends Trust {
   claimStatus: "unclaimed" | "pending" | "claimed";
   /** When it went public. The start of the 30-day claim clock in PRD §6. */
   listedAt?: string | null;
+  /**
+   * Whether the signed-in driver has saved this — always `false` for a guest,
+   * never absent. An undefined on first paint is a heart that flickers on every
+   * card at once.
+   */
+  isFavourite?: boolean;
 }
 
 export interface Business extends Trust {
@@ -94,6 +100,7 @@ export interface Business extends Trust {
   status: "draft" | "live" | "suspended";
   listedAt: string | null;
   claimedAt: string | null;
+  isFavourite?: boolean;
 }
 
 export type SortOption = "distance" | "rating" | "newest";

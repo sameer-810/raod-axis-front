@@ -105,6 +105,25 @@ const AdminCategoriesPage = lazy(() =>
     default: m.AdminCategoriesPage,
   })),
 );
+const MyGaragesPage = lazy(() =>
+  import("./modules/favourite/pages/MyGaragesPage").then((m) => ({ default: m.MyGaragesPage })),
+);
+const AdminAnalyticsPage = lazy(() =>
+  import("./modules/analytics/pages/AdminAnalyticsPage").then((m) => ({
+    default: m.AdminAnalyticsPage,
+  })),
+);
+const PortalAnalyticsPage = lazy(() =>
+  import("./modules/analytics/pages/PortalAnalyticsPage").then((m) => ({
+    default: m.PortalAnalyticsPage,
+  })),
+);
+const AdminReviewsPage = lazy(() =>
+  import("./modules/admin/pages/AdminReviewsPage").then((m) => ({ default: m.AdminReviewsPage })),
+);
+const AdminImportPage = lazy(() =>
+  import("./modules/admin/pages/AdminImportPage").then((m) => ({ default: m.AdminImportPage })),
+);
 
 export default function App() {
   return (
@@ -146,7 +165,16 @@ export default function App() {
             }
           />
 
-          {/* Phase 6 → my-garages */}
+          {/* The retention screen. Somebody's own saved list, so it is the one
+              public-tree route behind the wall. */}
+          <Route
+            path="my-garages"
+            element={
+              <RequireAuth>
+                <MyGaragesPage />
+              </RequireAuth>
+            }
+          />
 
           <Route path="*" element={<NotFoundPage />} />
         </Route>
@@ -165,6 +193,7 @@ export default function App() {
           <Route index element={<PortalOverviewPage />} />
           <Route path="requests" element={<PortalRequestsPage />} />
           <Route path="whatsapp" element={<PortalWhatsAppPage />} />
+          <Route path="performance" element={<PortalAnalyticsPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
 
@@ -178,11 +207,14 @@ export default function App() {
         >
           <Route index element={<AdminBusinessesPage />} />
           <Route path="businesses" element={<AdminBusinessesPage />} />
-          {/* Before "businesses/:id", so "new" is never read as an id. */}
+          {/* Before "businesses/:id", so "new" and "import" are never read as ids. */}
           <Route path="businesses/new" element={<AdminBusinessFormPage />} />
+          <Route path="businesses/import" element={<AdminImportPage />} />
           <Route path="businesses/:id" element={<AdminBusinessFormPage />} />
           <Route path="claims" element={<AdminClaimsPage />} />
           <Route path="categories" element={<AdminCategoriesPage />} />
+          <Route path="reviews" element={<AdminReviewsPage />} />
+          <Route path="analytics" element={<AdminAnalyticsPage />} />
           <Route path="whatsapp-logs" element={<AdminWhatsAppLogsPage />} />
           <Route path="audit" element={<AdminAuditPage />} />
           <Route path="*" element={<NotFoundPage />} />

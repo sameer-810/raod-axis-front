@@ -373,7 +373,10 @@ test.describe("Phase 2 · Administration", () => {
     await signInAsAdmin(page);
     await page.goto("/admin/businesses");
 
-    await expect(page.getByText(/listings/i).first()).toBeVisible();
+    // Scoped to the page. The navigation gained an "Import listings" entry in
+    // Phase 6, and on a phone that sits in the collapsed sidebar — so an
+    // unscoped match resolves to something deliberately hidden.
+    await expect(page.getByRole("main").getByText(/listings/i).first()).toBeVisible();
     await page.getByLabel("Search listings").fill("Deansgate");
     await expect(page.getByRole("link", { name: /Deansgate/ }).first()).toBeVisible();
   });

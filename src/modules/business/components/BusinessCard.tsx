@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { TrustRow } from "@/shared/components/TrustRow";
 import { Badge } from "@/shared/components/Badge";
 import { googleMapsDirections } from "@/shared/lib/maps";
+import { SaveButton } from "@/modules/favourite/components/SaveButton";
 import type { BusinessCard as BusinessCardType } from "../types";
 
 /**
@@ -68,9 +69,22 @@ export function BusinessCard({ business }: { business: BusinessCardType }) {
                 {business.name}
               </Link>
             </h2>
-            {business.claimStatus === "unclaimed" && (
-              <Badge className="relative z-10 shrink-0">Unclaimed</Badge>
-            )}
+            <div className="flex shrink-0 items-start gap-1.5">
+              {business.claimStatus === "unclaimed" && (
+                <Badge className="relative z-10">Unclaimed</Badge>
+              )}
+              {/*
+                Top-right, where a save control lives on every card in every
+                product a person already uses. It sits above the card's stretched
+                link and stops its own click, or saving a garage would open it.
+              */}
+              <SaveButton
+                businessId={business.id}
+                businessName={business.name}
+                isFavourite={business.isFavourite}
+                className="-mt-1.5 -me-1.5 border-0 bg-transparent"
+              />
+            </div>
           </div>
 
           <p className="mt-0.5 truncate text-sm text-muted-foreground">

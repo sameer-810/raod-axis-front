@@ -15,6 +15,9 @@ import { Badge } from "@/shared/components/Badge";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { PageLoader } from "@/shared/components/PageLoader";
 import { formatCurrency } from "@/shared/lib/format";
+import { useSeo, localBusinessJsonLd } from "@/shared/hooks/useSeo";
+import { SaveButton } from "@/modules/favourite/components/SaveButton";
+import { ReviewSection } from "@/modules/review/components/ReviewSection";
 import { PhotoGallery } from "../components/PhotoGallery";
 import { OpeningHours } from "../components/OpeningHours";
 import { useBusiness } from "../hooks/useBusinesses";
@@ -34,6 +37,32 @@ import { useBusiness } from "../hooks/useBusinesses";
 export function BusinessProfilePage() {
   const { slug } = useParams<{ slug: string }>();
   const { data: business, isLoading, error } = useBusiness(slug);
+
+  /**
+   * FR-SEO-03 and FR-SEO-04, and the reason this page exists twice over.
+   *
+   * The description is built from what the business actually is — trade, town,
+   * services — rather than from boilerplate, because a directory of ten thousand
+   * pages sharing one description is a directory search engines index once. The
+   * hook is called unconditionally, above the early returns, so the rules of
+   * hooks hold while the data is still loading.
+   */
+  useSeo({
+    title: business ? `${business.name}, ${business.address.city ?? "UK"}` : "Business",
+    description: business
+      ? `${business.name} — ${business.categories.map((c) => c.name).join(", ") || "vehicle services"} in ${business.address.city ?? "the UK"}. ${
+          business.services.length
+            ? `${business.services
+                .slice(0, 4)
+                .map((s) => s.name)
+                .join(", ")}. `
+            : ""
+        }Request a booking on RoadAxis.`
+      : undefined,
+    structuredData: business
+      ? localBusinessJsonLd({ ...business, primaryPhotoUrl: business.photos[0]?.url ?? null })
+      : undefined,
+  });
 
   if (isLoading) return <PageLoader />;
 
@@ -95,6 +124,16 @@ export function BusinessProfilePage() {
                 {business.categories.map((c) => c.name).join(" · ")}
               </p>
             </div>
+            {/* Labelled here, unlike on the card. There is room, and on the page
+                where somebody decides they like this garage the word is what
+                makes the heart's meaning obvious the first time. */}
+            <SaveButton
+              businessId={business.id}
+              businessName={business.name}
+              isFavourite={business.isFavourite}
+              variant="labelled"
+              className="shrink-0"
+            />
           </div>
 
           <TrustRow
@@ -283,6 +322,19 @@ export function BusinessProfilePage() {
             </section>
           </div>
         </div>
+
+        {/*
+          Reviews last, below everything a driver needs to act.
+          Someone at the roadside is deciding whether to call, not reading; the
+          social proof matters to the smaller number of people who are still
+          weighing it up, and they are the ones who scroll.
+        */}
+        <ReviewSection
+          businessId={business.id}
+          businessName={business.name}
+          averageRating={business.averageRating}
+          reviewCount={business.reviewCount}
+        />
       </div>
 
       {/*

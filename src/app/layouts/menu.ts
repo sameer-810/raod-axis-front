@@ -6,6 +6,9 @@ import {
   Tags,
   ScrollText,
   CalendarClock,
+  BarChart3,
+  Star,
+  Upload,
 } from "lucide-react";
 import type { Role } from "@/modules/auth/authSlice";
 
@@ -46,7 +49,7 @@ export type MenuSection = {
  * is unreliable, and the first thing they do with an unreliable menu is stop
  * reading it.
  *
- * Phase 6 → Reviews, Analytics, Users
+ * Phase 7 → nothing new; it is the mobile, accessibility and regression pass.
  */
 const SECTIONS: MenuSection[] = [
   {
@@ -69,6 +72,12 @@ const SECTIONS: MenuSection[] = [
         icon: MessageSquare,
         roles: ["business_owner"],
       },
+      {
+        label: "Performance",
+        to: "/portal/performance",
+        icon: BarChart3,
+        roles: ["business_owner"],
+      },
     ],
   },
   {
@@ -77,11 +86,20 @@ const SECTIONS: MenuSection[] = [
       { label: "Businesses", to: "/admin/businesses", icon: Store, roles: ["admin"] },
       { label: "Claims", to: "/admin/claims", icon: ClipboardCheck, roles: ["admin"] },
       { label: "Categories", to: "/admin/categories", icon: Tags, roles: ["admin"] },
+      { label: "Reviews", to: "/admin/reviews", icon: Star, roles: ["admin"] },
+      {
+        label: "Import listings",
+        shortLabel: "Import",
+        to: "/admin/businesses/import",
+        icon: Upload,
+        roles: ["admin"],
+      },
     ],
   },
   {
     heading: "Operations",
     items: [
+      { label: "Analytics", to: "/admin/analytics", icon: BarChart3, roles: ["admin"] },
       {
         label: "WhatsApp Logs",
         shortLabel: "Logs",
