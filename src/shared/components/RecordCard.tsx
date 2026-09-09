@@ -58,8 +58,16 @@ export function RecordCard({
 
   return (
     <div className={cn("ra-card p-3.5", className)}>
+      {/*
+        `ra-tap` on the link: a record card is the whole target on a phone, and
+        with a one-line title it rendered at 42px — under the floor by two
+        pixels, on the most-tapped row in the admin console.
+      */}
       {to ? (
-        <Link to={to} className="block outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <Link
+          to={to}
+          className="ra-tap block outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
           {body}
         </Link>
       ) : onClick ? (

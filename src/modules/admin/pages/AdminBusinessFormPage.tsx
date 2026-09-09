@@ -394,7 +394,7 @@ export function AdminBusinessFormPage() {
                           prev.map((x, j) => (i === j ? { ...x, open: e.target.value } : x)),
                         )
                       }
-                      className="h-10 rounded-lg border border-input bg-card px-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                      className="h-11 rounded-lg border border-input bg-card px-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                     <span className="text-muted-foreground">to</span>
                     <input
@@ -406,7 +406,7 @@ export function AdminBusinessFormPage() {
                           prev.map((x, j) => (i === j ? { ...x, close: e.target.value } : x)),
                         )
                       }
-                      className="h-10 rounded-lg border border-input bg-card px-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                      className="h-11 rounded-lg border border-input bg-card px-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                   </>
                 )}
