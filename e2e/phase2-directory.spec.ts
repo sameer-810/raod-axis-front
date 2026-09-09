@@ -258,12 +258,17 @@ test.describe("Phase 2 · The trust row", () => {
   });
 
   test("unverified is silent, verified is stated", async ({ page }) => {
-    await page.goto(`/search${NEAR}&radius=20000`);
-    await expect(page.locator("article").first()).toBeVisible();
+    // Searched by name rather than by radius. Other suites seed listings around
+    // the same city centre, and a distance-sorted page of twenty can fill up
+    // with them — which would make this pass or fail on how many fixtures
+    // happen to exist rather than on the rule under test.
+    await page.goto(`/search?q=Ancoats Motor Works`);
+    const card = page.locator("article", { hasText: "Ancoats Motor Works" });
+    await expect(card).toBeVisible();
     // "Verified" is a claim we can substantiate from a reviewed document.
     // "Unverified" is an accusation we cannot.
+    await expect(card.getByText("Verified")).toBeVisible();
     await expect(page.getByText(/unverified/i)).toHaveCount(0);
-    await expect(page.getByText("Verified").first()).toBeVisible();
   });
 
   test("distances are set in the monospace family", async ({ page }) => {

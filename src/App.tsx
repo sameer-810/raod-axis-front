@@ -40,6 +40,25 @@ const SignInPage = lazy(() =>
 const StaffSignInPage = lazy(() =>
   import("./modules/auth/pages/StaffSignInPage").then((m) => ({ default: m.StaffSignInPage })),
 );
+const ForBusinessPage = lazy(() =>
+  import("./modules/claim/pages/ForBusinessPage").then((m) => ({ default: m.ForBusinessPage })),
+);
+const ClaimBusinessPage = lazy(() =>
+  import("./modules/claim/pages/ClaimBusinessPage").then((m) => ({
+    default: m.ClaimBusinessPage,
+  })),
+);
+const RegisterBusinessPage = lazy(() =>
+  import("./modules/claim/pages/RegisterBusinessPage").then((m) => ({
+    default: m.RegisterBusinessPage,
+  })),
+);
+const AcceptInvitePage = lazy(() =>
+  import("./modules/auth/pages/AcceptInvitePage").then((m) => ({ default: m.AcceptInvitePage })),
+);
+const AdminClaimsPage = lazy(() =>
+  import("./modules/admin/pages/AdminClaimsPage").then((m) => ({ default: m.AdminClaimsPage })),
+);
 const PortalOverviewPage = lazy(() =>
   import("./modules/portal/pages/PortalOverviewPage").then((m) => ({
     default: m.PortalOverviewPage,
@@ -75,11 +94,20 @@ export default function App() {
               the whole Claim Your Business feature depends on an owner
               discovering their own listing. */}
           <Route path="business/:slug" element={<BusinessProfilePage />} />
+
+          {/* Onboarding. All public: a garage owner should not have to create an
+              account before they know whether their claim will be accepted. */}
+          <Route path="for-business" element={<ForBusinessPage />} />
+          <Route path="business/:slug/claim" element={<ClaimBusinessPage />} />
+          <Route path="register-business" element={<RegisterBusinessPage />} />
+
           <Route path="sign-in" element={<SignInPage />} />
           <Route path="staff/sign-in" element={<StaffSignInPage />} />
+          {/* The link itself is the credential — there is nothing else to
+              authenticate with, because this person has never signed in. */}
+          <Route path="accept-invite" element={<AcceptInvitePage />} />
 
-          {/* Phase 3 → for-business, business/:slug/claim, register
-              Phase 5 → business/:slug/request
+          {/* Phase 5 → business/:slug/request
               Phase 6 → my-garages */}
 
           <Route path="*" element={<NotFoundPage />} />
@@ -113,6 +141,7 @@ export default function App() {
           {/* Before "businesses/:id", so "new" is never read as an id. */}
           <Route path="businesses/new" element={<AdminBusinessFormPage />} />
           <Route path="businesses/:id" element={<AdminBusinessFormPage />} />
+          <Route path="claims" element={<AdminClaimsPage />} />
           <Route path="categories" element={<AdminCategoriesPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>

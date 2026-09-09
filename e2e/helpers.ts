@@ -57,6 +57,41 @@ export async function expectNoHorizontalOverflow(page: Page) {
   ).toBeLessThanOrEqual(overflow.clientWidth + 1);
 }
 
+/**
+ * Every interactive control must clear the 44px touch floor.
+ *
+ * Two exemptions, both principled rather than convenient:
+ *
+ *  - **A link inside a sentence.** WCAG success criterion 2.5.8 excludes
+ *    targets "in a sentence or block of text", because the alternative is a
+ *    44px-tall word wrecking the line it sits on. Only inline links qualify; a
+ *    standalone control that happens to be an anchor gets no relief.
+ *  - **Anything hidden from assistive technology.** A visually-hidden input
+ *    driven by a real button beside it is not a target anybody can hit, and
+ *    counting it produces a failure with no user behind it.
+ */
+export async function expectTouchTargets(page: Page, context = "") {
+  const small = await page.evaluate(() =>
+    Array.from(document.querySelectorAll("button, a[href], input, select, textarea"))
+      .filter((el) => {
+        const r = el.getBoundingClientRect();
+        if (r.width === 0 && r.height === 0) return false;
+        if (el.closest('[aria-hidden="true"]') || el.getAttribute("aria-hidden") === "true") {
+          return false;
+        }
+        if (el.tagName === "A" && getComputedStyle(el).display === "inline") return false;
+        return r.height < 40 || r.width < 40;
+      })
+      .map(
+        (el) =>
+          `${el.tagName.toLowerCase()} "${el.textContent?.trim().slice(0, 24)}" ${Math.round(
+            el.getBoundingClientRect().height,
+          )}px`,
+      ),
+  );
+  expect(small, `${context} controls below the touch floor:\n${small.join("\n")}`).toEqual([]);
+}
+
 /** Switch theme through the header control, which is how a user does it. */
 export async function setTheme(page: Page, theme: "light" | "dark") {
   const current = await page.evaluate(() =>

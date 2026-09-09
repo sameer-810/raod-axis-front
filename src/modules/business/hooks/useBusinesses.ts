@@ -70,37 +70,53 @@ export function useSearchFilters() {
     };
   }, [params]);
 
+  /**
+   * Apply a change to the URL.
+   *
+   * The functional form of `setSearchParams` is load-bearing, not a style
+   * choice. Building `next` from the `params` captured in this closure meant two
+   * changes dispatched before React re-rendered both started from the *same*
+   * stale snapshot, and the second silently discarded the first — tap "Open
+   * now" and then "Verified" quickly in the filter sheet and only "Verified"
+   * survived. The updater always receives the current value.
+   */
   const update = useCallback(
     (patch: Partial<SearchFilters>, options?: { replace?: boolean }) => {
-      const next = new URLSearchParams(params);
+      const apply = (current: URLSearchParams) => {
+        const next = new URLSearchParams(current);
 
-      const set = (key: string, value: string | undefined | null) => {
-        // An absent key rather than an empty one, so the URL only ever names the
-        // filters actually in force and two identical searches look identical.
-        if (value === undefined || value === null || value === "") next.delete(key);
-        else next.set(key, value);
+        const set = (key: string, value: string | undefined | null) => {
+          // An absent key rather than an empty one, so the URL only ever names
+          // the filters in force and two identical searches look identical.
+          if (value === undefined || value === null || value === "") next.delete(key);
+          else next.set(key, value);
+        };
+
+        if ("search" in patch) set("q", patch.search);
+        if ("categories" in patch) set("category", patch.categories?.join(","));
+        if ("city" in patch) set("city", patch.city);
+        if ("lat" in patch) set("lat", patch.lat?.toString());
+        if ("lng" in patch) set("lng", patch.lng?.toString());
+        if ("radius" in patch) {
+          set("radius", patch.radius === DEFAULT_RADIUS ? "" : String(patch.radius));
+        }
+        if ("openNow" in patch) set("openNow", patch.openNow ? "true" : "");
+        if ("verifiedOnly" in patch) set("verified", patch.verifiedOnly ? "true" : "");
+        if ("minRating" in patch) set("minRating", patch.minRating?.toString());
+        if ("sort" in patch) set("sort", patch.sort);
+
+        // Any change to what is being searched invalidates the page number.
+        // Without this, narrowing a filter while on page 4 shows an empty list
+        // and reads as "no results" rather than "you are past the end".
+        if ("page" in patch) set("page", patch.page && patch.page > 1 ? String(patch.page) : "");
+        else next.delete("page");
+
+        return next;
       };
 
-      if ("search" in patch) set("q", patch.search);
-      if ("categories" in patch) set("category", patch.categories?.join(","));
-      if ("city" in patch) set("city", patch.city);
-      if ("lat" in patch) set("lat", patch.lat?.toString());
-      if ("lng" in patch) set("lng", patch.lng?.toString());
-      if ("radius" in patch) set("radius", patch.radius === DEFAULT_RADIUS ? "" : String(patch.radius));
-      if ("openNow" in patch) set("openNow", patch.openNow ? "true" : "");
-      if ("verifiedOnly" in patch) set("verified", patch.verifiedOnly ? "true" : "");
-      if ("minRating" in patch) set("minRating", patch.minRating?.toString());
-      if ("sort" in patch) set("sort", patch.sort);
-
-      // Any change to what is being searched invalidates the page number.
-      // Without this, narrowing a filter while on page 4 shows an empty list and
-      // reads as "no results" rather than "you are past the end".
-      if ("page" in patch) set("page", patch.page && patch.page > 1 ? String(patch.page) : "");
-      else next.delete("page");
-
-      setParams(next, { replace: options?.replace ?? false });
+      setParams(apply, { replace: options?.replace ?? false });
     },
-    [params, setParams],
+    [setParams],
   );
 
   /**
