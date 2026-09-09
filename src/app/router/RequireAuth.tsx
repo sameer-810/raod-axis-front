@@ -20,13 +20,7 @@ import type { Role } from "@/modules/auth/authSlice";
  * enforced on the server, on every route (FR-AUT-05). Hiding a screen is never
  * the control.
  */
-export function RequireAuth({
-  children,
-  roles,
-}: {
-  children: React.ReactNode;
-  roles?: Role[];
-}) {
+export function RequireAuth({ children, roles }: { children: React.ReactNode; roles?: Role[] }) {
   const { accessToken, user } = useAppSelector((s) => s.auth);
   const location = useLocation();
 

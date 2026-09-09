@@ -120,8 +120,7 @@ export function SaveButton({
     toggle.mutate(
       { businessId, saved },
       {
-        onSuccess: () =>
-          toast.success(saved ? "Removed from My Garages" : "Saved to My Garages"),
+        onSuccess: () => toast.success(saved ? "Removed from My Garages" : "Saved to My Garages"),
         onError: () => toast.error("We couldn't save that. Try again in a moment."),
       },
     );
@@ -132,7 +131,9 @@ export function SaveButton({
       type="button"
       onClick={onClick}
       aria-pressed={saved}
-      aria-label={saved ? `Remove ${businessName} from My Garages` : `Save ${businessName} to My Garages`}
+      aria-label={
+        saved ? `Remove ${businessName} from My Garages` : `Save ${businessName} to My Garages`
+      }
       className={cn(
         "ra-tap relative z-10 flex items-center justify-center gap-2 rounded-lg transition-colors",
         variant === "icon"

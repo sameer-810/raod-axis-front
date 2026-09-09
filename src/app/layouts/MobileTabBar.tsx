@@ -43,9 +43,7 @@ export function MobileTabBar() {
                 }
               >
                 {item.icon && <item.icon className="h-5 w-5" aria-hidden="true" />}
-                <span className="max-w-full truncate px-1">
-                  {item.shortLabel ?? item.label}
-                </span>
+                <span className="max-w-full truncate px-1">{item.shortLabel ?? item.label}</span>
               </NavLink>
             </li>
           ))}

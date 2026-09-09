@@ -108,8 +108,11 @@ export function PortalAnalyticsPage() {
           </h2>
           <ul className="space-y-2">
             {data.businesses.map((b) => (
-              <li key={b.id} className="ra-tile flex flex-wrap items-baseline justify-between gap-3">
-                <Link to={`/business/${b.slug}`} className="font-medium hover:underline">
+              <li key={b.id} className="ra-tile flex flex-wrap items-center justify-between gap-3">
+                <Link
+                  to={`/business/${b.slug}`}
+                  className="ra-tap inline-flex items-center font-medium hover:underline"
+                >
                   {b.name}
                 </Link>
                 <span className="font-mono text-sm tabular-nums text-muted-foreground">

@@ -126,8 +126,9 @@ export function ClaimBusinessPage() {
               told plainly, or they conclude their application vanished. */}
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{result.message}</p>
           <p className="mt-4 text-sm text-muted-foreground">
-            We'll email <span className="font-medium text-foreground">{result.claim.contactEmail}</span>{" "}
-            either way.
+            We'll email{" "}
+            <span className="font-medium text-foreground">{result.claim.contactEmail}</span> either
+            way.
           </p>
           <Link
             to={`/business/${business.slug}`}
@@ -156,8 +157,8 @@ export function ClaimBusinessPage() {
             Claim {business.name}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Show us you run this business and you'll be able to manage the listing — photos,
-            opening hours, services, and the WhatsApp number customers reach you on.
+            Show us you run this business and you'll be able to manage the listing — photos, opening
+            hours, services, and the WhatsApp number customers reach you on.
           </p>
         </header>
 

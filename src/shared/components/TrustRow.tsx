@@ -78,7 +78,10 @@ export function TrustRow({
           {/* The raw value is exposed so tests — and anything else reading the
               page — can assert on a number rather than parse a formatted
               string whose unit and rounding are a display decision. */}
-          <span className="font-mono tabular-nums" data-distance-metres={distanceMetres ?? undefined}>
+          <span
+            className="font-mono tabular-nums"
+            data-distance-metres={distanceMetres ?? undefined}
+          >
             {distance}
           </span>
           {/* Leading space: without it `textContent` concatenates to "470 maway". */}

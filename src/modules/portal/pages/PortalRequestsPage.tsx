@@ -57,8 +57,8 @@ export function PortalRequestsPage() {
           Booking requests
         </h1>
         <p className="text-sm text-muted-foreground">
-          <span className="font-mono tabular-nums">{data?.meta.total ?? 0}</span> requests · reply on
-          WhatsApp, then mark what happened here
+          <span className="font-mono tabular-nums">{data?.meta.total ?? 0}</span> requests · reply
+          on WhatsApp, then mark what happened here
         </p>
       </div>
 
@@ -82,7 +82,9 @@ export function PortalRequestsPage() {
       </div>
 
       {isLoading ? (
-        <div className="ra-panel px-4 py-12 text-center text-sm text-muted-foreground">Loading…</div>
+        <div className="ra-panel px-4 py-12 text-center text-sm text-muted-foreground">
+          Loading…
+        </div>
       ) : items.length === 0 ? (
         <EmptyState
           icon={status ? Inbox : Store}
@@ -106,7 +108,10 @@ export function PortalRequestsPage() {
       ) : (
         <ul className="space-y-2">
           {items.map((request) => (
-            <li key={request.id} className={cn("ra-tile", request.status === "new" && "border-primary/40")}>
+            <li
+              key={request.id}
+              className={cn("ra-tile", request.status === "new" && "border-primary/40")}
+            >
               <button
                 type="button"
                 onClick={() => setExpanded(expanded === request.id ? null : request.id)}
@@ -177,7 +182,10 @@ export function PortalRequestsPage() {
                 <div className="mt-3 space-y-3 border-t border-border pt-3">
                   <dl className="grid gap-x-6 gap-y-1.5 text-sm sm:grid-cols-2">
                     <Row label="Phone" value={request.driverPhoneFormatted} mono />
-                    <Row label="Sent to WhatsApp" value={<DeliveryBadge delivery={request.delivery} />} />
+                    <Row
+                      label="Sent to WhatsApp"
+                      value={<DeliveryBadge delivery={request.delivery} />}
+                    />
                   </dl>
 
                   {request.notes && (
@@ -252,7 +260,10 @@ export function PortalRequestsPage() {
             </h2>
             {/* The customer reads this. "No" with nothing attached leaves them
                 unable to decide whether to ask again or try somewhere else. */}
-            <label htmlFor="decline-reason" className="mt-4 block text-sm font-medium text-foreground">
+            <label
+              htmlFor="decline-reason"
+              className="mt-4 block text-sm font-medium text-foreground"
+            >
               Why?
             </label>
             <p className="mt-1 text-xs text-muted-foreground">

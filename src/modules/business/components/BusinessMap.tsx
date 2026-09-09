@@ -147,7 +147,10 @@ export function BusinessMap({
                 {b.name}
               </Link>
               <p className="text-xs text-muted-foreground">
-                {b.categories.map((c) => c.name).slice(0, 2).join(" · ")}
+                {b.categories
+                  .map((c) => c.name)
+                  .slice(0, 2)
+                  .join(" · ")}
               </p>
               <TrustRow
                 verified={b.isVerified}

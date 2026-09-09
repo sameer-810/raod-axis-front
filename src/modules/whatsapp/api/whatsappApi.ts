@@ -9,7 +9,9 @@ import type { NumbersResult, WhatsAppNumber } from "../types";
  * leave the client to recompute them and get it wrong. The list is two items
  * long; there is nothing to save by being clever.
  */
-function unwrap(res: { data: { data: WhatsAppNumber[]; meta?: { warning?: string } } }): NumbersResult {
+function unwrap(res: {
+  data: { data: WhatsAppNumber[]; meta?: { warning?: string } };
+}): NumbersResult {
   return { numbers: res.data.data, warning: res.data.meta?.warning ?? null };
 }
 

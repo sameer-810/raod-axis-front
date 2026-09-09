@@ -67,20 +67,33 @@ export function AdminWhatsAppLogsPage() {
           // Null, not 100%, when nothing is trackable — a rate computed from no
           // data is not a rate, and showing a confident number here would be
           // the exact failure this screen exists to prevent.
-          value={stats?.deliveryRate === null || stats?.deliveryRate === undefined ? "—" : `${stats.deliveryRate}%`}
+          value={
+            stats?.deliveryRate === null || stats?.deliveryRate === undefined
+              ? "—"
+              : `${stats.deliveryRate}%`
+          }
           hint={
-            stats?.tracked
-              ? `of ${stats.tracked} trackable`
-              : "Nothing trackable yet — see below"
+            stats?.tracked ? `of ${stats.tracked} trackable` : "Nothing trackable yet — see below"
           }
           tone={
-            stats?.deliveryRate !== null && stats?.deliveryRate !== undefined && stats.deliveryRate < 98
+            stats?.deliveryRate !== null &&
+            stats?.deliveryRate !== undefined &&
+            stats.deliveryRate < 98
               ? "warning"
               : "neutral"
           }
         />
-        <StatCard label="Failed" value={stats?.byState?.failed ?? 0} hint="Can be re-sent" tone={stats?.byState?.failed ? "destructive" : "neutral"} />
-        <StatCard label="Not tracked" value={stats?.untracked ?? 0} hint="Sent from the driver's own device" />
+        <StatCard
+          label="Failed"
+          value={stats?.byState?.failed ?? 0}
+          hint="Can be re-sent"
+          tone={stats?.byState?.failed ? "destructive" : "neutral"}
+        />
+        <StatCard
+          label="Not tracked"
+          value={stats?.untracked ?? 0}
+          hint="Sent from the driver's own device"
+        />
       </div>
 
       {/*
@@ -117,7 +130,9 @@ export function AdminWhatsAppLogsPage() {
       </div>
 
       {isLoading ? (
-        <div className="ra-panel px-4 py-12 text-center text-sm text-muted-foreground">Loading…</div>
+        <div className="ra-panel px-4 py-12 text-center text-sm text-muted-foreground">
+          Loading…
+        </div>
       ) : items.length === 0 ? (
         <EmptyState
           icon={MessageSquare}
@@ -131,7 +146,9 @@ export function AdminWhatsAppLogsPage() {
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="flex flex-wrap items-center gap-2 text-sm">
-                    <span className="font-mono tabular-nums text-foreground">{log.reference ?? "—"}</span>
+                    <span className="font-mono tabular-nums text-foreground">
+                      {log.reference ?? "—"}
+                    </span>
                     <DeliveryBadge delivery={log.delivery} />
                     {log.usedFallback && (
                       <span className="text-xs text-warning">via fallback number</span>
@@ -142,9 +159,7 @@ export function AdminWhatsAppLogsPage() {
                     {log.business?.name} · {log.toLabel ?? "—"}{" "}
                     <span className="font-mono tabular-nums">{log.to}</span>
                   </p>
-                  {log.error && (
-                    <p className="mt-1 text-xs text-destructive">{log.error}</p>
-                  )}
+                  {log.error && <p className="mt-1 text-xs text-destructive">{log.error}</p>}
                 </div>
 
                 <div className="flex shrink-0 items-center gap-2">

@@ -1,11 +1,6 @@
 import { http } from "@/shared/api/http";
 import type { AuthUser } from "../authSlice";
-import type {
-  CodeChallenge,
-  RequestCodesPayload,
-  Session,
-  VerifyCodesPayload,
-} from "../types";
+import type { CodeChallenge, RequestCodesPayload, Session, VerifyCodesPayload } from "../types";
 
 export const authApi = {
   /** Staff: email and password. */

@@ -62,7 +62,9 @@ export function AdminBusinessFormPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [geoNote, setGeoNote] = useState<string | null>(null);
-  const [duplicates, setDuplicates] = useState<Array<{ id: string; name: string; city: string | null }>>([]);
+  const [duplicates, setDuplicates] = useState<
+    Array<{ id: string; name: string; city: string | null }>
+  >([]);
 
   useEffect(() => {
     if (!existing) return;
@@ -96,8 +98,9 @@ export function AdminBusinessFormPage() {
     }
   }, [existing]);
 
-  const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-    setForm((f) => ({ ...f, [key]: e.target.value }));
+  const set =
+    (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      setForm((f) => ({ ...f, [key]: e.target.value }));
 
   /**
    * Postcode → coordinates, on blur.
@@ -168,7 +171,9 @@ export function AdminBusinessFormPage() {
       email: form.email.trim() || undefined,
       website: form.website.trim() || undefined,
       workingHours: hours.map((h) =>
-        h.closed ? { day: h.day, closed: true } : { day: h.day, closed: false, open: h.open, close: h.close },
+        h.closed
+          ? { day: h.day, closed: true }
+          : { day: h.day, closed: false, open: h.open, close: h.close },
       ),
     };
 
@@ -260,10 +265,20 @@ export function AdminBusinessFormPage() {
 
         <section className="ra-tile space-y-1">
           <h2 className="mb-2 text-sm font-semibold text-foreground">Where</h2>
-          <Field label="Street address" value={form.line1} onChange={set("line1")} error={errors["address.line1"]} />
+          <Field
+            label="Street address"
+            value={form.line1}
+            onChange={set("line1")}
+            error={errors["address.line1"]}
+          />
           <Field label="Address line 2" value={form.line2} onChange={set("line2")} />
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Town or city" value={form.city} onChange={set("city")} error={errors["address.city"]} />
+            <Field
+              label="Town or city"
+              value={form.city}
+              onChange={set("city")}
+              error={errors["address.city"]}
+            />
             <Field
               label="Postcode"
               value={form.postcode}
@@ -283,13 +298,23 @@ export function AdminBusinessFormPage() {
 
           {/* Shown so an obvious error is visible, not for typing into. */}
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Latitude" value={form.latitude} onChange={set("latitude")} className="font-mono" />
-            <Field label="Longitude" value={form.longitude} onChange={set("longitude")} className="font-mono" />
+            <Field
+              label="Latitude"
+              value={form.latitude}
+              onChange={set("latitude")}
+              className="font-mono"
+            />
+            <Field
+              label="Longitude"
+              value={form.longitude}
+              onChange={set("longitude")}
+              className="font-mono"
+            />
           </div>
 
           {duplicates.length > 0 && (
             <div className="rounded-lg border border-warning/30 bg-warning/10 p-3">
-              <p className="flex items-center gap-1.5 text-sm font-medium text-warning">
+              <p className="flex items-center gap-1.5 text-sm font-medium text-warning-text">
                 <AlertTriangle className="h-4 w-4" aria-hidden="true" />
                 Possibly already listed
               </p>
@@ -311,10 +336,28 @@ export function AdminBusinessFormPage() {
         <section className="ra-tile space-y-1">
           <h2 className="mb-2 text-sm font-semibold text-foreground">Contact</h2>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Phone" value={form.phone} onChange={set("phone")} error={errors.phone} placeholder="0161 200 0101" />
-            <Field label="Email" type="email" value={form.email} onChange={set("email")} error={errors.email} />
+            <Field
+              label="Phone"
+              value={form.phone}
+              onChange={set("phone")}
+              error={errors.phone}
+              placeholder="0161 200 0101"
+            />
+            <Field
+              label="Email"
+              type="email"
+              value={form.email}
+              onChange={set("email")}
+              error={errors.email}
+            />
           </div>
-          <Field label="Website" value={form.website} onChange={set("website")} error={errors.website} placeholder="https://" />
+          <Field
+            label="Website"
+            value={form.website}
+            onChange={set("website")}
+            error={errors.website}
+            placeholder="https://"
+          />
         </section>
 
         <section className="ra-tile">
@@ -322,7 +365,10 @@ export function AdminBusinessFormPage() {
           <div className="space-y-2">
             {hours.map((h, i) => (
               <div key={h.day} className="flex flex-wrap items-center gap-2">
-                <label className="flex w-32 items-center gap-2 text-sm">
+                {/* `ra-tap` on the label, not the box: the label is what
+                    receives the tap, so growing it is what gives the 16px
+                    control a finger-sized target. */}
+                <label className="ra-tap flex w-32 cursor-pointer items-center gap-2 text-sm">
                   <input
                     type="checkbox"
                     checked={!h.closed}
@@ -344,7 +390,9 @@ export function AdminBusinessFormPage() {
                       value={h.open}
                       aria-label={`${DAYS[h.day]} opening time`}
                       onChange={(e) =>
-                        setHours((prev) => prev.map((x, j) => (i === j ? { ...x, open: e.target.value } : x)))
+                        setHours((prev) =>
+                          prev.map((x, j) => (i === j ? { ...x, open: e.target.value } : x)),
+                        )
                       }
                       className="h-10 rounded-lg border border-input bg-card px-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     />
@@ -354,7 +402,9 @@ export function AdminBusinessFormPage() {
                       value={h.close}
                       aria-label={`${DAYS[h.day]} closing time`}
                       onChange={(e) =>
-                        setHours((prev) => prev.map((x, j) => (i === j ? { ...x, close: e.target.value } : x)))
+                        setHours((prev) =>
+                          prev.map((x, j) => (i === j ? { ...x, close: e.target.value } : x)),
+                        )
                       }
                       className="h-10 rounded-lg border border-input bg-card px-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     />
@@ -401,7 +451,11 @@ export function AdminBusinessFormPage() {
             disabled={create.isPending || update.isPending}
             className="ra-tap flex-1 rounded-lg bg-primary text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-70 sm:flex-none sm:px-6"
           >
-            {create.isPending || update.isPending ? "Saving…" : isEdit ? "Save changes" : "Create listing"}
+            {create.isPending || update.isPending
+              ? "Saving…"
+              : isEdit
+                ? "Save changes"
+                : "Create listing"}
           </button>
           <Link
             to="/admin/businesses"

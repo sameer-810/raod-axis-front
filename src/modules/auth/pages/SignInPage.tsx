@@ -103,11 +103,14 @@ export function SignInPage() {
         <>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Sign in</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            We'll send a code to your email and a code to your WhatsApp. No password to
-            remember.
+            We'll send a code to your email and a code to your WhatsApp. No password to remember.
           </p>
 
-          <form onSubmit={identityForm.handleSubmit(onRequest)} className="mt-6 space-y-1" noValidate>
+          <form
+            onSubmit={identityForm.handleSubmit(onRequest)}
+            className="mt-6 space-y-1"
+            noValidate
+          >
             <Field
               label="Email address"
               type="email"
@@ -192,7 +195,7 @@ export function SignInPage() {
 
           {import.meta.env.DEV && challenge.devCodes && (
             <div className="mt-4 rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm">
-              <p className="font-medium text-warning">Development mode</p>
+              <p className="font-medium text-warning-text">Development mode</p>
               <p className="mt-1 text-muted-foreground">
                 Email code <span className="font-mono">{challenge.devCodes.email}</span> · WhatsApp
                 code <span className="font-mono">{challenge.devCodes.phone}</span>

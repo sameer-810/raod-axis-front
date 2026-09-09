@@ -12,7 +12,9 @@ type Tone = "neutral" | "success" | "warning" | "destructive" | "primary";
 const TONES: Record<Tone, string> = {
   neutral: "border-border bg-muted text-muted-foreground",
   success: "border-success/30 bg-success/10 text-success",
-  warning: "border-warning/30 bg-warning/10 text-warning",
+  // `warning-text`, not `warning`: full-strength amber on its own 10% tint is
+  // 3.64:1 in the light theme. See index.css.
+  warning: "border-warning/30 bg-warning/10 text-warning-text",
   destructive: "border-destructive/30 bg-destructive/10 text-destructive",
   primary: "border-primary/30 bg-primary/10 text-primary-text",
 };

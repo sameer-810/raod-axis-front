@@ -7,7 +7,24 @@ import { cn } from "@/lib/utils";
  * Drawn rather than imported so it inherits `currentColor` and works on the
  * dark rail, the light header and a favicon without three files that drift.
  */
-export function Logo({ className, showWordmark = true }: { className?: string; showWordmark?: boolean }) {
+export function Logo({
+  className,
+  showWordmark = true,
+  onDark = false,
+}: {
+  className?: string;
+  showWordmark?: boolean;
+  /**
+   * The rail is dark in **both** themes.
+   *
+   * `--primary-text` is the orange darkened until it clears 4.5:1 against a
+   * light ground — which is exactly the wrong colour on a dark one, where it
+   * measured 3.35:1. This is not a dark-mode switch: the ordinary theme
+   * variables cannot express "this surface is dark regardless of the theme", so
+   * the caller that knows says so.
+   */
+  onDark?: boolean;
+}) {
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
       <svg
@@ -26,7 +43,8 @@ export function Logo({ className, showWordmark = true }: { className?: string; s
       </svg>
       {showWordmark && (
         <span className="text-[17px] font-semibold tracking-tight">
-          Road<span className="text-primary-text">Axis</span>
+          Road
+          <span className={onDark ? "text-sidebar-primary" : "text-primary-text"}>Axis</span>
         </span>
       )}
     </span>

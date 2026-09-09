@@ -223,8 +223,8 @@ export function RequestBookingPage() {
           */}
           <p className="mt-2 flex items-start gap-2 text-sm text-muted-foreground">
             <CalendarClock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-            Tell {business.name} when suits you. They'll reply on WhatsApp to confirm — this
-            doesn't hold a slot.
+            Tell {business.name} when suits you. They'll reply on WhatsApp to confirm — this doesn't
+            hold a slot.
           </p>
         </header>
 

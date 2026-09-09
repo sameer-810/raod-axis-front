@@ -104,7 +104,10 @@ export function WhatsAppNumbers({
 
   async function makePrimary(number: WhatsAppNumber) {
     try {
-      report(await update.mutateAsync({ id: number.id, isPrimary: true }), `${number.label} is now primary`);
+      report(
+        await update.mutateAsync({ id: number.id, isPrimary: true }),
+        `${number.label} is now primary`,
+      );
     } catch (err) {
       toast.error(getApiErrorMessage(err));
     }
@@ -139,8 +142,7 @@ export function WhatsAppNumbers({
           {effective ? (
             <>
               <p className="text-sm font-medium text-foreground">
-                Booking requests go to{" "}
-                <span className="font-semibold">{effective.label}</span>
+                Booking requests go to <span className="font-semibold">{effective.label}</span>
               </p>
               <p className="mt-0.5 font-mono text-sm tabular-nums text-muted-foreground">
                 {effective.phoneFormatted}
@@ -237,7 +239,10 @@ export function WhatsAppNumbers({
               */}
               {!number.isActive && number.deactivatedByRole === "admin" && (
                 <p className="mt-3 flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-sm text-foreground">
-                  <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
+                  <ShieldAlert
+                    className="mt-0.5 h-4 w-4 shrink-0 text-warning"
+                    aria-hidden="true"
+                  />
                   <span>
                     <span className="font-medium">RoadAxis switched this off.</span>{" "}
                     {number.deactivatedReason}
@@ -316,7 +321,10 @@ export function WhatsAppNumbers({
               The owner sees this reason in their portal. Nothing is deleted — you can switch it
               back on.
             </p>
-            <label htmlFor="deactivate-reason" className="mt-4 block text-sm font-medium text-foreground">
+            <label
+              htmlFor="deactivate-reason"
+              className="mt-4 block text-sm font-medium text-foreground"
+            >
               Reason
             </label>
             <input

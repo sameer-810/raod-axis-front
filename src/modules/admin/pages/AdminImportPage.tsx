@@ -98,8 +98,7 @@ export function AdminImportPage() {
           Import listings
         </h1>
         <p className="text-sm text-muted-foreground">
-          Seed the directory from a spreadsheet. Nothing is written until you have seen the
-          preview.
+          Seed the directory from a spreadsheet. Nothing is written until you have seen the preview.
         </p>
       </div>
 
@@ -168,8 +167,8 @@ export function AdminImportPage() {
           2. Preview
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Checks every row against the same rules a listing typed by hand has to meet, and
-          against what is already in the directory.
+          Checks every row against the same rules a listing typed by hand has to meet, and against
+          what is already in the directory.
         </p>
         <button
           type="button"

@@ -78,10 +78,7 @@ export function AdminReviewsPage() {
       ) : (
         <ul className="space-y-3">
           {items.map((review) => (
-            <li
-              key={review.id}
-              className={cn("ra-panel p-4", review.isRemoved && "opacity-60")}
-            >
+            <li key={review.id} className={cn("ra-panel p-4", review.isRemoved && "opacity-60")}>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <StarDisplay rating={review.rating} />
                 <span className="text-sm font-medium text-foreground">{review.driverName}</span>
@@ -167,8 +164,8 @@ export function AdminReviewsPage() {
       >
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            It stops appearing on the business's profile and the rating is recalculated without
-            it. Nothing is deleted — the record and your reason are kept.
+            It stops appearing on the business's profile and the rating is recalculated without it.
+            Nothing is deleted — the record and your reason are kept.
           </p>
           <div className="space-y-1.5">
             <label htmlFor="remove-reason" className="block text-sm font-medium text-foreground">

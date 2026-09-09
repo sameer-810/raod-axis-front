@@ -25,7 +25,7 @@ export function Sidebar() {
       )}
     >
       <div className="flex h-14 shrink-0 items-center gap-2 px-3">
-        <Logo showWordmark={!collapsed} className="text-sidebar-foreground" />
+        <Logo showWordmark={!collapsed} onDark className="text-sidebar-foreground" />
       </div>
 
       <nav className="min-h-0 flex-1 space-y-4 overflow-y-auto px-2 py-2" aria-label="Main">

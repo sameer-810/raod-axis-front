@@ -72,7 +72,9 @@ export function DocumentUpload({
         onClick={() => inputRef.current?.click()}
         className={cn(
           "flex w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-8 text-sm transition-colors",
-          message ? "border-destructive/50" : "border-border hover:border-primary hover:bg-accent/40",
+          message
+            ? "border-destructive/50"
+            : "border-border hover:border-primary hover:bg-accent/40",
         )}
       >
         <Upload className="h-6 w-6 text-muted-foreground" aria-hidden="true" />

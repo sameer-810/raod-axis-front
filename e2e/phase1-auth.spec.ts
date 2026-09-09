@@ -418,7 +418,9 @@ test.describe("Phase 1 · Sign-in on a phone", () => {
               )}px`,
           ),
       );
-      expect(small, `${route} has controls below the touch floor:\n${small.join("\n")}`).toEqual([]);
+      expect(small, `${route} has controls below the touch floor:\n${small.join("\n")}`).toEqual(
+        [],
+      );
     }
   });
 });

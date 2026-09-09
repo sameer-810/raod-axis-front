@@ -18,7 +18,11 @@ export function useCategories() {
 }
 
 export function useFacets() {
-  return useQuery({ queryKey: ["business-facets"], queryFn: businessApi.facets, staleTime: 300_000 });
+  return useQuery({
+    queryKey: ["business-facets"],
+    queryFn: businessApi.facets,
+    staleTime: 300_000,
+  });
 }
 
 export function useBusinessSearch(filters: Partial<SearchFilters>, enabled = true) {

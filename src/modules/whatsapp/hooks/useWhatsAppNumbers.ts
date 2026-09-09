@@ -116,8 +116,16 @@ export function useAddNumber(businessId: string) {
 export function useUpdateNumber(businessId: string) {
   return useNumberMutation(
     businessId,
-    ({ id, ...payload }: { id: string; label?: string; isActive?: boolean; isPrimary?: boolean; reason?: string }) =>
-      whatsappApi.update(businessId, id, payload),
+    ({
+      id,
+      ...payload
+    }: {
+      id: string;
+      label?: string;
+      isActive?: boolean;
+      isPrimary?: boolean;
+      reason?: string;
+    }) => whatsappApi.update(businessId, id, payload),
     (previous, { id, ...patch }) => optimistic(previous, id, patch),
   );
 }

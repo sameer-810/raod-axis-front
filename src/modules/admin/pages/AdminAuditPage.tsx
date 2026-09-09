@@ -56,7 +56,13 @@ export function AdminAuditPage() {
       if (page > 1) params.page = String(page);
       const res = await http.get<{
         data: AuditEntry[];
-        meta: { total: number; totalPages: number; hasNextPage: boolean; hasPrevPage: boolean; page: number };
+        meta: {
+          total: number;
+          totalPages: number;
+          hasNextPage: boolean;
+          hasPrevPage: boolean;
+          page: number;
+        };
       }>("/audit", { params });
       return { items: res.data.data, meta: res.data.meta };
     },
@@ -119,7 +125,9 @@ export function AdminAuditPage() {
       </div>
 
       {isLoading ? (
-        <div className="ra-panel px-4 py-12 text-center text-sm text-muted-foreground">Loading…</div>
+        <div className="ra-panel px-4 py-12 text-center text-sm text-muted-foreground">
+          Loading…
+        </div>
       ) : items.length === 0 ? (
         <EmptyState
           icon={ScrollText}
@@ -208,11 +216,7 @@ export function AdminAuditPage() {
 
 function ActionBadge({ action }: { action: string }) {
   const label = action.replace(/[._]/g, " ");
-  return CONSEQUENTIAL.has(action) ? (
-    <Badge tone="warning">{label}</Badge>
-  ) : (
-    <Badge>{label}</Badge>
-  );
+  return CONSEQUENTIAL.has(action) ? <Badge tone="warning">{label}</Badge> : <Badge>{label}</Badge>;
 }
 
 /** `null` reads as an em dash; everything else as itself. */

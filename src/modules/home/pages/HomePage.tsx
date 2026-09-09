@@ -128,7 +128,10 @@ export function HomePage() {
 
         {categories.length > 0 && (
           <section aria-labelledby="browse">
-            <h2 id="browse" className="text-sm font-medium uppercase tracking-[0.08em] text-muted-foreground">
+            <h2
+              id="browse"
+              className="text-sm font-medium uppercase tracking-[0.08em] text-muted-foreground"
+            >
               Browse by service
             </h2>
             {/* Above the fold, and a strip rather than a grid — eleven wrapped
@@ -149,8 +152,16 @@ export function HomePage() {
           </h2>
           <div className="grid gap-3 sm:grid-cols-3">
             {[
-              { icon: Search, title: "Discover", body: "Search by service and distance. See who's open now." },
-              { icon: MessageCircle, title: "Contact", body: "Message them, or send a booking request." },
+              {
+                icon: Search,
+                title: "Discover",
+                body: "Search by service and distance. See who's open now.",
+              },
+              {
+                icon: MessageCircle,
+                title: "Contact",
+                body: "Message them, or send a booking request.",
+              },
               { icon: Navigation, title: "Go", body: "Open directions straight in Google Maps." },
             ].map((s) => (
               <div key={s.title} className="ra-tile">

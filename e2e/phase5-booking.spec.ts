@@ -1,4 +1,10 @@
-import { test, expect, request as pwRequest, type APIRequestContext, type Page } from "@playwright/test";
+import {
+  test,
+  expect,
+  request as pwRequest,
+  type APIRequestContext,
+  type Page,
+} from "@playwright/test";
 import { API, expectNoHorizontalOverflow, expectTouchTargets } from "./helpers";
 
 /**
@@ -328,11 +334,18 @@ test.describe("Phase 5 · The business inbox", () => {
     await signInAsOwner(page, email, password);
     await page.goto("/portal/requests");
     await page.getByRole("button", { name: /driver decline/i }).click();
-    await page.getByRole("button", { name: /^decline$/i }).first().click();
+    await page
+      .getByRole("button", { name: /^decline$/i })
+      .first()
+      .click();
 
     await expect(page.getByText(/the customer sees this/i)).toBeVisible();
     await page.getByLabel("Why?").fill("Fully booked that week — try us the following Monday.");
-    await page.getByRole("dialog").or(page.locator(".ra-overlay")).getByRole("button", { name: /^decline$/i }).click();
+    await page
+      .getByRole("dialog")
+      .or(page.locator(".ra-overlay"))
+      .getByRole("button", { name: /^decline$/i })
+      .click();
 
     await expect(page.getByText(/marked declined/i)).toBeVisible();
   });
@@ -432,7 +445,11 @@ test.describe("Phase 5 · On a phone", () => {
     const { business } = await seedBookableBusiness("MobileFlow");
     await signInAsDriver(page, "mobileflow");
 
-    for (const route of [`/business/${business.slug}`, `/business/${business.slug}/request`, "/my-requests"]) {
+    for (const route of [
+      `/business/${business.slug}`,
+      `/business/${business.slug}/request`,
+      "/my-requests",
+    ]) {
       await page.goto(route);
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
       await expectNoHorizontalOverflow(page);
@@ -515,7 +532,10 @@ test.describe("Phase 5 · Accessibility", () => {
       );
       expect(levels[0], route).toBe(1);
       for (let i = 1; i < levels.length; i++) {
-        expect(levels[i] - levels[i - 1], `${route}: h${levels[i - 1]} → h${levels[i]}`).toBeLessThanOrEqual(1);
+        expect(
+          levels[i] - levels[i - 1],
+          `${route}: h${levels[i - 1]} → h${levels[i]}`,
+        ).toBeLessThanOrEqual(1);
       }
     }
   });

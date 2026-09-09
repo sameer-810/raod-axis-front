@@ -58,7 +58,17 @@ export async function expectNoHorizontalOverflow(page: Page) {
 }
 
 /**
- * Every interactive control must clear the 44px touch floor.
+ * The floor itself, in one place.
+ *
+ * It was 40 here while DESIGN.md said 44, which meant four pixels of the rule
+ * were documented and not enforced — and the Phase 7 route sweep found real
+ * controls living in exactly that gap. A threshold that differs from the stated
+ * rule is worse than no threshold, because it is quoted as if it were the rule.
+ */
+export const TOUCH_FLOOR = 44;
+
+/**
+ * Every interactive control must clear the touch floor.
  *
  * Two exemptions, both principled rather than convenient:
  *
@@ -71,7 +81,7 @@ export async function expectNoHorizontalOverflow(page: Page) {
  *    counting it produces a failure with no user behind it.
  */
 export async function expectTouchTargets(page: Page, context = "") {
-  const small = await page.evaluate(() =>
+  const small = await page.evaluate((TOUCH_FLOOR) =>
     Array.from(document.querySelectorAll("button, a[href], input, select, textarea"))
       .filter((el) => {
         const r = el.getBoundingClientRect();
@@ -91,9 +101,9 @@ export async function expectTouchTargets(page: Page, context = "") {
         const label = el.closest("label");
         if (label) {
           const lr = label.getBoundingClientRect();
-          if (lr.height >= 40 && lr.width >= 40) return false;
+          if (lr.height >= TOUCH_FLOOR && lr.width >= TOUCH_FLOOR) return false;
         }
-        return r.height < 40 || r.width < 40;
+        return r.height < TOUCH_FLOOR || r.width < TOUCH_FLOOR;
       })
       .map(
         (el) =>
@@ -101,8 +111,12 @@ export async function expectTouchTargets(page: Page, context = "") {
             el.getBoundingClientRect().height,
           )}px`,
       ),
+    TOUCH_FLOOR,
   );
-  expect(small, `${context} controls below the touch floor:\n${small.join("\n")}`).toEqual([]);
+  expect(
+    small,
+    `${context} controls below the ${TOUCH_FLOOR}px touch floor:\n${small.join("\n")}`,
+  ).toEqual([]);
 }
 
 /** Switch theme through the header control, which is how a user does it. */

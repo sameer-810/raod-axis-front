@@ -173,7 +173,11 @@ export function AdminAnalyticsPage() {
             </div>
             <div className="ra-tile">
               <p className="text-sm font-medium text-foreground">Listings going live</p>
-              <Sparkline points={data.series.listings} label="Listings going live" className="mt-2" />
+              <Sparkline
+                points={data.series.listings}
+                label="Listings going live"
+                className="mt-2"
+              />
             </div>
           </>
         )}
@@ -200,10 +204,15 @@ export function AdminAnalyticsPage() {
         <div className="ra-tile">
           <p className="text-sm font-medium text-foreground">Most requested</p>
           {data?.leaderboards.mostRequested.length ? (
-            <ol className="mt-3 space-y-2">
+            <ol className="mt-3 divide-y divide-border">
               {data.leaderboards.mostRequested.map((b) => (
-                <li key={b.id} className="flex items-baseline justify-between gap-3 text-sm">
-                  <Link to={`/business/${b.slug}`} className="truncate hover:underline">
+                <li key={b.id} className="flex items-center justify-between gap-3 text-sm">
+                  {/* `ra-tap`: a leaderboard row is a standalone destination,
+                      not a link inside a sentence, so it owes the touch floor. */}
+                  <Link
+                    to={`/business/${b.slug}`}
+                    className="ra-tap flex min-w-0 flex-1 items-center truncate hover:underline"
+                  >
                     {b.name}
                   </Link>
                   <span className="font-mono tabular-nums text-muted-foreground">{b.count}</span>
@@ -211,9 +220,7 @@ export function AdminAnalyticsPage() {
               ))}
             </ol>
           ) : (
-            <p className="mt-3 text-sm text-muted-foreground">
-              No requests in this window yet.
-            </p>
+            <p className="mt-3 text-sm text-muted-foreground">No requests in this window yet.</p>
           )}
         </div>
       </section>
@@ -243,13 +250,16 @@ function Leaderboard({
       <p className="text-sm font-medium text-foreground">{title}</p>
       {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
       {rows.length ? (
-        <ol className="mt-3 space-y-2">
+        <ol className="mt-3 divide-y divide-border">
           {rows.map((b) => (
-            <li key={b.id} className="flex items-baseline justify-between gap-3 text-sm">
-              <Link to={`/business/${b.slug}`} className="truncate hover:underline">
+            <li key={b.id} className="flex items-center justify-between gap-3 text-sm">
+              <Link
+                to={`/business/${b.slug}`}
+                className="ra-tap flex min-w-0 flex-1 items-center truncate hover:underline"
+              >
                 {b.name}
               </Link>
-              <span className="font-mono tabular-nums text-muted-foreground">
+              <span className="shrink-0 font-mono tabular-nums text-muted-foreground">
                 {value(b)} {unit}
               </span>
             </li>

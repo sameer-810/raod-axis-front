@@ -143,7 +143,11 @@ export function AcceptInvitePage() {
             aria-label={show ? "Hide password" : "Show password"}
             className="ra-tap absolute end-0 top-[1.55rem] flex items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
           >
-            {show ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+            {show ? (
+              <EyeOff className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <Eye className="h-4 w-4" aria-hidden="true" />
+            )}
           </button>
         </div>
 

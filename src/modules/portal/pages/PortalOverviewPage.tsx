@@ -71,7 +71,10 @@ export function PortalOverviewPage() {
         businesses.map((business) => (
           <section key={business.id} aria-labelledby={`b-${business.id}`} className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 id={`b-${business.id}`} className="flex items-center gap-2 text-base font-semibold text-foreground">
+              <h2
+                id={`b-${business.id}`}
+                className="flex items-center gap-2 text-base font-semibold text-foreground"
+              >
                 {business.name}
                 {business.isVerified && (
                   <Badge tone="success" icon={BadgeCheck}>
@@ -81,7 +84,7 @@ export function PortalOverviewPage() {
               </h2>
               <Link
                 to={`/business/${business.slug}`}
-                className="text-sm font-medium text-primary-text hover:underline"
+                className="ra-tap inline-flex items-center text-sm font-medium text-primary-text hover:underline"
               >
                 View public page
               </Link>
@@ -125,9 +128,7 @@ export function PortalOverviewPage() {
                   </>
                 ) : (
                   <>
-                    <p className="text-sm font-medium text-foreground">
-                      Customers can't reach you
-                    </p>
+                    <p className="text-sm font-medium text-foreground">Customers can't reach you</p>
                     <p className="mt-0.5 text-sm text-muted-foreground">
                       {business.routing.reason === "no_numbers"
                         ? "Add a WhatsApp number to start receiving booking requests."
@@ -136,7 +137,10 @@ export function PortalOverviewPage() {
                   </>
                 )}
               </div>
-              <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+              <ArrowRight
+                className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
+                aria-hidden="true"
+              />
             </Link>
 
             <div className="grid gap-3 sm:grid-cols-3">

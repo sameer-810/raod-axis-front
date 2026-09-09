@@ -40,6 +40,12 @@ export default {
         warning: {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
+          /**
+           * Amber as *text on a tinted ground*, the same idea as
+           * `primary.text`. The badge paints its own colour at 10% behind the
+           * label, and the full-strength amber measured 3.64:1 against that.
+           */
+          text: "hsl(var(--warning-text))",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",

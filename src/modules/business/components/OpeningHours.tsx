@@ -26,9 +26,7 @@ export function OpeningHours({
     new Intl.DateTimeFormat("en-GB", { timeZone: timezone, weekday: "short" })
       .formatToParts(new Date())
       .find((p) => p.type === "weekday")
-      ? new Date(
-          new Date().toLocaleString("en-US", { timeZone: timezone }),
-        ).getDay()
+      ? new Date(new Date().toLocaleString("en-US", { timeZone: timezone })).getDay()
       : new Date().getDay(),
   );
 

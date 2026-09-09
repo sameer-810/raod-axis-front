@@ -1,5 +1,13 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { Search, SlidersHorizontal, MapPin, List, Map as MapIcon, LocateFixed, SearchX } from "lucide-react";
+import {
+  Search,
+  SlidersHorizontal,
+  MapPin,
+  List,
+  Map as MapIcon,
+  LocateFixed,
+  SearchX,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/shared/hooks/useMediaQuery";
 import { useGeolocation } from "@/shared/hooks/useGeolocation";
@@ -142,7 +150,8 @@ export function SearchPage() {
               >
                 <MapPin className="h-4 w-4 shrink-0 text-primary-text" aria-hidden="true" />
                 <span className="min-w-0 flex-1 truncate text-start text-muted-foreground">
-                  Within <span className="font-mono tabular-nums">{formatDistance(filters.radius)}</span>
+                  Within{" "}
+                  <span className="font-mono tabular-nums">{formatDistance(filters.radius)}</span>
                   {placeLabel ? ` of ${placeLabel}` : ""}
                 </span>
                 <span className="shrink-0 text-xs font-medium text-primary-text">Change</span>
@@ -197,7 +206,12 @@ export function SearchPage() {
               layout="inline"
             />
             <div className="flex items-center justify-between gap-3">
-              <ResultCount meta={meta} isLoading={isLoading} hasLocation={hasLocation} radius={filters.radius} />
+              <ResultCount
+                meta={meta}
+                isLoading={isLoading}
+                hasLocation={hasLocation}
+                radius={filters.radius}
+              />
               <ViewToggle view={view} onChange={setView} />
             </div>
           </>
@@ -205,7 +219,12 @@ export function SearchPage() {
 
         {isMobile && (
           <>
-            <ResultCount meta={meta} isLoading={isLoading} hasLocation={hasLocation} radius={filters.radius} />
+            <ResultCount
+              meta={meta}
+              isLoading={isLoading}
+              hasLocation={hasLocation}
+              radius={filters.radius}
+            />
             <Sheet
               open={filterSheet}
               onOpenChange={setFilterSheet}
@@ -344,20 +363,22 @@ function ViewToggle({
   onChange: (v: "list" | "map") => void;
 }) {
   return (
-    <div className="flex shrink-0 rounded-lg border border-border p-0.5" role="group" aria-label="View">
-      {(
-        [
-          { value: "list" as const, icon: List, label: "List" },
-          { value: "map" as const, icon: MapIcon, label: "Map" },
-        ]
-      ).map((v) => (
+    <div
+      className="flex shrink-0 rounded-lg border border-border p-0.5"
+      role="group"
+      aria-label="View"
+    >
+      {[
+        { value: "list" as const, icon: List, label: "List" },
+        { value: "map" as const, icon: MapIcon, label: "Map" },
+      ].map((v) => (
         <button
           key={v.value}
           type="button"
           onClick={() => onChange(v.value)}
           aria-pressed={view === v.value}
           className={cn(
-            "flex min-h-[40px] items-center gap-1.5 rounded-md px-3 text-sm font-medium transition-colors",
+            "flex min-h-[44px] items-center gap-1.5 rounded-md px-3 text-sm font-medium transition-colors",
             view === v.value
               ? "bg-primary text-primary-foreground"
               : "text-muted-foreground hover:text-foreground",

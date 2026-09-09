@@ -220,7 +220,9 @@ test.describe("Phase 3 · Registering a new business", () => {
     // Advisory, never a block — but offering the claim route to somebody about
     // to create a duplicate saves them a week and saves us a merge.
     await expect(page.getByText(/already on roadaxis/i)).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByRole("link", { name: new RegExp(`${TAG} Duplicate Check`) })).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: new RegExp(`${TAG} Duplicate Check`) }),
+    ).toBeVisible();
   });
 
   test("a postcode is resolved to a position", async ({ page }) => {
@@ -402,7 +404,11 @@ test.describe("Phase 3 · On a phone", () => {
 
   test("no onboarding route scrolls sideways", async ({ page }) => {
     const business = await seedListing(`${TAG} Mobile Garage`);
-    for (const route of ["/for-business", "/register-business", `/business/${business.slug}/claim`]) {
+    for (const route of [
+      "/for-business",
+      "/register-business",
+      `/business/${business.slug}/claim`,
+    ]) {
       await page.goto(route);
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
       await expectNoHorizontalOverflow(page);
@@ -462,7 +468,10 @@ test.describe("Phase 3 · Accessibility", () => {
       );
       expect(levels[0], route).toBe(1);
       for (let i = 1; i < levels.length; i++) {
-        expect(levels[i] - levels[i - 1], `${route}: h${levels[i - 1]} → h${levels[i]}`).toBeLessThanOrEqual(1);
+        expect(
+          levels[i] - levels[i - 1],
+          `${route}: h${levels[i - 1]} → h${levels[i]}`,
+        ).toBeLessThanOrEqual(1);
       }
     }
   });

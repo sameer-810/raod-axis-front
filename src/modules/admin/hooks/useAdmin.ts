@@ -78,7 +78,10 @@ export function useAdminCategories() {
 }
 
 export function useCategorySuggestions() {
-  return useQuery({ queryKey: [...CATEGORY_KEY, "suggestions"], queryFn: adminCategoryApi.suggestions });
+  return useQuery({
+    queryKey: [...CATEGORY_KEY, "suggestions"],
+    queryFn: adminCategoryApi.suggestions,
+  });
 }
 
 function useInvalidateCategories() {

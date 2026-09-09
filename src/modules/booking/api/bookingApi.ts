@@ -31,7 +31,12 @@ export const bookingApi = {
    * A driver gets their own, an owner gets their businesses', an admin gets
    * everything — decided from the session rather than from a parameter.
    */
-  async list(query: { status?: BookingStatus | ""; businessId?: string; search?: string; page?: number }) {
+  async list(query: {
+    status?: BookingStatus | "";
+    businessId?: string;
+    search?: string;
+    page?: number;
+  }) {
     const params: Record<string, string> = { limit: "20" };
     if (query.status) params.status = query.status;
     if (query.businessId) params.businessId = query.businessId;

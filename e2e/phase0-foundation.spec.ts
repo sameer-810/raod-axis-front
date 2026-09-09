@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { contrastRatio, expectNoHorizontalOverflow, setTheme } from "./helpers";
+import { contrastRatio, expectNoHorizontalOverflow, setTheme, TOUCH_FLOOR } from "./helpers";
 
 /**
  * Phase 0 — the foundation.
@@ -199,19 +199,25 @@ test.describe("Phase 0 · Mobile", () => {
 
   test("every interactive control clears the 44px floor", async ({ page }) => {
     await page.goto("/");
-    const small = await page.evaluate(() => {
+    // The shared constant, so this cannot drift from the rule the rest of the
+    // suite enforces — which is exactly how it came to be checking 40.
+    const small = await page.evaluate((floor) => {
       const out: string[] = [];
       for (const el of Array.from(document.querySelectorAll("button, a[href]"))) {
         const r = el.getBoundingClientRect();
         // Skip anything not actually rendered.
         if (r.width === 0 && r.height === 0) continue;
-        if (r.height < 40 || r.width < 40) {
-          out.push(`${el.tagName.toLowerCase()} "${el.textContent?.trim().slice(0, 30)}" ${Math.round(r.width)}×${Math.round(r.height)}`);
+        if (r.height < floor || r.width < floor) {
+          out.push(
+            `${el.tagName.toLowerCase()} "${el.textContent?.trim().slice(0, 30)}" ${Math.round(r.width)}×${Math.round(r.height)}`,
+          );
         }
       }
       return out;
-    });
-    expect(small, `controls below the touch floor:\n${small.join("\n")}`).toEqual([]);
+    }, TOUCH_FLOOR);
+    expect(small, `controls below the ${TOUCH_FLOOR}px touch floor:\n${small.join("\n")}`).toEqual(
+      [],
+    );
   });
 
   test("bottom navigation is present and clears the safe area", async ({ page }) => {
@@ -232,19 +238,34 @@ test.describe("Phase 0 · Mobile", () => {
     // `document.body.scrollHeight` is the wrong measure here: body carries
     // `height: 100%`, so it reports the viewport height and the page is left
     // one screen short of the bottom.
-    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-    await page.waitForFunction(() => {
-      const el = document.documentElement;
-      return el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
-    });
-
-    const bar = await page.locator(".ra-bottombar").boundingBox();
-    const last = await page.locator(".ra-tile").last().boundingBox();
-    // The classic bottom-navigation bug: the last row of every list sits under
-    // the bar and users conclude the list is truncated.
-    expect(last!.y + last!.height, "content is obscured by the tab bar").toBeLessThanOrEqual(
-      bar!.y + 1,
-    );
+    /**
+     * Scroll, measure, and be willing to do both again.
+     *
+     * The home page fetches its categories after the first paint. Against a
+     * cloud database that reply can land *after* the scroll, growing the page
+     * and pushing the last tile back down the screen — so a single
+     * scroll-then-measure reports a failure that a human scrolling the same page
+     * would never see. Polling re-scrolls to whatever the bottom is now.
+     */
+    await expect
+      .poll(
+        async () => {
+          await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+          await page.waitForFunction(() => {
+            const el = document.documentElement;
+            return el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
+          });
+          const bar = await page.locator(".ra-bottombar").boundingBox();
+          const last = await page.locator(".ra-tile").last().boundingBox();
+          // Positive = the tile is under the bar, which is the failure.
+          return Math.round(last!.y + last!.height - bar!.y);
+        },
+        {
+          message:
+            "the last tile sits under the tab bar — the classic bottom-navigation bug, where the final row of every list is hidden and users conclude the list is truncated",
+        },
+      )
+      .toBeLessThanOrEqual(1);
   });
 });
 
@@ -287,13 +308,16 @@ test.describe("Phase 0 · Accessibility", () => {
     );
     expect(levels[0]).toBe(1);
     for (let i = 1; i < levels.length; i++) {
-      expect(levels[i] - levels[i - 1], `heading jumped from h${levels[i - 1]} to h${levels[i]}`).toBeLessThanOrEqual(1);
+      expect(
+        levels[i] - levels[i - 1],
+        `heading jumped from h${levels[i - 1]} to h${levels[i]}`,
+      ).toBeLessThanOrEqual(1);
     }
   });
 });
 
 test.describe("Phase 0 · Language", () => {
-  test('no screen implies a confirmed appointment', async ({ page }) => {
+  test("no screen implies a confirmed appointment", async ({ page }) => {
     /**
      * FR-BKG-10, swept across every public route rather than one page.
      *
@@ -302,12 +326,7 @@ test.describe("Phase 0 · Language", () => {
      * arrives in Phase 5; this is the guard that stops the wrong word creeping
      * in before it does.
      */
-    for (const route of [
-      "/",
-      "/search?lat=53.4808&lng=-2.2426",
-      "/categories",
-      "/sign-in",
-    ]) {
+    for (const route of ["/", "/search?lat=53.4808&lng=-2.2426", "/categories", "/sign-in"]) {
       await page.goto(route);
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
       const body = await page.locator("body").innerText();

@@ -113,7 +113,9 @@ export function AdminClaimsPage() {
       </div>
 
       {isLoading ? (
-        <div className="ra-panel px-4 py-12 text-center text-sm text-muted-foreground">Loading…</div>
+        <div className="ra-panel px-4 py-12 text-center text-sm text-muted-foreground">
+          Loading…
+        </div>
       ) : items.length === 0 ? (
         <EmptyState
           icon={Check}
@@ -246,8 +248,8 @@ function ClaimDetail({ claim, onDecided }: { claim: AdminClaim; onDecided: () =>
 
         {claim.kind === "self_register" && (
           <p className="mt-3 flex items-start gap-1.5 rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-            <Store className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-            A new listing. It is not publicly visible and will only go live if you approve this.
+            <Store className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />A new listing. It is not
+            publicly visible and will only go live if you approve this.
           </p>
         )}
 
@@ -255,7 +257,7 @@ function ClaimDetail({ claim, onDecided }: { claim: AdminClaim; onDecided: () =>
             a real thing — this is here so a reviewer can tell the difference. */}
         {claim.possibleDuplicates.length > 0 && (
           <div className="mt-3 rounded-lg border border-warning/30 bg-warning/10 p-3">
-            <p className="flex items-center gap-1.5 text-sm font-medium text-warning">
+            <p className="flex items-center gap-1.5 text-sm font-medium text-warning-text">
               <AlertTriangle className="h-4 w-4" aria-hidden="true" />
               Similar listings nearby
             </p>
@@ -308,14 +310,19 @@ function ClaimDetail({ claim, onDecided }: { claim: AdminClaim; onDecided: () =>
               <button
                 type="button"
                 onClick={() => open(doc)}
-                className="flex w-full items-center gap-3 rounded-lg border border-border px-3 py-2 text-start transition-colors hover:bg-accent/40"
+                className="ra-tap flex w-full items-center gap-3 rounded-lg border border-border px-3 py-2 text-start transition-colors hover:bg-accent/40"
               >
                 {loadingDoc === doc.id ? (
-                  <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" aria-hidden="true" />
+                  <Loader2
+                    className="h-4 w-4 shrink-0 animate-spin text-muted-foreground"
+                    aria-hidden="true"
+                  />
                 ) : (
                   <FileText className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
                 )}
-                <span className="min-w-0 flex-1 truncate text-sm text-foreground">{doc.filename}</span>
+                <span className="min-w-0 flex-1 truncate text-sm text-foreground">
+                  {doc.filename}
+                </span>
                 <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
                   {doc.bytes ? `${(doc.bytes / 1024).toFixed(0)} KB` : ""}
                 </span>
@@ -419,7 +426,11 @@ function ClaimDetail({ claim, onDecided }: { claim: AdminClaim; onDecided: () =>
             <X className="h-6 w-6" aria-hidden="true" />
           </button>
           {preview.type === "application/pdf" ? (
-            <iframe src={preview.url} title={preview.name} className="h-full w-full rounded-lg bg-white" />
+            <iframe
+              src={preview.url}
+              title={preview.name}
+              className="h-full w-full rounded-lg bg-white"
+            />
           ) : (
             <img
               src={preview.url}

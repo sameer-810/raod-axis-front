@@ -40,7 +40,12 @@ export interface AdminClaim extends Claim {
       })
     | null;
   /** Advisory only. Shown side by side; never used to refuse an applicant. */
-  possibleDuplicates: Array<{ id: string; name: string | null; slug: string | null; city: string | null }>;
+  possibleDuplicates: Array<{
+    id: string;
+    name: string | null;
+    slug: string | null;
+    city: string | null;
+  }>;
   reviewedBy: { id: string; name: string | null } | null;
   /** How long it has been waiting. What the queue is actually triaged by. */
   ageHours: number;

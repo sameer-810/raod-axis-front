@@ -68,7 +68,13 @@ export const adminClaimApi = {
 
     const res = await http.get<{
       data: AdminClaim[];
-      meta: { total: number; totalPages: number; hasNextPage: boolean; hasPrevPage: boolean; page: number };
+      meta: {
+        total: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        hasPrevPage: boolean;
+        page: number;
+      };
     }>("/claims", { params });
     return { items: res.data.data, meta: res.data.meta };
   },

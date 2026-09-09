@@ -54,11 +54,15 @@ export function RegisterBusinessPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [geoNote, setGeoNote] = useState<string | null>(null);
-  const [existing, setExisting] = useState<Array<{ name: string; slug: string; city: string | null }>>([]);
+  const [existing, setExisting] = useState<
+    Array<{ name: string; slug: string; city: string | null }>
+  >([]);
   const [result, setResult] = useState<{ claim: Claim; message: string } | null>(null);
 
-  const set = (key: keyof typeof business) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-    setBusiness((b) => ({ ...b, [key]: e.target.value }));
+  const set =
+    (key: keyof typeof business) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      setBusiness((b) => ({ ...b, [key]: e.target.value }));
 
   /**
    * Postcode → coordinates.
@@ -99,7 +103,9 @@ export function RegisterBusinessPage() {
         lng,
         radius: 2000,
       });
-      setExisting(items.slice(0, 3).map((b) => ({ name: b.name, slug: b.slug, city: b.address.city })));
+      setExisting(
+        items.slice(0, 3).map((b) => ({ name: b.name, slug: b.slug, city: b.address.city })),
+      );
     } catch {
       // A missing suggestion is not worth failing the form over.
     }
@@ -210,7 +216,7 @@ export function RegisterBusinessPage() {
             {/* Most people arriving here are already listed and do not know it. */}
             {existing.length > 0 && (
               <div className="rounded-lg border border-warning/30 bg-warning/10 p-3">
-                <p className="flex items-center gap-1.5 text-sm font-medium text-warning">
+                <p className="flex items-center gap-1.5 text-sm font-medium text-warning-text">
                   <Search className="h-4 w-4" aria-hidden="true" />
                   Already on RoadAxis?
                 </p>
@@ -283,10 +289,20 @@ export function RegisterBusinessPage() {
 
           <section className="ra-tile space-y-1">
             <h2 className="mb-2 text-sm font-semibold text-foreground">Where you are</h2>
-            <Field label="Street address" value={business.line1} onChange={set("line1")} error={errors["address.line1"]} />
+            <Field
+              label="Street address"
+              value={business.line1}
+              onChange={set("line1")}
+              error={errors["address.line1"]}
+            />
             <Field label="Address line 2" value={business.line2} onChange={set("line2")} />
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Town or city" value={business.city} onChange={set("city")} error={errors["address.city"]} />
+              <Field
+                label="Town or city"
+                value={business.city}
+                onChange={set("city")}
+                error={errors["address.city"]}
+              />
               <Field
                 label="Postcode"
                 value={business.postcode}
@@ -312,7 +328,13 @@ export function RegisterBusinessPage() {
                 error={errors.phone}
                 hint="Shown on your public listing."
               />
-              <Field label="Website" value={business.website} onChange={set("website")} error={errors.website} placeholder="https://" />
+              <Field
+                label="Website"
+                value={business.website}
+                onChange={set("website")}
+                error={errors.website}
+                placeholder="https://"
+              />
             </div>
           </section>
 

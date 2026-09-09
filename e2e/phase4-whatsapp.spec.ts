@@ -1,4 +1,10 @@
-import { test, expect, request as pwRequest, type APIRequestContext, type Page } from "@playwright/test";
+import {
+  test,
+  expect,
+  request as pwRequest,
+  type APIRequestContext,
+  type Page,
+} from "@playwright/test";
 import { API, expectNoHorizontalOverflow, expectTouchTargets } from "./helpers";
 
 /**
@@ -196,9 +202,9 @@ test.describe("Phase 4 · What a driver sees", () => {
 
     // FR-PRO-04: choosing "Emergency" over "Customer Support" is the reason a
     // business has two numbers, so both are offered with their labels.
-    const section = page.getByRole("region", { name: /message them/i }).or(
-      page.locator("section", { hasText: "Message them" }),
-    );
+    const section = page
+      .getByRole("region", { name: /message them/i })
+      .or(page.locator("section", { hasText: "Message them" }));
     await expect(section.getByText("Customer Support")).toBeVisible();
     await expect(section.getByText("Emergency")).toBeVisible();
 
@@ -388,7 +394,9 @@ test.describe("Phase 4 · Accessibility", () => {
 
     // Two unlabelled checkboxes in a list is a screen reader announcing
     // "checkbox, checked" twice with no way to tell which phone is which.
-    await expect(page.getByRole("checkbox", { name: /switch off customer support/i })).toBeVisible();
+    await expect(
+      page.getByRole("checkbox", { name: /switch off customer support/i }),
+    ).toBeVisible();
     await expect(page.getByRole("checkbox", { name: /switch off emergency/i })).toBeVisible();
   });
 
@@ -406,7 +414,10 @@ test.describe("Phase 4 · Accessibility", () => {
       );
       expect(levels[0], route).toBe(1);
       for (let i = 1; i < levels.length; i++) {
-        expect(levels[i] - levels[i - 1], `${route}: h${levels[i - 1]} → h${levels[i]}`).toBeLessThanOrEqual(1);
+        expect(
+          levels[i] - levels[i - 1],
+          `${route}: h${levels[i - 1]} → h${levels[i]}`,
+        ).toBeLessThanOrEqual(1);
       }
     }
   });

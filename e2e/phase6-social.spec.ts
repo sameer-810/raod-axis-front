@@ -1,4 +1,10 @@
-import { test, expect, request as pwRequest, type APIRequestContext, type Page } from "@playwright/test";
+import {
+  test,
+  expect,
+  request as pwRequest,
+  type APIRequestContext,
+  type Page,
+} from "@playwright/test";
 import { API, expectNoHorizontalOverflow, expectTouchTargets } from "./helpers";
 
 /**
@@ -374,7 +380,10 @@ test.describe("Phase 6 · Analytics", () => {
      * The sharp case. In deep-link mode nothing is trackable, and a confident
      * "100%" here is the exact failure the delivery log exists to prevent.
      */
-    const delivery = page.locator("div").filter({ hasText: /^Delivery rate/ }).first();
+    const delivery = page
+      .locator("div")
+      .filter({ hasText: /^Delivery rate/ })
+      .first();
     await expect(delivery).toContainText("—");
     await expect(delivery).toContainText(/deep-link mode/i);
   });
@@ -417,9 +426,7 @@ test.describe("Phase 6 · Being findable", () => {
     // the same as having none.
     await expect(page).toHaveTitle(new RegExp(`${business.name}.*RoadAxis`));
 
-    const description = await page
-      .locator('meta[name="description"]')
-      .getAttribute("content");
+    const description = await page.locator('meta[name="description"]').getAttribute("content");
     expect(description).toContain(business.name);
     expect(description).toContain("Manchester");
 

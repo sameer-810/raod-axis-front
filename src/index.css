@@ -46,7 +46,16 @@
     --secondary-foreground: 221 39% 11%;
 
     --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%; /* #6B7280 */
+    /*
+     * 44%, not Tailwind's 46%.
+     *
+     * At 46% this passes on a white card (4.83:1) and fails on our own muted
+     * surface (4.39:1) — which is exactly where the neutral Badge puts it, so
+     * every "Unclaimed" chip in the directory was a hair under AA. Secondary
+     * text has to be readable on every ground the design actually uses it on,
+     * and the badge is the tightest of them.
+     */
+    --muted-foreground: 220 9% 44%; /* #666D7A — 5.21:1 on white, 4.73:1 on muted */
 
     --accent: 220 14% 93%;
     --accent-foreground: 217 19% 27%; /* #374151 */
@@ -59,6 +68,13 @@
 
     --warning: 32 95% 38%; /* pending claim, delivery unknown */
     --warning-foreground: 0 0% 100%;
+    /*
+     * Amber on a 10% amber tint — the warning Badge — measured 3.64:1 at full
+     * strength. Darkened until it clears AA on that ground (4.84:1), the same
+     * move `--primary-text` makes for orange. It is not used on solid grounds;
+     * `--warning` still is.
+     */
+    --warning-text: 32 95% 32%;
 
     --border: 220 13% 91%; /* #E5E7EB — the brochure's only border */
     --input: 220 13% 91%;
@@ -106,6 +122,13 @@
 
     --warning: 35 92% 55%;
     --warning-foreground: 215 45% 8%;
+    /*
+     * Unchanged from `--warning` in the dark theme, and deliberately so. The
+     * badge's tint is 10% amber over a near-black card, which barely lifts the
+     * ground — the bright amber already measures well past AA there, and
+     * darkening it would make it harder to read, not easier.
+     */
+    --warning-text: 35 92% 55%;
 
     --border: 210 20% 20%;
     --input: 210 20% 20%;
@@ -128,7 +151,11 @@
     @apply bg-background text-foreground antialiased;
   }
   html {
-    font-family: "Inter Tight", system-ui, -apple-system, sans-serif;
+    font-family:
+      "Inter Tight",
+      system-ui,
+      -apple-system,
+      sans-serif;
   }
 }
 
@@ -246,6 +273,54 @@ table,
 }
 
 /**
+ * No form control below 16px on a phone.
+ *
+ * Safari on iOS zooms the whole page when a control with a font smaller than
+ * 16px receives focus — and it does not zoom back out. The user is left
+ * pinching their way around a form they were halfway through, which reads as
+ * the site being broken rather than as an OS behaviour.
+ *
+ * Applied by media query rather than by changing the component classes, because
+ * 14px is the right size for these controls on a desktop where the behaviour
+ * does not exist: the forms stay dense where density is free and grow only
+ * where the alternative is a zoomed viewport. The breakpoint is Tailwind's `md`,
+ * the same line every other mobile rule in this file uses.
+ */
+@media (max-width: 767px) {
+  /*
+   * `!important` on purpose, and this is the case it exists for.
+   *
+   * Every control in the product carries `text-sm`, a class selector that
+   * outranks an element selector no matter where this rule sits in the sheet.
+   * The alternative is repeating a responsive font size on every input in every
+   * form — dozens of places to forget one, on a rule whose failure is invisible
+   * until somebody uses an iPhone.
+   */
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/**
+ * A checkbox or radio is 13px by default, and no amount of surrounding padding
+ * changes the box itself. These are the two controls in the product that a
+ * finger has to land on precisely, so they are grown outright — 20px of drawn
+ * control inside a label that carries the 44px hit area.
+ *
+ * In `base`, deliberately: it is a default, and a utility class on a specific
+ * control must still win. The star rating's radio, for instance, is stretched
+ * to fill its label and would be ruined by a 20px floor it could not override.
+ */
+@layer base {
+  input[type="checkbox"],
+  input[type="radio"] {
+    @apply h-5 w-5 shrink-0;
+  }
+}
+
+/**
  * Bottom navigation. Fixed to the bottom edge because it is the only part of a
  * 6" screen a right thumb reaches without regripping — the hamburger it
  * replaces sits in the top-left corner, the single furthest point from it.
@@ -287,7 +362,17 @@ table,
 }
 .ra-chip {
   @apply inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-border bg-card px-3.5 py-2 text-sm font-medium text-muted-foreground transition-colors;
-  min-height: 40px;
+  /*
+   * 44, not 40.
+   *
+   * The Phase 7 sweep recorded the smallest target on every route and found
+   * these sitting four pixels under the floor this design system claims — on
+   * the category chips, which are the most-tapped control in the consumer
+   * product and the one people reach for while holding a phone at the roadside.
+   * A rule the tests enforce at 40 while the documentation says 44 is not a
+   * rule; it is a number nobody checked.
+   */
+  min-height: 44px;
 }
 .ra-chip[aria-pressed="true"],
 .ra-chip[data-active="true"] {

@@ -1,10 +1,5 @@
 export type BookingStatus =
-  | "new"
-  | "contacted"
-  | "accepted"
-  | "completed"
-  | "declined"
-  | "cancelled";
+  "new" | "contacted" | "accepted" | "completed" | "declined" | "cancelled";
 
 /**
  * How delivery reads to a human.

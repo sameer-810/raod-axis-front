@@ -136,7 +136,9 @@ export function AdminBusinessesPage() {
       </div>
 
       {isLoading ? (
-        <div className="ra-panel px-4 py-12 text-center text-sm text-muted-foreground">Loading…</div>
+        <div className="ra-panel px-4 py-12 text-center text-sm text-muted-foreground">
+          Loading…
+        </div>
       ) : items.length === 0 ? (
         <EmptyState
           title="No listings match"

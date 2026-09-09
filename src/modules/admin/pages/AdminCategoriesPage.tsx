@@ -133,12 +133,12 @@ export function AdminCategoriesPage() {
                     <p className="truncate font-mono text-xs text-muted-foreground">/{c.slug}</p>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
-                    <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <label className="ra-tap flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
                       <input
                         type="checkbox"
                         checked={c.isActive}
                         onChange={(e) => toggle(c.id, e.target.checked)}
-                        className="h-4 w-4 rounded border-input accent-primary"
+                        className="rounded border-input accent-primary"
                       />
                       <span className="hidden sm:inline">Shown</span>
                       <span className="sr-only sm:hidden">Show {c.name} publicly</span>
@@ -148,7 +148,7 @@ export function AdminCategoriesPage() {
                       onClick={() => destroy(c.id, c.name)}
                       aria-label={`Delete ${c.name}`}
                       title="Delete"
-                      className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                      className="ra-tap flex items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>

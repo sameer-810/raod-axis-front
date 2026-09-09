@@ -16,14 +16,14 @@ the client's own brochure rather than as we might have imagined it.
 This is the single most important decision in this file, and getting it wrong is the
 most likely way the build goes bad.
 
-|  | **Discovery** (public) | **Portal & Console** (authenticated) |
-| -- | -- | -- |
-| Who | A driver, on a phone, possibly at the roadside | An owner between jobs; an admin at a desk all day |
-| Job | Decide who to trust, then act | Process a queue |
-| Reads it | Once, for ninety seconds, under stress | Forty times a day for a year |
-| Wins by | Trust, clarity, reachable actions | Density, scanning speed, low noise |
-| Photography | **Is the content** | Absent |
-| Density | Generous | High |
+|             | **Discovery** (public)                         | **Portal & Console** (authenticated)              |
+| ----------- | ---------------------------------------------- | ------------------------------------------------- |
+| Who         | A driver, on a phone, possibly at the roadside | An owner between jobs; an admin at a desk all day |
+| Job         | Decide who to trust, then act                  | Process a queue                                   |
+| Reads it    | Once, for ninety seconds, under stress         | Forty times a day for a year                      |
+| Wins by     | Trust, clarity, reachable actions              | Density, scanning speed, low noise                |
+| Photography | **Is the content**                             | Absent                                            |
+| Density     | Generous                                       | High                                              |
 
 An interface tuned for the second is hostile as the first, and vice versa. Most local
 marketplaces fail by shipping an admin panel to consumers; most internal tools fail by
@@ -50,7 +50,7 @@ Six findings that changed decisions here, rather than a literature review.
    catalogue.** → search gets the most engineering per pixel of any screen, and the
    empty state is designed rather than defaulted.
 3. **Authentication friction at the conversion moment measurably depresses completion,
-   and the cost is worst on mobile.** Verification is best done *late* — after the
+   and the cost is worst on mobile.** Verification is best done _late_ — after the
    commitment, not before it. → guests browse everything; the account wall stands at
    exactly one door (D-005), and the form is filled in before it appears, never after.
 4. **6-digit codes with a 5–10 minute expiry are the usability/security balance.** Four
@@ -59,7 +59,7 @@ Six findings that changed decisions here, rather than a literature review.
 5. **One-time codes beat magic links when the user may be on a different device**, which
    at the roadside they usually are. → codes, not links.
 6. **The claim/verify pattern is settled by Google and Yelp**, and users have learned it:
-   the *platform* decides the verification method, the claimant does not choose; and the
+   the _platform_ decides the verification method, the claimant does not choose; and the
    moment after approval is when profile completion actually happens. → a single
    document-upload path, and an approval screen that leads straight into "add your
    WhatsApp number" rather than congratulating and stopping.
@@ -71,15 +71,15 @@ Six findings that changed decisions here, rather than a literature review.
 Taken from `provided RoadAxis_Platform_Brochure.pdf` by measuring the painted area of
 every fill in the document. This is the client's existing identity, not a proposal.
 
-| Token | Hex | Brochure role |
-| ----- | --- | ------------- |
-| Accent | `#FF7A00` | Headings, rules, emphasis |
-| Ink | `#0E1621` | The dominant dark surface |
-| Ink raised | `#1A232C` | Secondary dark panels |
-| Ground | `#F8FAFC` | Page background |
-| Surface | `#F3F4F6` | Muted fills |
-| Hairline | `#E5E7EB` | Every border in the document |
-| Text | `#111827` / `#374151` / `#6B7280` | A three-step hierarchy |
+| Token      | Hex                               | Brochure role                |
+| ---------- | --------------------------------- | ---------------------------- |
+| Accent     | `#FF7A00`                         | Headings, rules, emphasis    |
+| Ink        | `#0E1621`                         | The dominant dark surface    |
+| Ink raised | `#1A232C`                         | Secondary dark panels        |
+| Ground     | `#F8FAFC`                         | Page background              |
+| Surface    | `#F3F4F6`                         | Muted fills                  |
+| Hairline   | `#E5E7EB`                         | Every border in the document |
+| Text       | `#111827` / `#374151` / `#6B7280` | A three-step hierarchy       |
 
 Graphite and orange is a genuine automotive-trade palette — workshop, high-vis, tooling
 — and it is nothing like the blue every SaaS template defaults to. It is kept.
@@ -137,7 +137,7 @@ inherited.
 
 ### Why mono is not decoration here
 
-`font-mono` must be *declared*. Left undeclared, Tailwind falls through to Consolas on
+`font-mono` must be _declared_. Left undeclared, Tailwind falls through to Consolas on
 Windows, Menlo on macOS and something else on Linux, and every figure in a product whose
 job is comparing figures renders differently on every machine. It is declared in
 `tailwind.config.js`.
@@ -162,12 +162,12 @@ Weight ladder: 300 secondary · 400 body · 500 interactive · 600–700 heading
 
 Every panel is one of these. A screen needing a fifth is a wrong screen.
 
-| Class | Use | Elevation |
-| ----- | --- | --------- |
-| `.ra-panel` | Any in-page container — tables, stat tiles | none |
-| `.ra-tile` | As above, padded — prose or a chart | none |
-| `.ra-card` | A public business card, with imagery | none, hairline only |
-| `.ra-overlay` | Genuinely floats — dialog, menu, sheet, palette | `shadow-2xl` |
+| Class         | Use                                             | Elevation           |
+| ------------- | ----------------------------------------------- | ------------------- |
+| `.ra-panel`   | Any in-page container — tables, stat tiles      | none                |
+| `.ra-tile`    | As above, padded — prose or a chart             | none                |
+| `.ra-card`    | A public business card, with imagery            | none, hairline only |
+| `.ra-overlay` | Genuinely floats — dialog, menu, sheet, palette | `shadow-2xl`        |
 
 ## Banned outright
 
@@ -183,7 +183,7 @@ decide whom to trust or find a number:
   connection that is already slow; on the portal side it is 200 ms of nothing on a
   screen someone opens forty times a day.
 - **Decorative icon tiles** — a pastel rounded square holding a glyph beside a label.
-  It spends *colour* on ornament in a product where colour means status.
+  It spends _colour_ on ornament in a product where colour means status.
 - **Stock photography of generic mechanics.** The photographs on this product are the
   actual businesses'. A stock image next to a real one makes the real one look fake,
   which is the opposite of the job.

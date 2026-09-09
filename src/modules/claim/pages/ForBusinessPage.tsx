@@ -55,8 +55,8 @@ export function ForBusinessPage() {
             Start by finding your business
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            We've already listed thousands of garages. If yours is here, claiming it is quicker
-            than starting again.
+            We've already listed thousands of garages. If yours is here, claiming it is quicker than
+            starting again.
           </p>
 
           <form onSubmit={search} className="mt-4 flex flex-col gap-2 sm:flex-row">
@@ -109,7 +109,9 @@ export function ForBusinessPage() {
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium text-foreground">
                           {b.name}
-                          {b.claimStatus === "unclaimed" && <Badge className="ms-2">Unclaimed</Badge>}
+                          {b.claimStatus === "unclaimed" && (
+                            <Badge className="ms-2">Unclaimed</Badge>
+                          )}
                         </p>
                         <TrustRow
                           className="mt-1"
@@ -148,7 +150,10 @@ export function ForBusinessPage() {
         </section>
 
         <section aria-labelledby="what-you-get">
-          <h2 id="what-you-get" className="text-sm font-medium uppercase tracking-[0.08em] text-muted-foreground">
+          <h2
+            id="what-you-get"
+            className="text-sm font-medium uppercase tracking-[0.08em] text-muted-foreground"
+          >
             What you get
           </h2>
           <div className="mt-3 grid gap-3 sm:grid-cols-3">

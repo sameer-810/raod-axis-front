@@ -64,7 +64,10 @@ async function signInAsAdmin(page: Page) {
     ([t]) =>
       localStorage.setItem(
         "roadaxis_auth",
-        JSON.stringify({ accessToken: t, user: { id: "admin", name: "Admin", email: "a@b.c", role: "admin" } }),
+        JSON.stringify({
+          accessToken: t,
+          user: { id: "admin", name: "Admin", email: "a@b.c", role: "admin" },
+        }),
       ),
     [token],
   );
@@ -191,7 +194,9 @@ test.describe("Phase 2 · Search", () => {
     // session ends unless it says why and what to do next.
     await expect(page.getByText(/nothing here yet/i)).toBeVisible();
     await expect(
-      page.getByRole("button", { name: /search within/i }).or(page.getByRole("button", { name: /clear filters/i })),
+      page
+        .getByRole("button", { name: /search within/i })
+        .or(page.getByRole("button", { name: /clear filters/i })),
     ).toBeVisible();
   });
 
@@ -316,7 +321,10 @@ test.describe("Phase 2 · Map and list are one search", () => {
 test.describe("Phase 2 · The business profile", () => {
   test("a guest can read a full profile and act on it", async ({ page }) => {
     await page.goto(`/search?q=Ancoats Motor Works`);
-    await page.getByRole("link", { name: /Ancoats Motor Works/ }).first().click();
+    await page
+      .getByRole("link", { name: /Ancoats Motor Works/ })
+      .first()
+      .click();
 
     await expect(page).toHaveURL(/\/business\/ancoats-motor-works-/);
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Ancoats Motor Works");
@@ -327,7 +335,10 @@ test.describe("Phase 2 · The business profile", () => {
 
   test("directions open Google Maps with the coordinates the right way round", async ({ page }) => {
     await page.goto(`/search?q=Ancoats Motor Works`);
-    await page.getByRole("link", { name: /Ancoats Motor Works/ }).first().click();
+    await page
+      .getByRole("link", { name: /Ancoats Motor Works/ })
+      .first()
+      .click();
 
     const link = page.getByRole("link", { name: /directions/i }).first();
     await expect(link).toBeVisible();
@@ -341,7 +352,10 @@ test.describe("Phase 2 · The business profile", () => {
 
   test("an unclaimed listing invites its owner without warning the driver", async ({ page }) => {
     await page.goto(`/search?q=Northern Quarter Quick Fit`);
-    await page.getByRole("link", { name: /Northern Quarter Quick Fit/ }).first().click();
+    await page
+      .getByRole("link", { name: /Northern Quarter Quick Fit/ })
+      .first()
+      .click();
 
     await expect(page.getByText(/is this your business/i)).toBeVisible();
     await expect(page.getByRole("link", { name: /claim your business/i })).toBeVisible();
@@ -352,7 +366,10 @@ test.describe("Phase 2 · The business profile", () => {
 
   test("today is picked out in the opening hours", async ({ page }) => {
     await page.goto(`/search?q=Ancoats Motor Works`);
-    await page.getByRole("link", { name: /Ancoats Motor Works/ }).first().click();
+    await page
+      .getByRole("link", { name: /Ancoats Motor Works/ })
+      .first()
+      .click();
     await expect(page.getByText("(today)", { exact: false })).toHaveCount(1);
   });
 
@@ -376,7 +393,12 @@ test.describe("Phase 2 · Administration", () => {
     // Scoped to the page. The navigation gained an "Import listings" entry in
     // Phase 6, and on a phone that sits in the collapsed sidebar — so an
     // unscoped match resolves to something deliberately hidden.
-    await expect(page.getByRole("main").getByText(/listings/i).first()).toBeVisible();
+    await expect(
+      page
+        .getByRole("main")
+        .getByText(/listings/i)
+        .first(),
+    ).toBeVisible();
     await page.getByLabel("Search listings").fill("Deansgate");
     await expect(page.getByRole("link", { name: /Deansgate/ }).first()).toBeVisible();
   });
@@ -431,7 +453,10 @@ test.describe("Phase 2 · On a phone", () => {
 
   test("a business profile does not scroll sideways", async ({ page }) => {
     await page.goto(`/search?q=Deansgate`);
-    await page.getByRole("link", { name: /Deansgate/ }).first().click();
+    await page
+      .getByRole("link", { name: /Deansgate/ })
+      .first()
+      .click();
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
@@ -453,7 +478,10 @@ test.describe("Phase 2 · On a phone", () => {
 
   test("the profile actions stay within reach", async ({ page }) => {
     await page.goto(`/search?q=Deansgate`);
-    await page.getByRole("link", { name: /Deansgate/ }).first().click();
+    await page
+      .getByRole("link", { name: /Deansgate/ })
+      .first()
+      .click();
     // The URL, not the heading: the search page has an h1 too, so waiting on
     // one passes instantly and the measurement below is taken against a search
     // card that happens to be below the fold.
@@ -464,7 +492,10 @@ test.describe("Phase 2 · On a phone", () => {
     // twice — pinned to the bottom edge below `md`, inline above it — and only
     // one is ever shown. Taking the first in DOM order picks whichever the
     // markup happens to list first, which is not the one on screen.
-    const directions = page.locator('a:visible').filter({ hasText: /directions/i }).first();
+    const directions = page
+      .locator("a:visible")
+      .filter({ hasText: /directions/i })
+      .first();
     const box = await directions.boundingBox();
     const viewport = page.viewportSize()!;
     // Pinned above the tab bar. Someone on this page is nearly always about to
@@ -524,7 +555,10 @@ test.describe("Phase 2 · Accessibility", () => {
       );
       expect(levels[0], route).toBe(1);
       for (let i = 1; i < levels.length; i++) {
-        expect(levels[i] - levels[i - 1], `${route}: h${levels[i - 1]} → h${levels[i]}`).toBeLessThanOrEqual(1);
+        expect(
+          levels[i] - levels[i - 1],
+          `${route}: h${levels[i - 1]} → h${levels[i]}`,
+        ).toBeLessThanOrEqual(1);
       }
     }
   });
