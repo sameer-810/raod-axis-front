@@ -1,4 +1,12 @@
-import { LayoutDashboard, Store, ClipboardCheck, MessageSquare, Tags, ScrollText } from "lucide-react";
+import {
+  LayoutDashboard,
+  Store,
+  ClipboardCheck,
+  MessageSquare,
+  Tags,
+  ScrollText,
+  CalendarClock,
+} from "lucide-react";
 import type { Role } from "@/modules/auth/authSlice";
 
 export type MenuItem = {
@@ -38,7 +46,6 @@ export type MenuSection = {
  * is unreliable, and the first thing they do with an unreliable menu is stop
  * reading it.
  *
- * Phase 5 → Booking Requests (portal and console), WhatsApp Logs
  * Phase 6 → Reviews, Analytics, Users
  */
 const SECTIONS: MenuSection[] = [
@@ -48,6 +55,13 @@ const SECTIONS: MenuSection[] = [
   {
     heading: "My business",
     items: [
+      {
+        label: "Booking Requests",
+        shortLabel: "Requests",
+        to: "/portal/requests",
+        icon: CalendarClock,
+        roles: ["business_owner"],
+      },
       {
         label: "WhatsApp Numbers",
         shortLabel: "WhatsApp",
@@ -63,6 +77,18 @@ const SECTIONS: MenuSection[] = [
       { label: "Businesses", to: "/admin/businesses", icon: Store, roles: ["admin"] },
       { label: "Claims", to: "/admin/claims", icon: ClipboardCheck, roles: ["admin"] },
       { label: "Categories", to: "/admin/categories", icon: Tags, roles: ["admin"] },
+    ],
+  },
+  {
+    heading: "Operations",
+    items: [
+      {
+        label: "WhatsApp Logs",
+        shortLabel: "Logs",
+        to: "/admin/whatsapp-logs",
+        icon: MessageSquare,
+        roles: ["admin"],
+      },
     ],
   },
   {
@@ -110,9 +136,11 @@ export { SECTIONS };
  */
 const MOBILE_TAB_ORDER = [
   "/portal",
+  "/portal/requests",
   "/admin/claims",
   "/admin/businesses",
   "/portal/whatsapp",
+  "/admin/whatsapp-logs",
   "/admin/categories",
   "/admin/audit",
 ];

@@ -72,6 +72,24 @@ const PortalWhatsAppPage = lazy(() =>
 const AdminAuditPage = lazy(() =>
   import("./modules/admin/pages/AdminAuditPage").then((m) => ({ default: m.AdminAuditPage })),
 );
+const AdminWhatsAppLogsPage = lazy(() =>
+  import("./modules/admin/pages/AdminWhatsAppLogsPage").then((m) => ({
+    default: m.AdminWhatsAppLogsPage,
+  })),
+);
+const PortalRequestsPage = lazy(() =>
+  import("./modules/portal/pages/PortalRequestsPage").then((m) => ({
+    default: m.PortalRequestsPage,
+  })),
+);
+const RequestBookingPage = lazy(() =>
+  import("./modules/booking/pages/RequestBookingPage").then((m) => ({
+    default: m.RequestBookingPage,
+  })),
+);
+const MyRequestsPage = lazy(() =>
+  import("./modules/booking/pages/MyRequestsPage").then((m) => ({ default: m.MyRequestsPage })),
+);
 const AdminBusinessesPage = lazy(() =>
   import("./modules/admin/pages/AdminBusinessesPage").then((m) => ({
     default: m.AdminBusinessesPage,
@@ -115,8 +133,20 @@ export default function App() {
               authenticate with, because this person has never signed in. */}
           <Route path="accept-invite" element={<AcceptInvitePage />} />
 
-          {/* Phase 5 → business/:slug/request
-              Phase 6 → my-garages */}
+          {/* The one wall in the public product. The page itself is open — the
+              form is filled in before an account is asked for, and the draft is
+              kept across the sign-in detour. */}
+          <Route path="business/:slug/request" element={<RequestBookingPage />} />
+          <Route
+            path="my-requests"
+            element={
+              <RequireAuth>
+                <MyRequestsPage />
+              </RequireAuth>
+            }
+          />
+
+          {/* Phase 6 → my-garages */}
 
           <Route path="*" element={<NotFoundPage />} />
         </Route>
@@ -133,6 +163,7 @@ export default function App() {
           }
         >
           <Route index element={<PortalOverviewPage />} />
+          <Route path="requests" element={<PortalRequestsPage />} />
           <Route path="whatsapp" element={<PortalWhatsAppPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
@@ -152,6 +183,7 @@ export default function App() {
           <Route path="businesses/:id" element={<AdminBusinessFormPage />} />
           <Route path="claims" element={<AdminClaimsPage />} />
           <Route path="categories" element={<AdminCategoriesPage />} />
+          <Route path="whatsapp-logs" element={<AdminWhatsAppLogsPage />} />
           <Route path="audit" element={<AdminAuditPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>

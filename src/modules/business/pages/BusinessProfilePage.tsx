@@ -8,6 +8,7 @@ import {
   ArrowLeft,
   SearchX,
   MessageCircle,
+  CalendarClock,
 } from "lucide-react";
 import { TrustRow } from "@/shared/components/TrustRow";
 import { Badge } from "@/shared/components/Badge";
@@ -305,14 +306,26 @@ export function BusinessProfilePage() {
 function ProfileActions({
   business,
 }: {
-  business: { name: string; phone: string | null; directionsUrl: string | null };
+  business: { name: string; slug: string; phone: string | null; directionsUrl: string | null };
 }) {
   return (
     <>
+      {/*
+        The primary action, and the product's whole purpose. "Request a
+        Booking", never "Book" — a driver who turns up expecting a held slot is
+        a failure of copywriting (FR-BKG-10).
+      */}
+      <Link
+        to={`/business/${business.slug}/request`}
+        className="ra-tap flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 md:flex-none"
+      >
+        <CalendarClock className="h-4 w-4" aria-hidden="true" />
+        Request a Booking
+      </Link>
       {business.phone && (
         <a
           href={`tel:${business.phone}`}
-          className="ra-tap flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 md:flex-none"
+          className="ra-tap flex flex-1 items-center justify-center gap-2 rounded-lg border border-border px-4 text-sm font-medium transition-colors hover:bg-accent md:flex-none"
         >
           <Phone className="h-4 w-4" aria-hidden="true" />
           Call
