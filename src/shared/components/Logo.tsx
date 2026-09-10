@@ -15,13 +15,10 @@ export function Logo({
   className?: string;
   showWordmark?: boolean;
   /**
-   * The rail is dark in **both** themes.
-   *
-   * `--primary-text` is the orange darkened until it clears 4.5:1 against a
-   * light ground — which is exactly the wrong colour on a dark one, where it
-   * measured 3.35:1. This is not a dark-mode switch: the ordinary theme
-   * variables cannot express "this surface is dark regardless of the theme", so
-   * the caller that knows says so.
+   * The rail is dark in **both** themes. `--primary-text` is the orange darkened
+   * until it clears 4.5:1 against a light ground — which measured 3.35:1 on a dark
+   * one. Not a dark-mode switch: the theme variables cannot express "this surface
+   * is dark regardless of the theme", so the caller that knows says so.
    */
   onDark?: boolean;
 }) {

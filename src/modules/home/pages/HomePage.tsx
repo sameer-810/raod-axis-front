@@ -18,17 +18,13 @@ import { CategoryIcon } from "@/shared/components/CategoryIcon";
 import { useCategories, useFacets } from "@/modules/business/hooks/useBusinesses";
 
 /**
- * The workshop photograph behind the hero.
+ * The workshop photograph behind the hero. Unsplash — licensed for commercial use
+ * with no attribution required — hot-linked from their CDN.
  *
- * Unsplash, which licenses for commercial use with no attribution required, and
- * hot-linked from their CDN rather than served from our own box — it is faster
- * from anywhere in the country and costs nothing to store.
- *
- * It is a picture of *a* mechanic, never of a listed business. That distinction
- * is the whole reason there is no stock photography on the business cards: a
- * generic workshop shown on "Deansgate Tyre & Exhaust" reads as a photo of
- * their premises, which would be a small lie told about a real company.
- * Decorative imagery is honest here and dishonest there.
+ * It is a picture of *a* mechanic, never of a listed business. That distinction is
+ * the whole reason there is no stock photography on the business cards: a generic
+ * workshop shown on "Deansgate Tyre & Exhaust" reads as a photo of their premises,
+ * which would be a small lie told about a real company.
  */
 const HERO =
   "https://images.unsplash.com/photo-1615906655593-ad0386982a0f?ixlib=rb-4.1.0&q=72&fm=jpg&crop=entropy&cs=srgb";
@@ -37,14 +33,10 @@ const HERO =
  * The home page, which is still the search page.
  *
  * The hero **contains** the search rather than sitting above it. The rule that
- * matters — nothing stands between a driver with a flat tyre and the list of
- * tyre shops — is about the search staying in the first screenful, not about
- * the page being plain. A marketplace whose front door looks unfinished loses
- * people before the search is ever used, and the previous version of this page
- * was a heading, two inputs and a row of grey chips on white.
- *
- * So: one screen, one job, done with some confidence. Search first, then the
- * services people actually came for, then the pitch to garage owners.
+ * matters — nothing stands between a driver with a flat tyre and the list of tyre
+ * shops — is about the search staying in the first screenful, not about the page
+ * being plain. Search first, then the services people actually came for, then the
+ * pitch to garage owners.
  */
 export function HomePage() {
   const navigate = useNavigate();
@@ -128,14 +120,14 @@ export function HomePage() {
               <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
               Independent garages across the UK
             </p>
-            <h1 className="text-[32px] font-semibold leading-[1.1] tracking-tight text-white md:text-5xl">
+            <h1 className="text-[34px] font-bold leading-[1.02] text-white md:text-[3.6rem]">
               Find a garage
               <br />
               you can trust.
             </h1>
             <p className="mt-4 max-w-lg text-[15px] leading-relaxed text-white/80 md:text-lg">
-              Tyres, brakes, servicing, recovery — with opening hours, directions and a way to
-              reach them in one tap.
+              Tyres, brakes, servicing, recovery — with opening hours, directions and a way to reach
+              them in one tap.
             </p>
           </div>
 
@@ -230,7 +222,11 @@ export function HomePage() {
             <section aria-labelledby="browse">
               <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
                 <div>
-                  <h2 id="browse" className="text-xl font-semibold tracking-tight text-foreground">
+                  <p className="ra-eyebrow text-primary-text">Services</p>
+                  <h2
+                    id="browse"
+                    className="mt-2 text-2xl font-bold tracking-tight text-foreground"
+                  >
                     What do you need doing?
                   </h2>
                   <p className="mt-1 text-sm text-muted-foreground">
@@ -256,7 +252,11 @@ export function HomePage() {
                 {categories.map((c) => {
                   const count = countFor(c.slug);
                   return (
-                    <Link key={c.slug} to={`/search?category=${c.slug}`} className="ra-service-tile">
+                    <Link
+                      key={c.slug}
+                      to={`/search?category=${c.slug}`}
+                      className="ra-service-tile"
+                    >
                       <span className="ra-service-icon">
                         <CategoryIcon name={c.icon} className="h-5 w-5" />
                       </span>
@@ -278,11 +278,29 @@ export function HomePage() {
           )}
 
           {/* ── How it works ───────────────────────────────────────────── */}
-          <section aria-labelledby="how">
-            <h2 id="how" className="mb-4 text-xl font-semibold tracking-tight text-foreground">
-              How it works
-            </h2>
-            <ol className="grid gap-3 sm:grid-cols-3">
+          {/*
+            An editorial list, not three cards in a row.
+
+            "Three identical cards, each with an icon in a tinted circle" is the
+            single most recognisable fingerprint of a generated page, and the
+            previous version of this section was exactly that. A numbered list
+            with hairline rules, a big mono numeral and the copy given room reads
+            as something written; the same three facts, arranged by a person.
+          */}
+          <section
+            aria-labelledby="how"
+            className="lg:grid lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-10"
+          >
+            <div className="mb-5 lg:mb-0">
+              <p className="ra-eyebrow text-primary-text">How it works</p>
+              <h2
+                id="how"
+                className="mt-2 text-2xl font-bold tracking-tight text-foreground lg:text-3xl"
+              >
+                Three taps from a problem to a garage that answers.
+              </h2>
+            </div>
+            <ol className="divide-y divide-border border-t border-border">
               {[
                 {
                   icon: Search,
@@ -300,16 +318,25 @@ export function HomePage() {
                   body: "They reply to confirm. Open directions straight in Google Maps and drive over.",
                 },
               ].map((s, i) => (
-                <li key={s.title} className="ra-tile relative">
+                <li
+                  key={s.title}
+                  className="grid grid-cols-[3rem_minmax(0,1fr)] gap-4 py-5 sm:grid-cols-[4rem_minmax(0,1fr)]"
+                >
                   <span
-                    className="absolute end-4 top-4 font-mono text-3xl font-semibold tabular-nums text-muted-foreground/15"
+                    className="font-mono text-2xl font-medium tabular-nums text-primary-text sm:text-3xl"
                     aria-hidden="true"
                   >
-                    {i + 1}
+                    0{i + 1}
                   </span>
-                  <s.icon className="h-5 w-5 text-primary-text" aria-hidden="true" />
-                  <p className="mt-3 text-base font-semibold text-foreground">{s.title}</p>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
+                  <div>
+                    <p className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                      <s.icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                      {s.title}
+                    </p>
+                    <p className="mt-1.5 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
+                      {s.body}
+                    </p>
+                  </div>
                 </li>
               ))}
             </ol>
@@ -329,8 +356,8 @@ export function HomePage() {
                 <div>
                   <p className="text-base font-semibold text-foreground">Run a garage?</p>
                   <p className="mt-1 max-w-md text-sm text-muted-foreground">
-                    You may already be listed. Claim your listing to manage your details, hours
-                    and photos — free while we are building the network.
+                    You may already be listed. Claim your listing to manage your details, hours and
+                    photos — free while we are building the network.
                   </p>
                 </div>
               </div>

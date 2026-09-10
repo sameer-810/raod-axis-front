@@ -17,17 +17,15 @@ import type { WhatsAppNumber } from "../types";
 const MAX_NUMBERS = 2;
 
 /**
- * WhatsApp number management, shared by the owner's portal and the admin
- * console.
+ * WhatsApp number management, shared by the owner's portal and the admin console.
  *
- * One component for both, because the rules are identical and the only
- * difference is who is doing it — an administrator must give a reason when
- * switching somebody else's number off, and an owner need not. Two components
- * would drift, and the thing they would drift on is who can silence a
- * business's phone.
+ * One component for both: the rules are identical and the only difference is who
+ * is doing it — an administrator must give a reason when switching somebody else's
+ * number off. Two components would drift, and the thing they would drift on is who
+ * can silence a business's phone.
  *
- * The screen is built around one sentence at the top: **where the next booking
- * request will go**. Everything below it is how you change that answer.
+ * The screen is built around one sentence at the top: where the next booking
+ * request will go.
  */
 export function WhatsAppNumbers({
   businessId,

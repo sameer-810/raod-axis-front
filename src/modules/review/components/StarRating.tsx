@@ -4,12 +4,9 @@ import { cn } from "@/lib/utils";
 const LABELS = ["Poor", "Not great", "OK", "Good", "Excellent"];
 
 /**
- * Stars, read-only.
- *
- * The number is rendered as text alongside rather than left to the icons alone.
- * Five shapes at 16px is a picture a screen reader cannot describe and a
- * colour-blind reader has to count, and "4.6" is both smaller and more precise
- * than either.
+ * Stars, read-only. The number is rendered as text alongside rather than left to
+ * the icons: five shapes at 16px is a picture a screen reader cannot describe and
+ * a colour-blind reader has to count, and "4.6" is smaller and more precise.
  */
 export function StarDisplay({
   rating,
@@ -36,16 +33,12 @@ export function StarDisplay({
 }
 
 /**
- * Stars, as an input.
+ * Stars, as an input. A radio group rather than five buttons, so the keyboard
+ * behaviour people already know comes free and the browser enforces that exactly
+ * one is chosen. Each star carries its own word ("4 — Good"), which is what makes
+ * the scale comparable between people.
  *
- * A radio group rather than five buttons, so the keyboard behaviour a person
- * already knows — arrow keys move within the group, Tab leaves it — comes for
- * free and the browser enforces that exactly one is chosen. Each star carries
- * its own word ("4 — Good"), because "four stars" means different things to
- * different people and the word is what makes the scale comparable between them.
- *
- * The touch target is 44px on every star. On a phone this is the only control on
- * the form, and a 20px icon is a control most people miss on the first try.
+ * 44px touch target per star: on a phone this is the only control on the form.
  */
 export function StarInput({
   value,

@@ -13,12 +13,9 @@ import type { Session } from "../types";
 /**
  * Set a first password, from the link emailed when a claim is approved.
  *
- * The link *is* the credential — there is nothing else to authenticate with,
- * because this person has never signed in. So the page validates it before
- * showing the form and names the business it belongs to: a bare password box on
- * an anonymous page is asking for trust it has not earned, and the business
- * name is what tells a garage owner this is the thing they applied for a week
- * ago rather than a phishing attempt.
+ * The link *is* the credential — this person has never signed in — so the page
+ * validates it before showing the form and names the business it belongs to. A
+ * bare password box on an anonymous page asks for trust it has not earned.
  */
 export function AcceptInvitePage() {
   const [params] = useSearchParams();
@@ -54,8 +51,7 @@ export function AcceptInvitePage() {
     setError(null);
 
     // Checked here rather than server-side: the server has no second field to
-    // compare against, and a typo the user cannot see is the whole reason this
-    // field exists.
+    // compare against, and a typo the user cannot see is why this field exists.
     if (password !== confirm) {
       setError("The two passwords don't match.");
       return;

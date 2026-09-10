@@ -8,9 +8,7 @@ import { Logo } from "@/shared/components/Logo";
 
 /**
  * The desktop rail. Hidden below `md`, where MobileTabBar takes over.
- *
- * Brand-dark in both themes, matching the brochure's own surfaces, so the
- * product's identity is continuous whichever theme the user picked.
+ * Brand-dark in both themes, matching the brochure's own surfaces.
  */
 export function Sidebar() {
   const role = useAppSelector((s) => s.auth.user?.role);

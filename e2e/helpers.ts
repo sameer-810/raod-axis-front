@@ -24,12 +24,9 @@ export function parseColor(css: string): [number, number, number] {
 }
 
 /**
- * Contrast ratio between two colours, per WCAG 2.x.
- *
- * Implemented here rather than pulled from a package because it is fifteen
- * lines and it is the assertion the whole colour system rests on: RoadAxis
- * orange fails against white and passes against the brand ink, and every
- * primary button in the product depends on getting that the right way round.
+ * Contrast ratio between two colours, per WCAG 2.x. Implemented here rather than
+ * installed: fifteen lines, and it is the assertion the whole colour system
+ * rests on — RoadAxis orange fails against white and passes against the ink.
  */
 export function contrastRatio(a: string, b: string): number {
   const lum = (css: string) => {
@@ -46,16 +43,12 @@ export function contrastRatio(a: string, b: string): number {
 }
 
 /**
- * The colour actually painted behind an element, as a browser-side function
- * body — one implementation, injected wherever it is needed.
+ * The colour actually painted behind an element, as a browser-side function body.
  *
- * It is a string because Playwright serialises the function passed to
- * `page.evaluate` and cannot capture anything from this module's scope. Two
- * copies of this algorithm is exactly the drift that let a real failure hide:
- * the naive version stops at the first element with a `background-color` and
- * reports a warning badge — amber text on a 10% amber tint — as 1.00:1, a
- * catastrophe no user has ever seen, while a heading on a photographic hero is
- * measured against the *page* ground two hundred pixels away and reads 1.05:1.
+ * A string because Playwright serialises the function passed to `page.evaluate`
+ * and cannot capture this module's scope. One copy, because two drifted once: a
+ * version that stops at the first `background-color` reports a warning badge —
+ * amber text on a 10% amber tint — as 1.00:1.
  *
  * So: walk up, collect every layer, and composite them the way an eye does.
  */
@@ -86,11 +79,9 @@ export const GROUND_OF = `
 `;
 
 /**
- * The contrast ratio of one element's text against what is really behind it.
- *
- * Use this rather than reading `document.body`'s background: the hero paints
- * white text on ink over a photograph, and a body-ground measurement of it
- * returns a number describing nothing that exists on the screen.
+ * The contrast ratio of one element's text against what is really behind it. Use
+ * this rather than `document.body`'s background: the hero paints white on ink
+ * over a photograph, and a body-ground reading describes nothing on the screen.
  */
 export async function contrastOf(page: Page, selector: string): Promise<number> {
   const { color, background } = await page.evaluate(
@@ -118,59 +109,49 @@ export async function expectNoHorizontalOverflow(page: Page) {
 }
 
 /**
- * The floor itself, in one place.
- *
- * It was 40 here while DESIGN.md said 44, which meant four pixels of the rule
- * were documented and not enforced — and the Phase 7 route sweep found real
- * controls living in exactly that gap. A threshold that differs from the stated
- * rule is worse than no threshold, because it is quoted as if it were the rule.
+ * The touch floor, in one place. It was 40 here while DESIGN.md said 44 — four
+ * pixels of the rule documented and not enforced, and the Phase 7 route sweep
+ * found real controls living in exactly that gap.
  */
 export const TOUCH_FLOOR = 44;
 
 /**
- * Every interactive control must clear the touch floor.
+ * Every interactive control must clear the touch floor. Two exemptions:
  *
- * Two exemptions, both principled rather than convenient:
- *
- *  - **A link inside a sentence.** WCAG success criterion 2.5.8 excludes
- *    targets "in a sentence or block of text", because the alternative is a
- *    44px-tall word wrecking the line it sits on. Only inline links qualify; a
- *    standalone control that happens to be an anchor gets no relief.
+ *  - **A link inside a sentence.** WCAG 2.5.8 excludes targets "in a sentence or
+ *    block of text". Inline links only; a standalone anchor gets no relief.
  *  - **Anything hidden from assistive technology.** A visually-hidden input
- *    driven by a real button beside it is not a target anybody can hit, and
- *    counting it produces a failure with no user behind it.
+ *    driven by a real button beside it is not a target anybody can hit.
  */
 export async function expectTouchTargets(page: Page, context = "") {
-  const small = await page.evaluate((TOUCH_FLOOR) =>
-    Array.from(document.querySelectorAll("button, a[href], input, select, textarea"))
-      .filter((el) => {
-        const r = el.getBoundingClientRect();
-        if (r.width === 0 && r.height === 0) return false;
-        if (el.closest('[aria-hidden="true"]') || el.getAttribute("aria-hidden") === "true") {
-          return false;
-        }
-        if (el.tagName === "A" && getComputedStyle(el).display === "inline") return false;
-        /**
-         * A control wrapped in a label that is itself large enough.
-         *
-         * A 16px checkbox inside a 44px `<label>` has a 44px hit area — the
-         * label is what receives the tap, which is the whole reason for
-         * wrapping it. Measuring the input alone reports a failure with no
-         * user behind it.
-         */
-        const label = el.closest("label");
-        if (label) {
-          const lr = label.getBoundingClientRect();
-          if (lr.height >= TOUCH_FLOOR && lr.width >= TOUCH_FLOOR) return false;
-        }
-        return r.height < TOUCH_FLOOR || r.width < TOUCH_FLOOR;
-      })
-      .map(
-        (el) =>
-          `${el.tagName.toLowerCase()} "${el.textContent?.trim().slice(0, 24)}" ${Math.round(
-            el.getBoundingClientRect().height,
-          )}px`,
-      ),
+  const small = await page.evaluate(
+    (TOUCH_FLOOR) =>
+      Array.from(document.querySelectorAll("button, a[href], input, select, textarea"))
+        .filter((el) => {
+          const r = el.getBoundingClientRect();
+          if (r.width === 0 && r.height === 0) return false;
+          if (el.closest('[aria-hidden="true"]') || el.getAttribute("aria-hidden") === "true") {
+            return false;
+          }
+          if (el.tagName === "A" && getComputedStyle(el).display === "inline") return false;
+          /**
+           * A control wrapped in a label that is itself large enough. A 16px
+           * checkbox inside a 44px `<label>` has a 44px hit area — the label is
+           * what receives the tap, which is the whole reason for wrapping it.
+           */
+          const label = el.closest("label");
+          if (label) {
+            const lr = label.getBoundingClientRect();
+            if (lr.height >= TOUCH_FLOOR && lr.width >= TOUCH_FLOOR) return false;
+          }
+          return r.height < TOUCH_FLOOR || r.width < TOUCH_FLOOR;
+        })
+        .map(
+          (el) =>
+            `${el.tagName.toLowerCase()} "${el.textContent?.trim().slice(0, 24)}" ${Math.round(
+              el.getBoundingClientRect().height,
+            )}px`,
+        ),
     TOUCH_FLOOR,
   );
   expect(

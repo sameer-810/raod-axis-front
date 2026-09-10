@@ -23,15 +23,12 @@ import type { AdminClaim, ClaimStatus } from "@/modules/claim/types";
 /**
  * The review queue — FR-ONB-05, US-304.
  *
- * The screen that decides who controls a business's public listing, so it is
- * built around one question: **can I make this decision from what is on this
- * page?** Everything a reviewer needs is on it — the documents, the applicant's
- * details, the listing they are claiming, and any near-identical listing
- * already in the directory — and nothing else is.
+ * Built around one question: can I make this decision from what is on this page?
+ * The documents, the applicant's details, the listing being claimed, and any
+ * near-identical listing already in the directory — and nothing else.
  *
- * Oldest first, and that ordering is the product decision. A claim left four
- * days is more urgent than one filed this morning, and newest-first is how a
- * queue grows a tail nobody ever reaches.
+ * Oldest first: a claim left four days is more urgent than one filed this
+ * morning, and newest-first is how a queue grows a tail nobody reaches.
  */
 export function AdminClaimsPage() {
   const qc = useQueryClient();
@@ -201,7 +198,7 @@ function ClaimDetail({ claim, onDecided }: { claim: AdminClaim; onDecided: () =>
   });
 
   /**
-   * Documents are private and carry no Authorization header on a plain link, so
+   * Documents are private and a plain link carries no Authorization header, so
    * they are fetched with the session's token and shown from a blob URL.
    */
   async function open(doc: { id: string; filename: string; mimeType: string }) {

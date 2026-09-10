@@ -13,11 +13,9 @@ import { useAllReviews, useRemoveReview } from "@/modules/review/hooks/useReview
 import type { AdminReview } from "@/modules/review/types";
 
 /**
- * Review moderation — FR-SOC-05.
- *
- * Removal is soft, requires a reason and is written to the audit log. All three
- * are the same decision: the person who wrote the review will ask why it went,
- * and "an administrator removed it" with no record is an answer nobody can give.
+ * Review moderation — FR-SOC-05. Removal is soft, requires a reason and is
+ * audited: the person who wrote it will ask why it went, and "an administrator
+ * removed it" with no record is an answer nobody can give.
  */
 export function AdminReviewsPage() {
   const [includeRemoved, setIncludeRemoved] = useState(false);

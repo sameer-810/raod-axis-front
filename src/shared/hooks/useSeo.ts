@@ -2,14 +2,13 @@ import { useEffect } from "react";
 
 /**
  * @module useSeo
- * @description Per-page title, description, canonical URL and structured data.
+ * @description Per-page title, description, canonical URL and structured data —
+ * FR-SEO-03 and FR-SEO-04.
  *
- * FR-SEO-03 and FR-SEO-04. A single-page app serves one `index.html` for every
- * route, so without this every business profile in the directory shares one
- * title and one description — which is the same thing as having none. Google
- * executes JavaScript before indexing, so setting them here works; it is not the
- * same as server rendering, and the README says so plainly rather than implying
- * otherwise.
+ * A single-page app serves one `index.html` for every route, so without this every
+ * business profile shares one title and one description, which is the same as
+ * having none. Google executes JavaScript before indexing, so this works; it is
+ * not the same as server rendering, and the README says so plainly.
  *
  * Every tag written here is removed on unmount, so a stale description cannot
  * follow the user from a business profile onto the search page.
@@ -40,11 +39,9 @@ function upsertMeta(selector: string, create: () => HTMLElement): [HTMLElement, 
 
 export function useSeo({ title, description, canonical, noIndex, structuredData }: Seo) {
   /**
-   * The dependency is the serialised payload, not the object.
-   *
-   * Callers build the JSON-LD inline from query data, so the object identity
-   * changes on every render while its contents do not — depending on the object
-   * would tear down and rewrite the `<script>` tag on each one.
+   * The dependency is the serialised payload, not the object. Callers build the
+   * JSON-LD inline from query data, so the object identity changes on every render
+   * while its contents do not — and depending on it would rewrite the tag each time.
    */
   const structuredJson = structuredData ? JSON.stringify(structuredData) : null;
 
@@ -137,11 +134,9 @@ export function useSeo({ title, description, canonical, noIndex, structuredData 
 /**
  * A business profile as schema.org describes it — FR-SEO-04.
  *
- * `AutoRepair` rather than the generic `LocalBusiness`: it is the specific type
- * Google understands for this trade, and the specific type is what earns the
- * rating stars and opening hours in a result. An `aggregateRating` is emitted
- * only when there are reviews — Google penalises a rating of zero from no
- * reviews, and so it should.
+ * `AutoRepair` rather than the generic `LocalBusiness`: the specific type is what
+ * earns the rating stars and opening hours in a result. `aggregateRating` is
+ * emitted only when there are reviews — Google penalises a zero rating from none.
  */
 export function localBusinessJsonLd(business: {
   name: string;

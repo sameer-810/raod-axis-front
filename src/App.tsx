@@ -7,18 +7,14 @@ import { NotFoundPage } from "./app/router/NotFoundPage";
 import { PageLoader } from "./shared/components/PageLoader";
 
 /**
- * Two route trees, because RoadAxis is two products sharing one identity.
+ * Two route trees:
  *
  *   /            public, guest-first  → PublicLayout
  *   /portal/*    business owner       → AppLayout
  *   /admin/*     RoadAxis staff       → AppLayout
  *
- * Routes are added with the phase that builds them, so this file is an honest
- * inventory of what the product does rather than a map of what it might.
- *
- * Every page is lazy. A driver arriving on a business profile from a search
- * result should not download the admin console to see it — that split is most of
- * the difference between a 2.5s first paint on 4G and something much worse.
+ * Every page is lazy — a driver landing on a business profile from a search
+ * result should not download the admin console to see it.
  */
 const HomePage = lazy(() =>
   import("./modules/home/pages/HomePage").then((m) => ({ default: m.HomePage })),
@@ -121,6 +117,11 @@ const PortalAnalyticsPage = lazy(() =>
 const AdminReviewsPage = lazy(() =>
   import("./modules/admin/pages/AdminReviewsPage").then((m) => ({ default: m.AdminReviewsPage })),
 );
+const PortalListingPage = lazy(() =>
+  import("./modules/portal/pages/PortalListingPage").then((m) => ({
+    default: m.PortalListingPage,
+  })),
+);
 const AdminImportPage = lazy(() =>
   import("./modules/admin/pages/AdminImportPage").then((m) => ({ default: m.AdminImportPage })),
 );
@@ -191,6 +192,7 @@ export default function App() {
           }
         >
           <Route index element={<PortalOverviewPage />} />
+          <Route path="listing" element={<PortalListingPage />} />
           <Route path="requests" element={<PortalRequestsPage />} />
           <Route path="whatsapp" element={<PortalWhatsAppPage />} />
           <Route path="performance" element={<PortalAnalyticsPage />} />

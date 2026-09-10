@@ -21,9 +21,7 @@ export function useMediaQuery(query: string): boolean {
 
 /**
  * The one breakpoint the mobile layer switches on — Tailwind's `md`, 768px.
- *
- * Deliberately one, not a scale. Every mobile rule in DESIGN.md is expressed
- * against this single line, so there is never a state where the tab bar has
+ * Deliberately one, not a scale, so there is never a state where the tab bar has
  * appeared but the table has not become cards.
  */
 export function useIsMobile(): boolean {

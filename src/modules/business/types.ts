@@ -28,10 +28,8 @@ export interface BusinessService {
 
 /**
  * The trust row's data, and the two nullable fields that carry its rules.
- *
  * `averageRating: null` means no reviews — a new business, not a bad one — and
- * must render as nothing at all rather than as zero stars. `isOpen: null` means
- * the hours are unknown, which is not the same as closed. See DESIGN.md.
+ * `isOpen: null` means the hours are unknown, not that it is closed. See DESIGN.md.
  */
 interface Trust {
   isVerified: boolean;
@@ -56,8 +54,7 @@ export interface BusinessCard extends Trust {
   listedAt?: string | null;
   /**
    * Whether the signed-in driver has saved this — always `false` for a guest,
-   * never absent. An undefined on first paint is a heart that flickers on every
-   * card at once.
+   * never absent. Undefined on first paint is a heart that flickers on every card.
    */
   isFavourite?: boolean;
 }
@@ -85,11 +82,9 @@ export interface Business extends Trust {
   email: string | null;
   website: string | null;
   /**
-   * Active numbers only, each with a ready-made `wa.me` link.
-   *
-   * No `isPrimary`: which number a business routes automatic requests to is its
-   * internal arrangement, and surfacing it would nudge every driver onto the
-   * same one — the opposite of why there are two.
+   * Active numbers only, each with a ready-made `wa.me` link. No `isPrimary`:
+   * which number a business routes automatic requests to is its internal
+   * arrangement, and surfacing it would nudge every driver onto the same one.
    */
   whatsappNumbers: Array<{ id: string; label: string; phoneFormatted: string; waLink: string }>;
   workingHours: WorkingHoursDay[];
@@ -106,11 +101,9 @@ export interface Business extends Trust {
 export type SortOption = "distance" | "rating" | "newest";
 
 /**
- * Every filter, and every one of them is in the URL.
- *
- * FR-DIS-09: a search has to be shareable, bookmarkable and reachable with the
- * Back button. That means this object round-trips through the query string
- * rather than living in component state.
+ * Every filter, and every one of them is in the URL — FR-DIS-09. A search has to
+ * be shareable, bookmarkable and reachable with the Back button, so this object
+ * round-trips through the query string rather than living in component state.
  */
 export interface SearchFilters {
   search: string;

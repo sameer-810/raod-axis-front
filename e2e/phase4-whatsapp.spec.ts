@@ -10,10 +10,9 @@ import { API, expectNoHorizontalOverflow, expectTouchTargets } from "./helpers";
 /**
  * Phase 4 — WhatsApp numbers, admin control, and the audit trail.
  *
- * WhatsApp is this product's only conversation channel, so these two rows of
- * data decide whether a real business hears about a customer at all. The suite
- * follows both sides of that: an owner setting it up, and an administrator
- * intervening on somebody else's listing.
+ * These two rows of data decide whether a real business hears about a customer
+ * at all, so the suite follows both sides: an owner setting it up, and an
+ * administrator intervening on somebody else's listing.
  */
 
 const TAG = `p4${Date.now().toString(36)}`;
@@ -36,11 +35,10 @@ async function adminContext(): Promise<{ ctx: APIRequestContext; token: string }
 }
 
 /**
- * A listing with an owner who can actually sign in.
- *
- * Built through the product's own routes — an admin seeds the listing, creates
- * a staff account, and transfers ownership — so the access under test is the
- * access the product grants rather than a fixture that bypasses it.
+ * A listing with an owner who can actually sign in. Built through the product's
+ * own routes — an admin seeds the listing, creates a staff account, and
+ * transfers ownership — so the access under test is the access the product
+ * grants rather than a fixture that bypasses it.
  */
 async function seedOwnedBusiness(suffix: string) {
   const { ctx } = await adminContext();
@@ -219,7 +217,16 @@ test.describe("Phase 4 · What a driver sees", () => {
     await page.goto("/portal/whatsapp");
     await addNumber(page, "Customer Support", "07700900720");
     await addNumber(page, "Emergency", "07700900721");
+
+    // The toggle is optimistic — the screen changes before the server has.
+    // Navigating away on the optimistic state cancels the PATCH in flight, and
+    // the public page then truthfully shows a number that was never switched
+    // off. Wait for the write, not the paint.
+    const switchedOff = page.waitForResponse(
+      (r) => r.url().includes("/whatsapp-numbers/") && r.request().method() === "PATCH",
+    );
     await page.getByRole("checkbox", { name: /switch off emergency/i }).click();
+    expect((await switchedOff).status()).toBe(200);
 
     await page.evaluate(() => localStorage.clear());
     await page.goto(`/business/${business.slug}`);

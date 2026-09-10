@@ -4,9 +4,7 @@ import type { AdminClaim, ApplicantFields, Claim, ClaimStatus } from "../types";
 /**
  * Claims are submitted as multipart, because the ownership documents come with
  * them. The applicant has no account yet, so there is no separate authenticated
- * upload step to attach files to first — and asking them to register before
- * they know whether the claim will be accepted is friction at exactly the wrong
- * moment.
+ * upload step to attach files to first.
  */
 function toFormData(fields: Record<string, unknown>, documents: File[]) {
   const form = new FormData();
@@ -85,11 +83,9 @@ export const adminClaimApi = {
   },
 
   /**
-   * The only route by which an ownership document is reachable.
-   *
-   * Fetched with the session's token rather than linked directly — the file is
-   * private, and an `<img src>` or a plain anchor carries no Authorization
-   * header. The blob URL is revoked by the caller when the preview closes.
+   * The only route by which an ownership document is reachable. Fetched with the
+   * session's token rather than linked directly — the file is private, and an
+   * `<img src>` carries no Authorization header. The caller revokes the blob URL.
    */
   async documentUrl(claimId: string, mediaId: string) {
     const res = await http.get(`/claims/${claimId}/documents/${mediaId}`, {

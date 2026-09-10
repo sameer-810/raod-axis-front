@@ -1,16 +1,11 @@
 /**
  * @module geocode
- * @description Turning a typed place into coordinates.
+ * @description Turning a typed place into coordinates — the other half of
+ * FR-DIS-05, so someone who refuses location access can still search.
  *
- * This is the other half of FR-DIS-05: someone who refuses location access, or
- * whose device cannot get a fix, must still be able to search — and an empty
- * screen is not an acceptable answer to a declined permission.
- *
- * **postcodes.io** is used rather than a commercial geocoder. It is free, needs
- * no key, has no rate limit worth worrying about at this scale, and is UK-only —
- * which is exactly the market (DECISIONS.md D-001). A paid geocoder is the right
- * answer at Stage 3 when multi-country arrives; paying for one now to cover a
- * market we do not serve would be spending money to look thorough.
+ * **postcodes.io** rather than a commercial geocoder: free, no key, no rate limit
+ * worth worrying about at this scale, and UK-only, which is exactly the market
+ * (D-001). A paid geocoder is the right answer when multi-country arrives.
  *
  * It handles both a full postcode and a place name, which between them cover
  * nearly everything a driver types.

@@ -16,7 +16,15 @@
 @layer base {
   :root,
   .light {
-    --background: 210 40% 98%; /* #F8FAFC */
+    /*
+     * A warm off-white, not Tailwind's slate-50.
+     *
+     * #F8FAFC is the ground of ten thousand SaaS dashboards and reads as one.
+     * Two points of warmth is enough to feel like paper rather than a screen,
+     * and it suits a trade that works in daylight; it is still neutral enough
+     * that no contrast figure in this file moves by a measurable amount.
+     */
+    --background: 40 25% 98%; /* #FBFAF8 */
     --foreground: 221 39% 11%; /* #111827 */
     --card: 0 0% 100%;
     --card-foreground: 221 39% 11%;
@@ -152,10 +160,26 @@
   }
   html {
     font-family:
-      "Inter Tight",
+      "Instrument Sans",
       system-ui,
       -apple-system,
       sans-serif;
+    font-feature-settings: "cv11", "ss01";
+  }
+  /*
+   * Headings in the display face, with the optical size left to the browser.
+   * Bricolage's `opsz` axis is the reason it was chosen: an h1 at 48px and a
+   * card title at 15px are cut differently, not just scaled.
+   */
+  h1,
+  h2,
+  h3 {
+    font-family: "Bricolage Grotesque", "Instrument Sans", system-ui, sans-serif;
+    font-optical-sizing: auto;
+    letter-spacing: -0.01em;
+  }
+  h1 {
+    letter-spacing: -0.025em;
   }
 }
 
@@ -360,6 +384,39 @@ table,
     hsl(var(--muted));
 }
 
+/* ── Auth panel ────────────────────────────────────────────────────────── */
+.ra-auth-panel {
+  @apply relative isolate overflow-hidden;
+  background-color: hsl(var(--sidebar));
+}
+.ra-auth-panel-image {
+  @apply absolute inset-0 -z-10 h-full w-full object-cover;
+  object-position: 60% 30%;
+  opacity: 0.28;
+}
+.ra-auth-panel::after {
+  content: "";
+  @apply pointer-events-none absolute inset-0 -z-10;
+  background: linear-gradient(
+    to top,
+    hsl(var(--sidebar)) 8%,
+    hsl(var(--sidebar) / 0.55) 55%,
+    hsl(var(--sidebar) / 0.75) 100%
+  );
+}
+
+/**
+ * The eyebrow: a small mono label above a heading.
+ *
+ * An editorial device, and one of the cheapest signals that a page was
+ * composed by a person. Every heading in a generated layout sits alone; a label
+ * that says what *kind* of thing follows — "For drivers", "Step 2 of 2" — is
+ * the difference between a template and a document.
+ */
+.ra-eyebrow {
+  @apply font-mono text-[11px] font-medium uppercase tracking-[0.14em];
+}
+
 /* ── Service tiles ─────────────────────────────────────────────────────── */
 .ra-service-tile {
   @apply flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors;
@@ -450,7 +507,13 @@ table,
  * Only the hit box grows — the glyph looks the same size.
  */
 .ra-tap {
-  @apply relative;
+  /*
+   * No `position: relative` here — it used to be, and because this class is
+   * emitted after Tailwind's utilities it silently beat `absolute` on any
+   * element that carried both. The password "show" button on the staff sign-in
+   * was one: it rendered in normal flow, below the field, on top of the submit
+   * button's corner. A hit-area class has no business deciding positioning.
+   */
   min-height: 44px;
   min-width: 44px;
 }

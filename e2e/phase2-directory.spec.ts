@@ -4,9 +4,8 @@ import { API, expectNoHorizontalOverflow } from "./helpers";
 /**
  * Phase 2 — discovery, through the real interface.
  *
- * Everything here runs as a **guest**. That is the point: a discovery
- * marketplace that asks you to sign in before you can look has no discovery in
- * it, and this suite is what stops that regression reaching production.
+ * Everything here runs as a **guest**: a discovery marketplace that asks you to
+ * sign in before you can look has no discovery in it.
  *
  * Requires the demo directory:
  *   cd raod-axis-back && npm run seed:categories && npm run seed:demo
@@ -31,16 +30,10 @@ async function adminToken() {
 }
 
 /**
- * Reach the filter controls, wherever this viewport keeps them.
- *
- * Desktop renders them inline above the results; below `md` they move into a
- * sheet behind a Filters button, because rendered inline on a phone they are
- * roughly a screen and a half of form standing between the driver and the first
- * record.
- *
- * A test that clicks them directly therefore passes on one profile and fails on
- * the other — which is a property of the test, not of the product. This opens
- * the sheet when there is one and applies the changes either way.
+ * Reach the filter controls, wherever this viewport keeps them. Desktop renders
+ * them inline above the results; below `md` they move into a sheet behind a
+ * Filters button. A test that clicks them directly passes on one profile and
+ * fails on the other, which is a property of the test rather than the product.
  */
 async function withFilters(page: Page, act: () => Promise<void>) {
   // Settle first. `isVisible()` is a synchronous snapshot with no waiting in
@@ -85,10 +78,9 @@ test.describe("Phase 2 · The home page is the search page", () => {
   test("services are reachable in the first screenful", async ({ page }) => {
     await page.goto("/");
     /*
-      A prefix match, not an exact one. These are tiles now rather than chips,
-      and each carries its own count — "Tyres 11 places" — which is the whole
-      reason the tile is better than the chip it replaced: it says in advance
-      whether tapping it is worth the tap.
+      A prefix match, not an exact one. These are tiles now rather than chips and
+      each carries its own count — "Tyres 11 places" — which is why the tile is
+      better: it says in advance whether tapping it is worth the tap.
     */
     const tile = page.getByRole("link", { name: /^Tyres\b/ });
     await expect(tile).toBeVisible();
@@ -309,9 +301,12 @@ test.describe("Phase 2 · Map and list are one search", () => {
     await page.goto(`/search${NEAR}`);
     // A map answers "where"; a list answers "which". Someone who already knows
     // roughly where they are is choosing.
-    await expect(page.getByRole("button", { name: "List" })).toHaveAttribute(
+    // `exact`: a card's "Save Checklist Motors to My Garages" button also
+    // matches a substring "List" once another spec has left that fixture here.
+    await expect(page.getByRole("button", { name: "List", exact: true })).toHaveAttribute(
       "aria-pressed",
       "true",
+      { timeout: 20_000 },
     );
   });
 
@@ -348,9 +343,8 @@ test.describe("Phase 2 · The business profile", () => {
 
     /*
       The visible copy. The profile renders its actions twice — a sticky rail
-      above `lg`, a pinned bottom bar below it — and only one is ever displayed,
-      so `.first()` in DOM order picks whichever the markup happens to list
-      first rather than the one on screen.
+      above `lg`, a pinned bottom bar below it — and only one is displayed, so
+      `.first()` picks whichever the markup happens to list first.
     */
     const link = page
       .getByRole("link", { name: /directions/i })
@@ -441,13 +435,10 @@ test.describe("Phase 2 · Administration", () => {
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await withFilters(page, async () => {
       /*
-        Text, not a role: the same filter is a checkbox in the desktop rail and
-        a chip button in the phone sheet, and this assertion is about the
-        category having reached the public product at all.
-
-        `filter({ visible: true })` because both layouts are in the DOM at every
-        width — one of them is display:none — so `.first()` picks whichever
-        comes first in source order and, on a phone, that is the hidden one.
+        Text, not a role: the same filter is a checkbox in the desktop rail and a
+        chip button in the phone sheet. `filter({ visible: true })` because both
+        layouts are in the DOM at every width — one is display:none — so
+        `.first()` picks the hidden one on a phone.
       */
       await expect(
         page.getByText(name, { exact: true }).filter({ visible: true }).first(),
@@ -526,13 +517,9 @@ test.describe("Phase 2 · On a phone", () => {
       .filter({ hasText: /directions/i })
       .first();
     /**
-     * Asserted visible before it is measured.
-     *
-     * `boundingBox()` does not auto-wait for visibility — it returns `null` the
-     * moment the element is attached but not yet painted, and the test then
-     * dies on `null.y` with a message about a property rather than about the
-     * layout it was checking. `toBeVisible` retries; the measurement that
-     * follows is then always of something on screen.
+     * Asserted visible before it is measured. `boundingBox()` does not auto-wait
+     * for visibility — it returns `null` while the element is attached but not
+     * yet painted, and the test then dies on `null.y`.
      */
     await expect(directions).toBeVisible();
     const box = await directions.boundingBox();

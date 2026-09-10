@@ -16,18 +16,11 @@ const pct = (value: number | null | undefined) =>
   value === null || value === undefined ? "—" : `${value}%`;
 
 /**
- * The platform dashboard — FR-ADM-07.
+ * The platform dashboard — FR-ADM-07. Two rules run through the screen:
  *
- * Every figure in PRD §6 that can be measured, and an honest gap where one
- * cannot. Two rules run through the whole screen:
- *
- *  1. **A rate computed from nothing renders "—", never 0% or 100%.** The
- *     delivery figure is the sharp case: in deep-link mode nothing is trackable,
- *     and a confident "100%" here is the exact failure the WhatsApp log screen
- *     exists to prevent.
- *  2. **A business with no reviews shows no rating**, not nought stars — the same
- *     rule as the trust row, because this table is read by the people who decide
- *     which listings to chase.
+ *  1. A rate computed from nothing renders "—", never 0% or 100%. Delivery is
+ *     the sharp case: in deep-link mode nothing is trackable.
+ *  2. A business with no reviews shows no rating, not nought stars.
  */
 export function AdminAnalyticsPage() {
   const [days, setDays] = useState(30);

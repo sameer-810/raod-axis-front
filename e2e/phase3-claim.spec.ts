@@ -5,9 +5,8 @@ import { API, expectNoHorizontalOverflow, expectTouchTargets } from "./helpers";
  * Phase 3 — ownership, through the real interface.
  *
  * The most consequential journey in the product: at the end of it a stranger
- * controls a business's public listing. So this suite follows the whole thing —
- * apply as a guest, be reviewed by an administrator, set a password, reach the
- * portal — rather than testing the screens in isolation.
+ * controls a business's public listing. So this follows the whole thing — apply
+ * as a guest, be reviewed by an administrator, set a password, reach the portal.
  */
 
 const TAG = `c3${Date.now().toString(36)}`;
@@ -82,13 +81,10 @@ async function applyOnPage(page: Page, suffix: string, files = [licence()]) {
   await page.locator('input[type="file"]').setInputFiles(files);
 
   /**
-   * Wait for the application to actually land.
-   *
-   * The submission carries the ownership documents, so with a real media
-   * provider configured it is an upload to Cloudinary rather than a write to a
-   * local disk — hundreds of milliseconds, not tens. A caller that navigates
-   * straight after the click cancels the request in flight, and the failure
-   * surfaces much later as an empty queue, which reads as a bug in the queue.
+   * Wait for the application to actually land. The submission carries the
+   * ownership documents, so with a real media provider it is an upload to
+   * Cloudinary — hundreds of milliseconds. Navigating straight after the click
+   * cancels it, and the failure surfaces later as an empty queue.
    */
   // `/claims/business/:id` for an existing listing, `/claims/register` for a new
   // one — this helper drives the first, but matching both keeps it honest if a

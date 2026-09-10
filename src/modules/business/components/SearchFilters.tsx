@@ -4,12 +4,9 @@ import { formatDistance } from "@/shared/lib/format";
 import type { Category, SearchFilters as Filters } from "../types";
 
 /**
- * The radius presets.
- *
- * Taken from the client's own words — "nearby 500m - 2km" — and extended
- * upwards, because 2 km is a city-centre assumption and a driver in a rural
- * county needs 10. Stored in metres always; how they *read* is
- * `formatDistance`'s job and follows the unit setting (DECISIONS.md D-002).
+ * The radius presets. Taken from the client's own words — "nearby 500m - 2km" —
+ * and extended upwards, because 2 km is a city-centre assumption and a rural
+ * driver needs 10. Stored in metres; how they read is `formatDistance`'s job (D-002).
  */
 const RADII = [500, 1000, 2000, 5000, 10000];
 
@@ -19,24 +16,18 @@ export interface FacetCount {
 }
 
 /**
- * The filter controls: a persistent rail on a desktop, a sheet on a phone.
+ * The filter controls: a persistent rail on desktop, a sheet on a phone. Two
+ * genuinely different controls, not one control at two widths.
  *
- * The two layouts are genuinely different controls, not one control at two
- * widths — which is the mistake this component used to make.
+ *  - **`rail`** — a permanent column beside the results, so reaching a filter
+ *    costs nothing. Categories are a checkbox list: eleven scan vertically in one
+ *    glance and each can carry a count.
+ *  - **`sheet`** — a phone. The same filters live behind one button and
+ *    categories become a horizontal strip; eleven wrapped chips at 390px is four
+ *    rows of navigation between a driver and the first result.
  *
- *  - **`rail`** is a column beside the results, permanently on screen. Filters
- *    get used repeatedly here, so the interaction cost of reaching them has to
- *    be zero, and categories become a *checkbox list* — eleven of them scan
- *    vertically in one glance and each can carry a count.
- *  - **`sheet`** is a phone. There is no room for a permanent rail, so the same
- *    filters live behind one button and categories become a horizontal strip:
- *    eleven wrapped chips at 390px is four rows of navigation standing between
- *    a driver and the first result.
- *
- * Sorting is deliberately absent from both. It is not a filter — it does not
- * change *which* results exist — and on a desktop it belongs in the results
- * header next to the count, which is where every product this competes with
- * puts it.
+ * Sorting is absent from both: it is not a filter — it does not change *which*
+ * results exist — and on desktop it belongs in the results header by the count.
  */
 export function SearchFiltersPanel({
   filters,
@@ -114,9 +105,8 @@ export function SearchFiltersPanel({
           /*
             A checkbox list, not chips. Eleven categories scan vertically in one
             glance, each row is a 44px target without any styling effort, and
-            there is room for the count — which is the single most useful thing
-            a filter can tell you, because it says in advance whether ticking it
-            will empty the page.
+            there is room for the count — which says in advance whether ticking
+            it will empty the page.
           */
           <ul className="-mx-1.5 space-y-0.5">
             {categories.map((c) => {

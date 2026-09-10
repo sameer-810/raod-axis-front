@@ -8,11 +8,9 @@ import { clearAuth, setAuth, type AuthUser } from "../authSlice";
 import type { Session } from "../types";
 
 /**
- * Where a given role belongs after signing in.
- *
- * A driver signs in *because they were doing something* — requesting a booking,
- * saving a garage — so they go back to it, and the caller's `returnTo` always
- * wins. Staff have a home, and it is the portal.
+ * Where a given role belongs after signing in. A driver signs in *because they
+ * were doing something*, so the caller's `returnTo` always wins. Staff have a
+ * home, and it is the portal.
  */
 function landingFor(user: AuthUser): string {
   return user.role === "driver" ? "/" : "/portal";
@@ -27,8 +25,7 @@ export function useAuth() {
     (session: Session, returnTo?: string | null) => {
       dispatch(setAuth(session));
       // The cache belongs to whoever was signed in a moment ago. Anything held
-      // from a previous session — or from browsing as a guest, where a business
-      // card did not know it was already saved — is now wrong.
+      // from a previous session — or from browsing as a guest — is now wrong.
       queryClient.clear();
       navigate(returnTo || landingFor(session.user), { replace: true });
     },

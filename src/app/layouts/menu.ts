@@ -15,9 +15,9 @@ import type { Role } from "@/modules/auth/authSlice";
 export type MenuItem = {
   label: string;
   /**
-   * Label for the mobile tab bar, where a fifth of a 390px screen is all a tab
-   * gets. "Booking Requests" renders as "Booking…", which is worse than a
-   * shorter true name.
+   * Label for the mobile tab bar, where a tab gets a fifth of a 390px screen.
+   * "Booking Requests" renders as "Booking…", which is worse than a shorter
+   * true name.
    */
   shortLabel?: string;
   to?: string;
@@ -35,21 +35,14 @@ export type MenuSection = {
  * The authenticated navigation, shared by the Business Portal and the Admin
  * Console.
  *
- * One menu rather than two, filtered by role. Two menus drift: a route gets
- * added to one and not the other, and the difference is discovered by a user
- * who cannot reach a page they are entitled to. Empty sections are dropped, so
- * an owner never sees an "Administration" heading with nothing under it.
+ * One menu filtered by role rather than two. Two menus drift: a route gets added
+ * to one and not the other. Empty sections are dropped, so an owner never sees
+ * an "Administration" heading with nothing under it.
  */
 /**
- * Only destinations that exist.
- *
- * Items are added with the phase that builds them, exactly as routes are in
- * App.tsx and endpoints are in the API's `routes/index.js`. A menu advertising
- * screens that 404 is worse than a short menu: it teaches people the navigation
- * is unreliable, and the first thing they do with an unreliable menu is stop
- * reading it.
- *
- * Phase 7 → nothing new; it is the mobile, accessibility and regression pass.
+ * Only destinations that exist. Items are added with the phase that builds them,
+ * exactly as routes are in App.tsx — a menu advertising screens that 404 teaches
+ * people the navigation is unreliable, and they stop reading it.
  */
 const SECTIONS: MenuSection[] = [
   {
@@ -58,6 +51,13 @@ const SECTIONS: MenuSection[] = [
   {
     heading: "My business",
     items: [
+      {
+        label: "My Listing",
+        shortLabel: "Listing",
+        to: "/portal/listing",
+        icon: Store,
+        roles: ["business_owner"],
+      },
       {
         label: "Booking Requests",
         shortLabel: "Requests",
@@ -142,19 +142,16 @@ export { SECTIONS };
 /**
  * Destination priority for the mobile tab bar, most-used first.
  *
- * A bottom bar holds four destinations plus "More" before labels start
- * truncating at 390px, so this is a ranking rather than a menu: the first four a
- * given role can see become tabs and the rest stay in the sheet.
- *
- * Ordered by daily reach, not by the sidebar's subject grouping. An owner opens
- * Booking Requests every day and Settings twice a year; the sidebar — organised
- * by subject, correctly, for a screen with room for everything — gives no weight
- * to that. The admin's Claims sits high for the same reason: in the first months
- * clearing the claim queue is most of the job.
+ * A ranking rather than a menu: the first four a role can see become tabs and
+ * the rest stay in the sheet. Ordered by daily reach, not by the sidebar's
+ * subject grouping — an owner opens Booking Requests every day and Settings
+ * twice a year, and the admin's Claims sits high because in the first months
+ * clearing that queue is most of the job.
  */
 const MOBILE_TAB_ORDER = [
   "/portal",
   "/portal/requests",
+  "/portal/listing",
   "/admin/claims",
   "/admin/businesses",
   "/portal/whatsapp",
@@ -164,11 +161,9 @@ const MOBILE_TAB_ORDER = [
 ];
 
 /**
- * The four tabs for a role, in bar order.
- *
- * Resolved against the same role-filtered menu the sidebar uses, so a permission
- * can never be granted here that the sidebar would deny — the bar is a view onto
- * the menu, never a second copy of it.
+ * The four tabs for a role, in bar order. Resolved against the same
+ * role-filtered menu the sidebar uses, so a permission can never be granted here
+ * that the sidebar would deny.
  */
 export function mobileTabs(role: Role | undefined): MenuItem[] {
   const allowed = new Map(

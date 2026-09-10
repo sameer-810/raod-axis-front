@@ -6,10 +6,9 @@ import { initials } from "@/shared/lib/format";
  * One record as a card — what replaces a table row below `md` in the portal and
  * console.
  *
- * A table works by letting the eye run down an aligned column, and that
- * mechanism needs width. At 390px there is none, so a table degrades into
- * sideways panning: the cost of a table (only three columns visible) without
- * its benefit (comparing figures seen at once). A card gives the alignment up
+ * A table works by letting the eye run down an aligned column, and that mechanism
+ * needs width. At 390px there is none, so a table degrades into sideways panning:
+ * the cost of a table without its benefit. A card gives up the alignment
  * deliberately and keeps each record whole.
  */
 export function RecordCard({

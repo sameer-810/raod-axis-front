@@ -2,12 +2,10 @@ import { http } from "@/shared/api/http";
 import type { NumbersResult, WhatsAppNumber } from "../types";
 
 /**
- * The whole collection comes back from every write.
- *
- * The invariants are collective — exactly one Primary, at most two numbers,
- * routing that falls through — so patching a single row into local state would
- * leave the client to recompute them and get it wrong. The list is two items
- * long; there is nothing to save by being clever.
+ * The whole collection comes back from every write. The invariants are collective
+ * — exactly one Primary, at most two numbers, routing that falls through — so
+ * patching a single row into local state would leave the client to recompute them
+ * and get it wrong.
  */
 function unwrap(res: {
   data: { data: WhatsAppNumber[]; meta?: { warning?: string } };

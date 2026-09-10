@@ -11,9 +11,9 @@ export interface CodeChallenge {
   isNew: boolean;
   expiresInMinutes: number;
   /**
-   * Which channels the codes actually reached. The interface tells someone to
-   * check their email and WhatsApp only for the ones that worked — telling them
-   * to wait for a message that was never sent is worse than saying nothing.
+   * Which channels the codes actually reached. The interface names only the ones
+   * that worked — telling someone to wait for a message that was never sent is
+   * worse than saying nothing.
    */
   delivery: { email: boolean; whatsapp: boolean };
   /**

@@ -4,14 +4,9 @@ import type { WorkingHoursDay } from "../types";
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 /**
- * The week, with today marked.
- *
- * Rendered Monday-first because that is how a UK reader expects a week, while
- * the data is Sunday-indexed to match JavaScript's own `getDay()` — converting
- * once here is cheaper than a translation layer in every query.
- *
- * Today's row is picked out because "is it open now" is the question, and
- * making someone count rows to find Thursday is work the interface should do.
+ * The week, with today marked. Rendered Monday-first because that is how a UK
+ * reader expects a week, while the data is Sunday-indexed to match `getDay()`.
+ * Today's row is picked out because "is it open now" is the question.
  */
 export function OpeningHours({
   hours,

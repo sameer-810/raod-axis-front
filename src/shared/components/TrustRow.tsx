@@ -7,24 +7,18 @@ import { formatDistance, formatRating } from "@/shared/lib/format";
  *
  *     [Verified ✓]   [4.6 ★ (23)]   [Open now]   [1.2 km]
  *
- * The research on marketplaces is unambiguous that trust is the thing being
- * sold and has to be designed in explicitly rather than assumed. This component
- * is that design, and it exists as one component precisely so the order cannot
- * drift between the search card, the map popup and the profile header — the eye
- * learns one position per fact and then stops reading labels.
+ * One component precisely so the order cannot drift between the search card, the
+ * map popup and the profile header — the eye learns one position per fact and then
+ * stops reading labels.
  *
- * Three rules are encoded here rather than left to each caller, because each of
- * them was gettable wrong and damaging:
+ * Three rules are encoded here rather than left to each caller:
  *
- *  1. **No reviews shows nothing.** Not "0.0 ★", not "No reviews yet" in red. A
- *     new business has not failed; rendering a zero rating is a libel we
- *     generated ourselves out of an absence of data.
- *  2. **Unverified shows nothing.** "Verified" is a positive claim we can
- *     substantiate from a reviewed document. "Unverified" is an accusation we
- *     cannot — most unverified businesses are simply ones nobody has claimed yet.
- *  3. **Closed is stated, not hidden.** This is the one negative worth showing,
- *     because a driver who drives to a closed garage has been actively misled,
- *     and it is muted rather than red because being shut at 9pm is normal.
+ *  1. **No reviews shows nothing.** Not "0.0 ★". A new business has not failed;
+ *     rendering a zero rating is a libel we generated out of an absence of data.
+ *  2. **Unverified shows nothing.** "Verified" is a claim we can substantiate;
+ *     "unverified" is an accusation we cannot — most are simply unclaimed.
+ *  3. **Closed is stated, not hidden.** A driver who drives to a closed garage has
+ *     been misled. Muted rather than red: being shut at 9pm is normal.
  */
 export function TrustRow({
   verified,

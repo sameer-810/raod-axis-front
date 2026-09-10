@@ -8,15 +8,12 @@ import { useSeo } from "@/shared/hooks/useSeo";
 import { useFavourites } from "../hooks/useFavourites";
 
 /**
- * My Garages — FR-SOC-06.
+ * My Garages — FR-SOC-06. The retention screen: a driver with three saved garages
+ * has a reason to open RoadAxis next time something goes wrong; one with none has
+ * a WhatsApp thread with the garage they used last.
  *
- * The retention screen. A driver with three saved garages has a reason to open
- * RoadAxis next time something goes wrong; a driver with none has a WhatsApp
- * thread with the garage they used last, and no reason at all.
- *
- * The empty state therefore does the real work on this page. "Nothing saved" is
- * a dead end; this one says what saving is for and puts the way to start one tap
- * away.
+ * The empty state does the real work here. "Nothing saved" is a dead end; this
+ * one says what saving is for and puts the way to start one tap away.
  */
 export function MyGaragesPage() {
   const { isSignedIn } = useAuth();

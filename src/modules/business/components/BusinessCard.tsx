@@ -9,33 +9,27 @@ import { SaveButton } from "@/modules/favourite/components/SaveButton";
 import type { BusinessCard as BusinessCardType } from "../types";
 
 /**
- * One search result.
+ * One search result — the most-repeated element in the product, so its decisions
+ * compound:
  *
- * The most-repeated element in the product, so its decisions compound:
- *
- *  - **The whole card is a link**, with the name as the anchor. Keyboard users,
- *    screen readers and "copy link address" all work; the enlarged hit area is
- *    an enhancement layered on a real `<a href>`, never a replacement for one.
- *  - **Directions sits outside that link**, because for a large share of
- *    sessions it is the terminal action — someone who already knows the garage
- *    wants the route, not the profile — and burying it one tap deeper costs
- *    them a page load at the roadside.
- *  - **The trust row is the same four facts in the same order** as everywhere
- *    else. That is the whole point of it being a component.
- *  - **"Unclaimed" is addressed to owners, not drivers.** It is neutral
- *    information with an invitation attached, not a warning about the business.
+ *  - **The whole card is a link**, with the name as the anchor. The enlarged hit
+ *    area is layered on a real `<a href>`, never a replacement for one.
+ *  - **Directions sits outside that link**, because for a large share of sessions
+ *    it is the terminal action, and burying it a tap deeper costs a page load at
+ *    the roadside.
+ *  - **The trust row is the same four facts in the same order** as everywhere else.
+ *  - **"Unclaimed" is addressed to owners, not drivers** — an invitation, not a
+ *    warning about the business.
  */
 export function BusinessCard({ business }: { business: BusinessCardType }) {
   const href = `/business/${business.slug}`;
   const directions = business.coordinates ? googleMapsDirections(business.coordinates) : null;
 
   /*
-    Category names and the town, joined only where both exist.
-
-    Built with `filter(Boolean)` rather than by interpolating a separator,
-    because a listing with no category rendered "· Manchester" — a dangling
-    punctuation mark that looks like a missing field, on every imported record
-    in the directory.
+    Category names and the town, joined only where both exist. `filter(Boolean)`
+    rather than interpolating a separator, because a listing with no category
+    rendered "· Manchester" — a dangling punctuation mark that looks like a
+    missing field, on every imported record in the directory.
   */
   const subtitle = [
     business.categories
@@ -66,14 +60,10 @@ export function BusinessCard({ business }: { business: BusinessCardType }) {
             />
           ) : (
             /*
-              A designed absence, not a broken-image glyph.
-
-              Most listings in a seeded directory have no photograph and never
-              will — an administrator imports two hundred garages from a
-              spreadsheet and none of them arrive with pictures. A grey square
-              with a crossed-out camera in it says "this is broken" two hundred
-              times; the trade's own icon on a warm ground says "no photo yet"
-              once and then gets out of the way.
+              A designed absence, not a broken-image glyph. Most listings in a
+              seeded directory have no photograph and never will. The trade's own
+              icon on a warm ground says "no photo yet" once; a crossed-out
+              camera says "this is broken" two hundred times.
             */
             <div className="ra-photo-empty">
               <CategoryIcon name={business.categories[0]?.icon} className="h-7 w-7" />
@@ -116,9 +106,7 @@ export function BusinessCard({ business }: { business: BusinessCardType }) {
             </div>
           </div>
 
-          {subtitle && (
-            <p className="mt-0.5 truncate text-sm text-muted-foreground">{subtitle}</p>
-          )}
+          {subtitle && <p className="mt-0.5 truncate text-sm text-muted-foreground">{subtitle}</p>}
 
           <TrustRow
             className="mt-auto pt-2"

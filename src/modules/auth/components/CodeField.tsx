@@ -2,23 +2,15 @@ import { forwardRef, useId } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * A six-digit code input.
+ * A six-digit code input. One field, not six boxes: six means reimplementing
+ * paste, handling backspace across boundaries, and six unlabelled fields to a
+ * screen reader — and autofill targets a single input.
  *
- * One field, not six boxes. Six separate boxes look considered and are worse:
- * paste behaviour has to be reimplemented by hand, backspace across a boundary
- * is a special case, screen readers announce six unlabelled fields, and browser
- * autofill — the thing that actually makes this painless — targets a single
- * input.
- *
- * The details that matter:
- *  - `inputMode="numeric"` brings up the digit keypad rather than a full
- *    keyboard, on a screen where someone is copying six characters between two
- *    apps.
- *  - `autoComplete="one-time-code"` lets the platform offer the code from the
- *    notification. It is set only on the channel that can realistically supply
- *    it; two fields both claiming it would have them fight.
+ *  - `inputMode="numeric"` brings up the digit keypad.
+ *  - `autoComplete="one-time-code"` on one channel only; two fields both
+ *    claiming it would fight.
  *  - `font-mono` with wide tracking, because a code is read one character at a
- *    time and proportional digits make 1 and 7 harder to separate at a glance.
+ *    time and proportional digits make 1 and 7 harder to separate.
  */
 interface CodeFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;

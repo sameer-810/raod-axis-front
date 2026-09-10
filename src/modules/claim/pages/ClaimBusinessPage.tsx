@@ -14,14 +14,12 @@ import type { ApplicantFields, Claim } from "../types";
 /**
  * Claim Your Business — FR-ONB-02.
  *
- * No account required, and that is the design decision the whole flow rests on:
- * a garage owner should not have to create a login before they know whether
- * their claim will even be accepted. The account is created on approval and
- * they are emailed a link to set a password.
+ * No account required, and the whole flow rests on it: a garage owner should not
+ * have to create a login before they know whether their claim will be accepted.
+ * The account is created on approval, with a link to set a password.
  *
- * The page opens by saying what happens next and what it will cost them —
- * one document, one working day — because the alternative is a form that asks
- * for a business licence with no explanation of why.
+ * The page opens by saying what happens next and what it costs them — one
+ * document, one working day.
  */
 export function ClaimBusinessPage() {
   const { slug } = useParams<{ slug: string }>();

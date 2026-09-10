@@ -1,12 +1,9 @@
 import { cn } from "@/lib/utils";
 
 /**
- * An empty result is a design problem, not an absence of one.
- *
- * "No results" on its own is a dead end, and on the search screen — the highest
- * leverage surface in any marketplace — it is where a session ends. Every empty
- * state here has to answer *why* it is empty and offer the next move: widen the
- * radius, clear a filter, try a different category.
+ * An empty result is a design problem, not an absence of one. "No results" on its
+ * own is a dead end, and on the search screen it is where a session ends — so
+ * every empty state answers *why* it is empty and offers the next move.
  */
 export function EmptyState({
   icon: Icon,

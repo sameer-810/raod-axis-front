@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Mail, MessageCircle } from "lucide-react";
 import { getApiErrorMessage } from "@/shared/api/http";
 import { Field } from "@/shared/components/Field";
-import { Logo } from "@/shared/components/Logo";
+import { AuthShell } from "../components/AuthShell";
 import { CodeField } from "../components/CodeField";
 import { useAuth, useRequestCodes, useVerifyCodes } from "../hooks/useAuth";
 import {
@@ -17,16 +17,12 @@ import {
 import type { CodeChallenge } from "../types";
 
 /**
- * Driver sign-in.
- *
- * Two steps, one screen each, and the copy explains itself at every point —
- * this is the only wall in the public product, and the research is unambiguous
- * that friction here is paid for in abandoned sessions.
+ * Driver sign-in. Two steps, one screen each, with copy that explains itself at
+ * every point — this is the only wall in the public product.
  *
  * Both channels are verified because the phone is what a garage messages back
- * when they answer a booking request; an unverified number means a real
- * business contacts a stranger. That cost is paid in one extra field, not one
- * extra screen.
+ * when they answer; an unverified number means a real business contacts a
+ * stranger. That costs one extra field, not one extra screen.
  */
 export function SignInPage() {
   const [params] = useSearchParams();
@@ -50,15 +46,12 @@ export function SignInPage() {
   });
 
   /**
-   * Someone who arrives *already* signed in has no business on this page, so
-   * they are moved along.
+   * Someone who arrives *already* signed in is moved along.
    *
-   * The arrival state is captured once, in a ref, and that is the whole point:
-   * reacting to `isSignedIn` becoming true would also fire for someone who has
-   * just signed in on this very page, on top of the navigation `complete()` has
-   * already performed. It did — as a `window.location.replace`, which threw away
-   * the running application and reloaded the entire bundle immediately after a
-   * successful sign-in.
+   * The arrival state is captured once, in a ref: reacting to `isSignedIn`
+   * becoming true would also fire for someone who has just signed in on this
+   * page, on top of the navigation `complete()` already performed — which it
+   * did, as a `window.location.replace` that reloaded the entire bundle.
    */
   const arrivedSignedIn = useRef(isSignedIn);
   useEffect(() => {
@@ -96,12 +89,25 @@ export function SignInPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-md flex-col px-4 py-10 md:py-16">
-      <Logo className="mb-6" />
-
+    <AuthShell
+      eyebrow="For drivers"
+      headline={
+        <>
+          Sign in once.
+          <br />
+          Then just ask.
+        </>
+      }
+      points={[
+        "No password — two codes, one to your email and one to your WhatsApp.",
+        "Garages reply to the number you sign in with, so it has to be yours.",
+        "Save the garages you trust and see every request you've sent.",
+      ]}
+    >
       {!challenge ? (
         <>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Sign in</h1>
+          <p className="ra-eyebrow text-muted-foreground">Driver sign-in</p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground">Sign in</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             We'll send a code to your email and a code to your WhatsApp. No password to remember.
           </p>
@@ -139,7 +145,7 @@ export function SignInPage() {
             */}
             <button
               type="submit"
-              className="ra-tap mt-2 w-full rounded-lg bg-primary text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-70"
+              className="ra-btn-primary mt-2 w-full"
               disabled={request.isPending}
             >
               {request.isPending ? "Sending codes…" : "Send me a code"}
@@ -167,7 +173,8 @@ export function SignInPage() {
             Change details
           </button>
 
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          <p className="ra-eyebrow text-muted-foreground">Step 2 of 2</p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground">
             Enter your codes
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -233,7 +240,7 @@ export function SignInPage() {
 
             <button
               type="submit"
-              className="ra-tap mt-2 w-full rounded-lg bg-primary text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-70"
+              className="ra-btn-primary mt-2 w-full"
               disabled={verify.isPending}
             >
               {verify.isPending ? "Checking…" : "Sign in"}
@@ -250,7 +257,7 @@ export function SignInPage() {
           </form>
         </>
       )}
-    </div>
+    </AuthShell>
   );
 }
 

@@ -21,18 +21,12 @@ function todayIso() {
 
 /**
  * Request a Booking — the one wall in the public product, and the screen the
- * whole thing converges on.
+ * whole thing converges on. Two things matter more than anything else here:
  *
- * Two things it does that matter more than anything else on it:
- *
- * **It never says "book".** A driver who turns up expecting a held slot is a
- * failure of copywriting (FR-BKG-10). There is no calendar, no availability and
- * no confirmation — the business answers on WhatsApp.
- *
- * **It survives the sign-in wall.** The form is filled in *before* the account
- * is asked for, and the draft is kept so nothing is retyped. Losing what
- * somebody was doing is how authentication friction turns into an abandoned
- * session, and the cost is worst on a phone.
+ *  - **It never says "book".** No calendar, no availability, no confirmation;
+ *    the business answers on WhatsApp (FR-BKG-10).
+ *  - **It survives the sign-in wall.** The form is filled in before the account
+ *    is asked for, and the draft is kept so nothing is retyped.
  */
 export function RequestBookingPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -82,11 +76,9 @@ export function RequestBookingPage() {
 
     if (!user) {
       /**
-       * The account wall, and the only one in the public product.
-       *
-       * The draft is kept first so the return trip costs nothing. An
-       * unauthenticated booking form would be an open relay into a real
-       * business's WhatsApp, which is why this exists at all.
+       * The account wall, and the only one in the public product. The draft is
+       * kept first so the return trip costs nothing. An unauthenticated booking
+       * form would be an open relay into a real business's WhatsApp.
        */
       try {
         sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ slug, form }));

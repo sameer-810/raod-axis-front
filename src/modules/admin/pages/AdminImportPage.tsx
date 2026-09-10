@@ -25,13 +25,10 @@ interface ImportSummary {
 }
 
 /**
- * The template, built here rather than downloaded.
- *
- * The API serves the same header line, but it is behind `authenticate` — and a
- * plain `<a href>` carries no Authorization header, so that link would download
- * a 401 as a file. The one place the columns are defined for real is the
- * importer; this is a convenience copy and the API's own row-by-row messages are
- * what catch a drift between them.
+ * The template, built here rather than downloaded. The API serves the same
+ * header line but is behind `authenticate`, and a plain `<a href>` would
+ * download a 401 as a file. The importer is where the columns are defined for
+ * real; its row-by-row messages catch any drift between the two.
  */
 function downloadTemplate() {
   const header =
@@ -57,11 +54,9 @@ const COLUMNS = [
  * Bulk listing import — FR-ADM-09.
  *
  * The most destructive screen in the product: one bad file puts several hundred
- * wrong records in front of the public at once. So the flow is preview-then-
- * commit, and the preview is not a summary — it is the same parsing, the same
- * validation and the same duplicate check the real run does, reported row by row
- * with line numbers. Nothing is written until somebody has seen that and pressed
- * a second button.
+ * wrong records in front of the public at once. So the flow is
+ * preview-then-commit, and the preview is not a summary — it is the same
+ * parsing, validation and duplicate check, reported row by row with line numbers.
  */
 export function AdminImportPage() {
   const [file, setFile] = useState<File | null>(null);

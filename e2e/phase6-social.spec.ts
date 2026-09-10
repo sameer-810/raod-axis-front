@@ -10,10 +10,8 @@ import { API, expectNoHorizontalOverflow, expectTouchTargets } from "./helpers";
 /**
  * Phase 6 — reviews, saved garages, analytics, SEO and bulk import.
  *
- * Everything here is about coming back. A driver who saves a garage has a reason
- * to open RoadAxis next time; a driver who leaves a review is the reason the
- * next one trusts the listing. So the assertions are mostly about the two ways
- * this can be got wrong quietly: showing a rating that does not exist, and
+ * Everything here is about coming back, so the assertions are mostly about the
+ * two ways that gets broken quietly: showing a rating that does not exist, and
  * losing what somebody just did.
  */
 
@@ -463,13 +461,10 @@ test.describe("Phase 6 · Being findable", () => {
 
 test.describe("Phase 6 · Bulk import", () => {
   /**
-   * Coordinates are randomised per call, and that is load-bearing.
-   *
-   * The importer refuses a row that looks like a business already listed within
-   * 500 m with a similar name — which is the behaviour these tests are checking.
-   * Fixed coordinates mean the *second* run of this suite collides with the
-   * first one's fixtures and every import test fails for a reason that has
-   * nothing to do with the code.
+   * Coordinates are randomised per call, and that is load-bearing. The importer
+   * refuses a row that looks like a business already listed within 500 m with a
+   * similar name — so fixed coordinates mean the second run of this suite
+   * collides with the first one's fixtures.
    */
   const somewhereInBritain = () => ({
     lat: (52 + Math.random() * 3).toFixed(4),

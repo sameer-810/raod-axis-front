@@ -8,16 +8,12 @@ interface Photo {
 }
 
 /**
- * The business's own photographs.
+ * The business's own photographs — the content, not decoration: a picture of a
+ * real workshop is the fastest trust signal available, which is why no stock
+ * photography goes near them.
  *
- * These are the content, not decoration: a picture of a real workshop is the
- * fastest trust signal available, which is why the product asks for five to ten
- * of them and why no stock photography is allowed near them — a stock image
- * beside a real one makes the real one look fake.
- *
- * A scrolling strip rather than a carousel with dots. A strip shows there is
- * more by being cut off at the edge, needs no controls, and is dragged with the
- * thumb already on the screen.
+ * A scrolling strip rather than a carousel: it shows there is more by being cut
+ * off at the edge, needs no controls, and is dragged with the thumb.
  */
 export function PhotoGallery({ photos, businessName }: { photos: Photo[]; businessName: string }) {
   const [lightbox, setLightbox] = useState<number | null>(null);

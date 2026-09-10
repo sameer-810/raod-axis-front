@@ -2,17 +2,13 @@ import { forwardRef, useId } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * A labelled input, and the accessibility contract that goes with it.
+ * A labelled input, and the accessibility contract that goes with it. Three things
+ * that are easy to get wrong once and then repeat on every form in the product:
  *
- * Three things happen here that are easy to get wrong once and then repeat on
- * every form in the product:
- *
- *  1. **The label is a real `<label>` bound by id.** A placeholder is not a
- *     label — it disappears the moment someone types, which is exactly when
- *     they need to check what they were filling in.
- *  2. **The error is announced, not only coloured.** It is wired through
- *     `aria-describedby` and `aria-invalid` and lives in a live region, so a
- *     screen-reader user hears it instead of tabbing into a silent red box.
+ *  1. **The label is a real `<label>` bound by id.** A placeholder is not a label
+ *     — it disappears the moment someone types, which is when they need it.
+ *  2. **The error is announced, not only coloured** — wired through
+ *     `aria-describedby` and `aria-invalid`, and in a live region.
  *  3. **Hint and error share one slot**, so a field never grows a line when it
  *     fails and shifts everything below it down the page mid-typing.
  */

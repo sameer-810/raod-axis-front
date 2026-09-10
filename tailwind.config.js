@@ -93,7 +93,19 @@ export default {
        * three lines, and that card is the most-repeated element in the product.
        */
       fontFamily: {
-        sans: ['"Inter Tight"', "system-ui", "-apple-system", "sans-serif"],
+        /**
+         * Instrument Sans for the interface, Bricolage Grotesque for headings.
+         *
+         * Not Inter, and that is the point. Inter — and its close relations — is
+         * the default face of every AI-generated page of 2026; a product set in it
+         * is read as a template before a single word is understood. Instrument
+         * Sans has the same neutrality in the body without the fingerprint, and
+         * Bricolage carries an optical-size axis so a display heading gets tight
+         * counters and a caption gets open ones — the difference between type
+         * that was set and type that was scaled.
+         */
+        sans: ['"Instrument Sans"', "system-ui", "-apple-system", "sans-serif"],
+        display: ['"Bricolage Grotesque"', '"Instrument Sans"', "system-ui", "sans-serif"],
         mono: ['"IBM Plex Mono"', "ui-monospace", "SFMono-Regular", "monospace"],
       },
       /**

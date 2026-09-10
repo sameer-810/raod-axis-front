@@ -4,10 +4,9 @@ import { API, expectNoHorizontalOverflow } from "./helpers";
 /**
  * Phase 1 — identity, through the real interface.
  *
- * The API suite in `raod-axis-back/scripts/e2e.mjs` proves the rules. This
- * proves the journey: that a driver can actually get through the one wall in the
- * public product, that a guest is never pushed at it, and that the wall returns
- * them to what they were doing.
+ * The API suite proves the rules; this proves the journey — that a driver can
+ * get through the one wall in the public product, that a guest is never pushed
+ * at it, and that the wall returns them to what they were doing.
  */
 
 const TAG = `ui${Date.now().toString(36)}`;
@@ -15,21 +14,13 @@ const TAG = `ui${Date.now().toString(36)}`;
 /**
  * A phone number nobody owns.
  *
- * Ofcom reserves 07700 900000–900999 for drama and testing, so a run against an
- * environment that *does* have WhatsApp credentials cannot message a real
- * person.
+ * Ofcom reserves 07700 900000–900999 for testing, so a run against an
+ * environment that does have WhatsApp credentials cannot message a real person.
  *
- * The catch is that the block holds exactly 1,000 numbers and a number belongs
- * to one account for ever. Fixed numbers therefore passed on the first run and
- * failed on the second with a 409: the email rotated and the phone did not, so
- * sign-in silently stayed on step one and every later assertion failed for a
- * reason that had nothing to do with what it was testing.
- *
- * So a free number is found rather than assumed. The probe uses a throwaway
- * email, because a code request creates no account — the account appears only on
- * verification — so 202 means the number is unclaimed and 409 means it belongs
- * to somebody else. A distinct probe email each time also keeps every attempt in
- * its own rate-limit bucket.
+ * The block holds 1,000 numbers and a number belongs to one account for ever, so
+ * a free one is found rather than assumed: fixed numbers passed on the first run
+ * and failed on the second with a 409. The probe uses a throwaway email, because
+ * a code request creates no account — 202 means unclaimed, 409 means taken.
  */
 async function findFreePhone(): Promise<string> {
   const ctx = await pwRequest.newContext();
@@ -55,11 +46,9 @@ async function freshIdentity(slot: string) {
 }
 
 /**
- * The codes shown on screen in development.
- *
- * They go to an inbox and a WhatsApp number the test runner does not have, so
- * the server echoes them outside production — and refuses to in production
- * regardless of configuration. See auth.service.js.
+ * The codes shown on screen in development. They go to an inbox and a WhatsApp
+ * number the test runner does not have, so the server echoes them outside
+ * production — and refuses to in production. See auth.service.js.
  */
 async function visibleCodes(page: Page): Promise<string[]> {
   const text = await page.evaluate(() =>
@@ -91,14 +80,9 @@ async function signInAsDriver(page: Page, email: string, phone: string, name: st
    * Wait on the response, not on the page.
    *
    * Returning as soon as the button is clicked hands the caller a page whose
-   * sign-in POST is still in flight; a caller that navigates immediately races
-   * it, the next page loads with empty storage, and the failure reads as a
-   * broken route guard rather than as a test that did not wait.
-   *
-   * Polling `localStorage` instead was worse: the read lands mid-navigation and
-   * the execution context is destroyed underneath it. The response is the one
-   * event that is unambiguous, and it carries the server's own message when
-   * something is actually wrong.
+   * sign-in POST is still in flight; navigating then races it, and the failure
+   * reads as a broken route guard. Polling `localStorage` was worse — the read
+   * lands mid-navigation and the execution context is destroyed underneath it.
    */
   const signedIn = page.waitForResponse(
     (r) => r.url().includes("/auth/otp/verify") && r.request().method() === "POST",
@@ -152,14 +136,9 @@ test.describe("Phase 1 · Driver sign-in", () => {
     await expect(page).toHaveURL(/\/$/);
     /**
      * Asserted on the destination rather than the wording: the header calls it
-     * "My garages" and the mobile tab bar calls it "Saved", because a tab label
-     * has a fifth of a 390px screen. Keying on the label would make this a
-     * desktop-only test of a mobile-first product.
-     *
-     * Exactly one, and `:visible` rather than `.first()`, because both links
-     * exist in the DOM at every width and only one is ever shown. Counting the
-     * visible ones also catches the opposite bug — a breakpoint edit that leaves
-     * the header link and the tab both on screen.
+     * "My garages" and the tab bar calls it "Saved". Exactly one, and `:visible`
+     * rather than `.first()`, because both links exist in the DOM at every width
+     * — which also catches a breakpoint edit that leaves both on screen.
      */
     await expect(page.locator('a[href="/my-garages"]:visible')).toHaveCount(1);
   });
@@ -399,14 +378,9 @@ test.describe("Phase 1 · Sign-in on a phone", () => {
             const r = el.getBoundingClientRect();
             if (r.width === 0 && r.height === 0) return false;
             /**
-             * A link inside a sentence is exempt, and this is WCAG's own
-             * exception rather than a convenience: success criterion 2.5.8
-             * excludes targets "in a sentence or block of text", because the
-             * alternative is a 44px-tall word sitting in a paragraph, which
-             * wrecks the line the sentence is set on and helps nobody.
-             *
-             * The exception applies to inline text links only. A standalone
-             * control that happens to be an anchor gets no relief.
+             * A link inside a sentence is exempt — WCAG's own exception, 2.5.8,
+             * which excludes targets "in a sentence or block of text". Inline
+             * text links only; a standalone anchor gets no relief.
              */
             if (el.tagName === "A" && getComputedStyle(el).display === "inline") return false;
             return r.height < 40 || r.width < 40;

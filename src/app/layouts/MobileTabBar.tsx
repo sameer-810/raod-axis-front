@@ -9,14 +9,10 @@ import { Sheet } from "@/shared/components/Sheet";
 /**
  * Bottom navigation, below `md` only.
  *
- * At the bottom edge because that is the only part of a 6" screen a right thumb
- * reaches without regripping — the hamburger it replaces sits in the top-left
- * corner, the single furthest point from it.
- *
- * Four destinations plus More. Four because a fifth label truncates at 390px,
- * and "Booking…" beside "Busines…" is worse than no fifth tab. Which four is
- * decided by `mobileTabs()` against the same role-filtered menu the sidebar
- * uses, so the bar is a view onto the menu and never a second copy of it.
+ * At the bottom edge because that is what a right thumb reaches without
+ * regripping. Four destinations plus More — a fifth label truncates at 390px.
+ * Which four comes from `mobileTabs()` against the same role-filtered menu the
+ * sidebar uses, so the bar is a view onto the menu, never a second copy of it.
  */
 export function MobileTabBar() {
   const role = useAppSelector((s) => s.auth.user?.role);

@@ -10,23 +10,19 @@ import type { BusinessCard } from "../types";
 /**
  * The map view.
  *
- * **OpenStreetMap via Leaflet, not Google Maps.** Google's JavaScript SDK needs
- * a billed API key, and the MVP exists to prove demand — spending on map loads
- * before there are users is spending to look finished. Directions still hand off
- * to Google, which is where drivers actually navigate, so the trade costs
- * nothing where it matters. Attribution is required by the ODbL and is
- * non-negotiable, not decoration.
+ * OpenStreetMap via Leaflet, not Google Maps: Google's SDK needs a billed API
+ * key, and the MVP exists to prove demand. Directions still hand off to Google,
+ * which is where drivers navigate. Attribution is required by the ODbL and is
+ * not decoration.
  *
- * This component is code-split (see vite.config.ts): the library is ~150 kB and
- * the list is the default view, so it must not sit on the critical path of the
- * screen a driver lands on.
+ * Code-split (see vite.config.ts) — the library is ~150 kB and the list is the
+ * default view, so it must not sit on the critical path.
  */
 
 /**
  * Leaflet's default marker resolves its icons by relative path, which a bundler
- * rewrites and then cannot find — the classic symptom is markers rendering as
- * broken images. A drawn SVG avoids the problem entirely and inherits the brand
- * colour instead of shipping a blue pin from 2011.
+ * rewrites and then cannot find — the symptom is markers rendering as broken
+ * images. A drawn SVG avoids it and inherits the brand colour.
  */
 function pin(active: boolean) {
   const fill = active ? "#FF7A00" : "#0E1621";
@@ -43,11 +39,9 @@ function pin(active: boolean) {
 }
 
 /**
- * Keep the viewport in step with the results.
- *
- * Without this the map holds its initial position while the list underneath it
- * changes, and a driver who narrows the radius watches pins vanish from a view
- * that never moves — which reads as a broken map rather than a working filter.
+ * Keep the viewport in step with the results. Without this the map holds its
+ * initial position while the list changes, and a driver who narrows the radius
+ * watches pins vanish from a view that never moves.
  */
 function FitToResults({ businesses }: { businesses: BusinessCard[] }) {
   const map = useMap();
@@ -71,27 +65,17 @@ function FitToResults({ businesses }: { businesses: BusinessCard[] }) {
 }
 
 /**
- * Where the map tiles come from.
+ * Where the map tiles come from — configurable, defaulted to OpenStreetMap.
  *
- * Configurable, and defaulted to OpenStreetMap's own tiles.
- *
- * This used to point at CARTO's keyless basemaps, which were ideal — a muted
- * light set and a matching dark set, so the map belonged to the page instead of
- * being a bright rectangle in a dark interface. CARTO has since started
- * stamping **"API KEY REQUIRED"** diagonally across tiles served without one,
- * which is not a broken map so much as a billboard on the highest-intent screen
- * in the product.
- *
- * OSM's standard tiles need no key and look right. Their usage policy permits
- * modest traffic with attribution and a real User-Agent, and explicitly does not
- * cover a busy commercial product — so this reads two environment variables and
- * the README says to set them before launch. A paid key (MapTiler, CARTO,
- * Thunderforest) is a few pounds a month and drops in without a code change.
+ * This used to point at CARTO's keyless basemaps, which now stamp
+ * **"API KEY REQUIRED"** diagonally across tiles served without one. OSM's
+ * standard tiles need no key and look right; their usage policy permits modest
+ * traffic with attribution and explicitly does not cover a busy commercial
+ * product, so set `VITE_MAP_TILE_URL` and `VITE_MAP_TILE_ATTRIBUTION` to a paid
+ * key (MapTiler, CARTO, Thunderforest) before launch.
  *
  * There is no keyless dark basemap worth having, so dark mode dims and slightly
- * desaturates the light tiles in CSS instead. It is not as good as a purpose-made
- * dark set, and it is honest about being a fallback rather than shipping a
- * watermark.
+ * desaturates the light tiles in CSS instead.
  */
 function tileConfig(theme: string) {
   const url = import.meta.env.VITE_MAP_TILE_URL || "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -129,8 +113,7 @@ export function BusinessMap({
       scrollWheelZoom
       className="h-full w-full rounded-lg"
       // Leaflet renders its own focus outlines badly; the container is not
-      // interactive by keyboard anyway and the list is the accessible path
-      // through the same data.
+      // keyboard-interactive anyway and the list is the accessible path.
       aria-label="Map of search results"
     >
       <TileLayer

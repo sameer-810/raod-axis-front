@@ -7,11 +7,9 @@ import { MENU } from "./menu";
 import { Logo } from "@/shared/components/Logo";
 
 /**
- * Opaque, deliberately.
- *
- * A frosted top bar leaves table rows half-visible through it as they scroll
- * underneath, which at speed reads as a smear, and it forces a compositing
- * layer on every scroll frame in a table-heavy product.
+ * Opaque, deliberately. A frosted bar leaves table rows half-visible through it
+ * as they scroll — at speed that reads as a smear — and forces a compositing
+ * layer on every scroll frame.
  */
 export function Topbar() {
   const { pathname } = useLocation();

@@ -20,10 +20,10 @@ http.interceptors.request.use((config) => {
  * Public routes on this API answer without a token, so a 401 means an *expired*
  * session and never "you needed to sign in for this".
  *
- * That is why the redirect is conditional on having held a token: a guest
- * browsing search results must never be bounced to a sign-in page, which is the
- * standard failure mode when this interceptor is copied from an
- * authenticated-only product. Guests browse everything (DECISIONS.md D-005).
+ * The redirect is therefore conditional on having held a token: a guest browsing
+ * search results must never be bounced to a sign-in page, which is the standard
+ * failure mode when this interceptor is copied from an authenticated-only
+ * product. Guests browse everything (D-005).
  */
 http.interceptors.response.use(
   (response) => response,
@@ -47,11 +47,9 @@ type ApiErrorResponse = {
 };
 
 /**
- * The message a human should see.
- *
- * A validation failure carries a useful per-field message underneath a useless
- * generic one, so the specific message is preferred — "Enter a valid UK
- * postcode" rather than "Validation error".
+ * The message a human should see. A validation failure carries a useful per-field
+ * message underneath a useless generic one, so the specific one wins — "Enter a
+ * valid UK postcode" rather than "Validation error".
  */
 export function getApiErrorMessage(err: unknown): string {
   if (axios.isAxiosError(err)) {

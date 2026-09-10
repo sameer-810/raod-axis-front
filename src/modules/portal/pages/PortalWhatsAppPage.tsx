@@ -6,15 +6,11 @@ import { WhatsAppNumbers } from "@/modules/whatsapp/components/WhatsAppNumbers";
 import { useMyBusinesses } from "../hooks/useMyBusiness";
 
 /**
- * The owner's WhatsApp settings.
+ * The owner's WhatsApp settings — the most important screen in the portal, since
+ * these two rows decide whether this business hears about a customer at all.
  *
- * The most important screen in the portal: WhatsApp is the product's only
- * conversation channel, so these two rows decide whether this business hears
- * about a customer at all.
- *
- * An owner with several garages gets one section each rather than a picker.
- * There are at most a handful, and a picker hides the one that is misconfigured
- * behind a control nobody thinks to open.
+ * An owner with several garages gets one section each rather than a picker: a
+ * picker hides the misconfigured one behind a control nobody thinks to open.
  */
 export function PortalWhatsAppPage() {
   const { data: businesses, isLoading } = useMyBusinesses();

@@ -26,12 +26,9 @@ export function useAdminBusiness(id: string | undefined) {
 }
 
 /**
- * After any write, the *public* caches are invalidated too.
- *
- * An administrator who suspends a fake listing and then opens the public search
- * in the next tab must not see it still there. The admin list and the public one
- * are the same records behind different filters, so a write to either
- * invalidates both.
+ * After any write, the *public* caches are invalidated too. An administrator who
+ * suspends a fake listing must not see it still there in the next tab — the
+ * admin list and the public one are the same records behind different filters.
  */
 function useInvalidateBusinesses() {
   const qc = useQueryClient();

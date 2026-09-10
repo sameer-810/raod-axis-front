@@ -7,16 +7,13 @@ const MAX_MB = 10;
 const ACCEPT = "image/jpeg,image/png,image/webp,image/avif,application/pdf";
 
 /**
- * Ownership evidence.
+ * Ownership evidence — the highest-friction step in the whole product: a garage
+ * owner on a phone, being asked for a document they may have to go and find. So
+ * the copy names exactly what counts, says a phone photo is fine, and the control
+ * is a large tap target rather than a default file input.
  *
- * The single highest-friction step in the whole product: a garage owner on a
- * phone, being asked for a document they may have to go and find. So the copy
- * names exactly what counts, says a phone photo is fine, and the control is a
- * large tap target rather than a default file input.
- *
- * Files are validated here before they are sent because a rejection after a
- * 10 MB upload on a workshop's connection is a minute of someone's life for an
- * answer the browser already knew.
+ * Files are validated before they are sent: a rejection after a 10 MB upload on a
+ * workshop's connection is a minute of someone's life for a known answer.
  */
 export function DocumentUpload({
   files,

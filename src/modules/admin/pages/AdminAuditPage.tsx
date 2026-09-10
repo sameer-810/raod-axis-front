@@ -18,12 +18,9 @@ interface AuditEntry {
 }
 
 /**
- * Actions whose consequences reach outside RoadAxis.
- *
- * Marked so they stand out in a list that is otherwise mostly routine edits —
- * these are the ones that changed who controls a listing, silenced a phone, or
- * took a business out of the directory. Everything else stays neutral, because
- * a log where every row is highlighted has no highlights.
+ * Actions whose consequences reach outside RoadAxis — who controls a listing, a
+ * silenced phone, a business taken out of the directory. Marked so they stand
+ * out; a log where every row is highlighted has no highlights.
  */
 const CONSEQUENTIAL = new Set([
   "claim.approved",
@@ -36,11 +33,8 @@ const CONSEQUENTIAL = new Set([
 ]);
 
 /**
- * The audit log — FR-ADM-08, and the mechanism PRD v1.1 asked for without
- * specifying.
- *
- * Read-only by design. There is no route that writes, edits or deletes an
- * entry; a log anybody can amend is not evidence of anything.
+ * The audit log — FR-ADM-08. Read-only by design: there is no route that writes,
+ * edits or deletes an entry, because a log anybody can amend is not evidence.
  */
 export function AdminAuditPage() {
   const [action, setAction] = useState("");

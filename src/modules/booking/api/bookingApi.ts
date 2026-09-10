@@ -26,10 +26,9 @@ export const bookingApi = {
   },
 
   /**
-   * The list, scoped server-side by who is asking.
-   *
-   * A driver gets their own, an owner gets their businesses', an admin gets
-   * everything — decided from the session rather than from a parameter.
+   * The list, scoped server-side by who is asking — a driver gets their own, an
+   * owner gets their businesses', an admin gets everything. Decided from the
+   * session rather than from a parameter.
    */
   async list(query: {
     status?: BookingStatus | "";

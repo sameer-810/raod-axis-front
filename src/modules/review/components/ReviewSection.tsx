@@ -11,14 +11,11 @@ import { useBusinessReviews, useMyReview, useSubmitReview } from "../hooks/useRe
 /**
  * Reviews on a business profile — FR-SOC-01 … FR-SOC-04.
  *
- * The form sits above the list, not below it. Somebody who has decided to leave
- * a review has to scroll past everyone else's to find where to do it otherwise,
- * and the number of people who make that journey is much smaller than the number
- * who would have written something.
+ * The form sits above the list, not below it: otherwise somebody who has decided
+ * to leave a review has to scroll past everyone else's to find where to do it.
  *
  * Reading is open to guests, in line with the rest of the public product; only
- * writing needs an account, and the prompt to sign in explains why rather than
- * simply refusing.
+ * writing needs an account, and the prompt explains why rather than refusing.
  */
 export function ReviewSection({
   businessId,
@@ -108,11 +105,9 @@ export function ReviewSection({
 }
 
 /**
- * The form. Stars are required; words are not.
- *
- * That is the whole design. Most people will give a rating and nothing else, and
- * a form that insists on a paragraph collects far fewer of both — the star is
- * one tap and the text box is a decision about how much time to spend.
+ * The form. Stars are required; words are not. Most people give a rating and
+ * nothing else, and a form that insists on a paragraph collects fewer of both —
+ * the star is one tap, the text box is a decision about how much time to spend.
  */
 function ReviewForm({
   businessId,
@@ -194,11 +189,9 @@ function ReviewForm({
 }
 
 /**
- * Why an account is needed, and a way back to this exact page afterwards.
- *
- * "Sign in to continue" with no explanation and no return journey is where
- * people leave. An owner or administrator sees a different line: they are signed
- * in, so refusing them without saying why would read as a fault.
+ * Why an account is needed, and a way back to this exact page afterwards. "Sign in
+ * to continue" with no explanation and no return journey is where people leave. An
+ * owner or administrator sees a different line: they are signed in already.
  */
 function SignInPrompt({ signedIn, businessName }: { signedIn: boolean; businessName: string }) {
   const location = useLocation();

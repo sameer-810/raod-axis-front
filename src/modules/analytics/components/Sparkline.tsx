@@ -4,16 +4,13 @@ import type { SeriesPoint } from "../types";
 /**
  * A daily trend, drawn as inline SVG.
  *
- * No chart library. This is thirty numbers and a line; the smallest capable
- * charting package is around 40 kB gzipped, which on a dashboard that is already
- * behind a login is 40 kB spent on decoration. More importantly, a library chart
- * arrives as a `<canvas>` or a pile of unlabelled `<path>`s — this one has a real
- * table behind it, so the data is readable by a screen reader and by anyone who
- * would rather see the figures.
+ * No chart library: this is thirty numbers and a line, and the smallest capable
+ * package is ~40 kB gzipped. A library chart also arrives as a `<canvas>` or a
+ * pile of unlabelled `<path>`s — this one has a real table behind it, so the
+ * data is readable by a screen reader and by anyone who wants the figures.
  *
- * The zero-height case is handled explicitly: a flat series would otherwise
- * divide by zero and draw nothing at all, which reads as a broken chart rather
- * than as a quiet month.
+ * The zero-height case is explicit: a flat series would divide by zero and draw
+ * nothing, which reads as a broken chart rather than a quiet month.
  */
 export function Sparkline({
   points,

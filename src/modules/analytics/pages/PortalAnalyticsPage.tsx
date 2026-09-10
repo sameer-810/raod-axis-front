@@ -11,11 +11,8 @@ import { useMyAnalytics } from "../hooks/useAnalytics";
 const WINDOWS = [7, 30, 90];
 
 /**
- * An owner's own numbers.
- *
- * Scoped server-side to the businesses they manage — there is no business id in
- * this request, deliberately, so an owner who can name a competitor's listing
- * cannot read its performance.
+ * An owner's own numbers, scoped server-side to the businesses they manage —
+ * there is no business id in this request, deliberately.
  *
  * "Median first reply" rather than an average, and it is here rather than only
  * in the admin console because it is the number an owner can actually move.

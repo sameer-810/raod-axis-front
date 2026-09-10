@@ -1,11 +1,9 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Status, and only status.
- *
- * `neutral` is the default and should be most of them. A screen where every
- * badge is coloured has no urgent badge — the one that needs attention is
- * camouflaged by the four that do not. See DESIGN.md, "Colour discipline".
+ * Status, and only status. `neutral` is the default and should be most of them: a
+ * screen where every badge is coloured has no urgent badge, because the one that
+ * needs attention is camouflaged by the four that do not.
  */
 type Tone = "neutral" | "success" | "warning" | "destructive" | "primary";
 

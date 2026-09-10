@@ -7,13 +7,9 @@ import { useMyBookingRequests } from "../hooks/useBookings";
 import { BookingStatusBadge } from "../components/StatusBadge";
 
 /**
- * A driver's own requests.
- *
- * Deliberately thin. The conversation happens on WhatsApp — this is a record of
- * what was asked and where it got to, not a second inbox. Nothing here says
- * anything about delivery: telling a driver "delivered" invites them to
- * conclude they are being ignored, and "failed" invites them to conclude the
- * business is broken.
+ * A driver's own requests. Deliberately thin: the conversation happens on
+ * WhatsApp, and this is a record of what was asked and where it got to. Nothing
+ * about delivery — "delivered" invites them to conclude they are being ignored.
  */
 export function MyRequestsPage() {
   const { data, isLoading } = useMyBookingRequests();

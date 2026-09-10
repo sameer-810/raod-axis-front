@@ -7,12 +7,10 @@ import { CategoryIcon } from "@/shared/components/CategoryIcon";
 import { useSeo } from "@/shared/hooks/useSeo";
 
 /**
- * Browse by service.
- *
- * Built from the *facets* rather than the category list, so every tile carries a
- * real count and a category nobody is listed under does not appear. A grid of
- * categories that lead to empty results is the fastest way to teach someone the
- * directory is empty — even when it is not.
+ * Browse by service. Built from the *facets* rather than the category list, so
+ * every tile carries a real count and a category nobody is listed under does not
+ * appear — a grid of categories leading to empty results is the fastest way to
+ * teach someone the directory is empty.
  */
 export function CategoriesPage() {
   const { data: facets, isLoading } = useFacets();
@@ -53,10 +51,7 @@ export function CategoriesPage() {
         ) : (
           /*
             The same tile as the home page, at a larger size. One component's
-            worth of design used twice rather than two near-identical grids —
-            the previous version of this page was a plain bordered box with two
-            lines of text in it, and looked like a placeholder somebody forgot
-            to finish.
+            worth of design used twice rather than two near-identical grids.
           */
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {facets.map((f) => (

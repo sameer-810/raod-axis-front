@@ -1,18 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 
 /**
- * The browser's location, asked for carefully.
- *
- * Two rules, both from the research on marketplace conversion and both easy to
- * get wrong:
+ * The browser's location, asked for carefully. Two rules:
  *
  *  1. **Never prompt on page load.** A permission dialog on arrival, before the
  *     visitor knows what the site is, is the fastest way to a permanent denial —
- *     and once denied it cannot be asked again from the page. So this starts
- *     idle and only prompts when something calls `request()`.
+ *     and once denied it cannot be asked again from the page. This starts idle and
+ *     only prompts when something calls `request()`.
  *  2. **A denial is not an error state.** It is one of the two normal paths
- *     (FR-DIS-05). The caller falls back to a town or postcode; nothing about
- *     the interface should imply the visitor did something wrong.
+ *     (FR-DIS-05); the caller falls back to a town or postcode.
  */
 
 type Status = "idle" | "prompting" | "granted" | "denied" | "unavailable";

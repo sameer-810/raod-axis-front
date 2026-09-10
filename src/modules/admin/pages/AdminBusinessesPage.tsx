@@ -14,12 +14,9 @@ import { useAdminBusinesses, useSetBusinessStatus } from "../hooks/useAdmin";
 import type { BusinessCard } from "@/modules/business/types";
 
 /**
- * The directory, as an administrator sees it.
- *
- * The one screen that shows all three states at once — visibility, ownership and
- * trust — because they are independent and the interesting records are the ones
- * where they disagree: a live listing nobody has claimed in six weeks, a claimed
- * listing that was never verified.
+ * The directory, as an administrator sees it. The one screen showing all three
+ * states at once — visibility, ownership and trust — because they are
+ * independent, and the interesting records are the ones where they disagree.
  */
 export function AdminBusinessesPage() {
   const isMobile = useIsMobile();
@@ -320,10 +317,9 @@ export function AdminBusinessesPage() {
 }
 
 /**
- * The three states, and only the ones worth saying.
- *
- * `live` and `claimed` are the ordinary case and get no badge — a screen where
- * every row is decorated has no signal in it. Only the exceptions are marked.
+ * The three states, and only the ones worth saying. `live` and `claimed` are the
+ * ordinary case and get no badge — a screen where every row is decorated has no
+ * signal in it.
  */
 function StatusBadges({ business }: { business: BusinessCard }) {
   return (

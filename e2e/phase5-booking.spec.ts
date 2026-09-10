@@ -10,10 +10,10 @@ import { API, expectNoHorizontalOverflow, expectTouchTargets } from "./helpers";
 /**
  * Phase 5 — the core loop, through the real interface.
  *
- * Discover → Contact → Book, which is the whole product. This suite follows one
- * request the entire way: a guest fills in the form, hits the one wall, signs
- * in, sends it, and a garage owner answers it — and then checks that the words
- * on every screen say "request" rather than "booking".
+ * Discover → Contact → Book, which is the whole product. One request followed
+ * the entire way: a guest fills in the form, hits the one wall, signs in, sends
+ * it, and a garage owner answers — then every screen is checked for the word
+ * "booking".
  */
 
 const TAG = `p5${Date.now().toString(36)}`;
@@ -290,10 +290,8 @@ test.describe("Phase 5 · The business inbox", () => {
 
     /*
       The two things an owner actually does, on every row rather than one tap
-      deeper — the difference between a two-hour reply and a two-day one.
-
-      Scoped to `main`: the sidebar also has a WhatsApp destination, and an
-      unscoped match resolves to that first.
+      deeper. Scoped to `main`: the sidebar also has a WhatsApp destination, and
+      an unscoped match resolves to that first.
     */
     const inbox = page.getByRole("main");
     await expect(inbox.getByRole("link", { name: /^call$/i }).first()).toHaveAttribute(

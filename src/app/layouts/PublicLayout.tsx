@@ -10,15 +10,11 @@ import { PageLoader } from "@/shared/components/PageLoader";
 /**
  * The consumer shell.
  *
- * A different problem from AppLayout and therefore a different layout, not a
- * re-skin of it. A driver reads this once, for ninety seconds, on a phone,
- * possibly at the roadside — so it is generous where the portal is dense, and
- * it carries no sidebar, no breadcrumbs and no chrome competing with the
- * content.
+ * A different problem from AppLayout, not a re-skin: a driver reads this once,
+ * for ninety seconds, on a phone, possibly at the roadside. Generous where the
+ * portal is dense, with no sidebar and no breadcrumbs.
  *
- * Nothing here is gated. Guests browse the whole public product; the account
- * wall stands at exactly one door, and it is the booking-request form
- * (DECISIONS.md D-005).
+ * Nothing here is gated — the account wall is the booking-request form (D-005).
  */
 export function PublicLayout() {
   const { theme, toggleTheme } = useTheme();
@@ -130,10 +126,8 @@ function PublicLink({ to, children }: { to: string; children: React.ReactNode })
 }
 
 /**
- * Three destinations on the public side, not four.
- *
- * A consumer product this shallow does not have four top-level places to be,
- * and padding the bar out to four to match a convention would invent one.
+ * Three destinations on the public side, not four. A consumer product this
+ * shallow does not have four top-level places to be.
  */
 function PublicTabBar({ signedIn }: { signedIn: boolean }) {
   const tabs = [

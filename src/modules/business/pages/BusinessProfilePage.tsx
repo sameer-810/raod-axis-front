@@ -24,29 +24,22 @@ import { OpeningHours } from "../components/OpeningHours";
 import { useBusiness } from "../hooks/useBusinesses";
 
 /**
- * The business profile.
+ * The business profile, ordered by the questions a driver actually asks, in the
+ * order they ask them: is this the right place · can I trust it · is it open ·
+ * what do they do · how do I reach them · how do I get there.
  *
- * Ordered by the questions a driver actually asks, in the order they ask them:
- * is this the right place · can I trust it · is it open · what do they do ·
- * how do I reach them · how do I get there.
- *
- * The two actions are pinned to the bottom of the screen on a phone. Someone
- * reading this is nearly always about to do one of them, and making them scroll
- * back up past the opening hours to find "Directions" is the difference between
- * a useful page and a brochure.
+ * The two actions are pinned to the bottom on a phone — someone reading this is
+ * nearly always about to do one of them.
  */
 export function BusinessProfilePage() {
   const { slug } = useParams<{ slug: string }>();
   const { data: business, isLoading, error } = useBusiness(slug);
 
   /**
-   * FR-SEO-03 and FR-SEO-04, and the reason this page exists twice over.
-   *
-   * The description is built from what the business actually is — trade, town,
-   * services — rather than from boilerplate, because a directory of ten thousand
-   * pages sharing one description is a directory search engines index once. The
-   * hook is called unconditionally, above the early returns, so the rules of
-   * hooks hold while the data is still loading.
+   * FR-SEO-03 and FR-SEO-04. The description is built from what the business
+   * actually is — trade, town, services — because a directory of ten thousand
+   * pages sharing one description is indexed once. Called unconditionally, above
+   * the early returns, so the rules of hooks hold while data is still loading.
    */
   useSeo({
     title: business ? `${business.name}, ${business.address.city ?? "UK"}` : "Business",
@@ -380,11 +373,9 @@ export function BusinessProfilePage() {
 }
 
 /**
- * The three things a driver does from this page.
- *
- * `stacked` is the rail: full-width buttons in a column, where there is room
- * for the primary action to be genuinely prominent. Unstacked is the pinned
- * bottom bar on a phone, where the three share one row.
+ * The three things a driver does from this page. `stacked` is the rail —
+ * full-width buttons in a column, where the primary action can be genuinely
+ * prominent. Unstacked is the pinned bottom bar on a phone, sharing one row.
  */
 function ProfileActions({
   business,

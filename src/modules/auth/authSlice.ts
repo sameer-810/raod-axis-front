@@ -1,7 +1,7 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 /**
- * Three roles, and the distinction that matters most is the first one:
+ * Three roles:
  *
  *  - `driver` — a consumer. Browses without an account at all; signs in only to
  *    request a booking, save a favourite or leave a review.
@@ -27,13 +27,9 @@ interface AuthState {
   accessToken: string | null;
   user: AuthUser | null;
   /**
-   * Where to return to after signing in.
-   *
-   * Load-bearing for conversion, not a convenience. The account wall stands at
-   * exactly one door — submitting a booking request — and the research is clear
-   * that authentication friction at the conversion moment measurably depresses
-   * completion. Sending someone back to the home page after they sign in, having
-   * lost the form they had filled in, is how that happens.
+   * Where to return to after signing in. Load-bearing for conversion: the account
+   * wall stands at exactly one door — submitting a booking request — and losing a
+   * filled-in form behind it is how friction turns into abandonment.
    */
   returnTo: string | null;
 }

@@ -32,23 +32,16 @@ const BusinessMap = lazy(() =>
 );
 
 /**
- * Search.
+ * Search — the highest-leverage screen in any marketplace, and the one a driver
+ * with a flat tyre lands on.
  *
- * The highest-leverage screen in any marketplace, and the one a driver with a
- * flat tyre lands on.
- *
- * **The desktop layout is a rail beside results, not a stack above them.** This
- * screen previously rendered the phone layout at every width: the search box,
- * then four rows of filters, then the view toggle — roughly 600px of chrome, so
- * a laptop showed *zero results* until you scrolled. Filters are used
- * repeatedly on a large screen, results are what you came for, and both belong
- * on screen at once. Everything else here is unchanged and still true:
- *
+ *  - **Desktop is a rail beside results, not a stack above them.** This screen
+ *    used to render the phone layout at every width: ~600px of chrome above the
+ *    first result, so a laptop showed zero results until you scrolled.
  *  - **The list is the default, not the map.** A map answers "where"; a list
- *    answers "which". Someone who already knows roughly where they are is
- *    choosing, and a map makes them work for a comparison a list gives away.
- *  - **Location is offered, never demanded.** Refusing it is one of two normal
- *    paths, not an error, and the town/postcode box is right there.
+ *    answers "which", and someone who knows roughly where they are is choosing.
+ *  - **Location is offered, never demanded.** Refusing is one of two normal
+ *    paths, and the town/postcode box is right there.
  *  - **Every filter is in the URL**, so this search can be sent to somebody.
  */
 export function SearchPage() {
@@ -171,13 +164,11 @@ export function SearchPage() {
               </form>
             ) : (
               /*
-              The whole pill is the control, not a small "Change" link inside
-              it. A 17px text link beside a label is under half the touch
-              floor, and every maps application already teaches that tapping
-              the location chip is how you change the location — so the
-              affordance costs nothing to learn and gains a target a thumb can
-              actually hit.
-            */
+                The whole pill is the control, not a small "Change" link inside
+                it. A 17px text link is under half the touch floor, and every
+                maps application already teaches that tapping the location chip
+                is how you change the location.
+              */
               <button
                 type="button"
                 onClick={() => {
@@ -406,12 +397,8 @@ export function SearchPage() {
 }
 
 /**
- * Sort, as a native select.
- *
- * A native control rather than a custom dropdown: it is one tag, it is
- * keyboard-operable and screen-reader-labelled for free, and on a phone it
- * opens the platform's own picker — which is both faster and more familiar than
- * anything a custom menu achieves here.
+ * Sort, as a native select: one tag, keyboard-operable and screen-reader-labelled
+ * for free, and on a phone it opens the platform's own picker.
  */
 function SortSelect({
   value,

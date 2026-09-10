@@ -5,9 +5,8 @@ import type { ApplicantFields as Fields } from "../types";
  * Who is applying — shared by both routes into the directory, because an
  * administrator asks the same questions of a claim and a registration.
  *
- * The phone number is required and the hint says why. Verifying ownership
- * frequently means ringing the number on the business's own paperwork, and an
- * application with no way to reach a human is one nobody can decide.
+ * The phone number is required and the hint says why: verifying ownership
+ * frequently means ringing the number on the business's own paperwork.
  */
 export function ApplicantFieldset({
   values,

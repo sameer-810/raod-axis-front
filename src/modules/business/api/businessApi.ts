@@ -2,11 +2,9 @@ import { http } from "@/shared/api/http";
 import type { Business, BusinessCard, Category, SearchFilters, SearchMeta } from "../types";
 
 /**
- * Filters → query string.
- *
- * Empty values are omitted rather than sent blank, so a URL only ever names the
- * filters actually in force. `?search=&city=&radius=5000` is the same search as
- * `?radius=5000` and should not look different when it is shared.
+ * Filters → query string. Empty values are omitted rather than sent blank, so a
+ * URL only names the filters actually in force: `?search=&city=&radius=5000` is
+ * the same search as `?radius=5000` and should not look different when shared.
  */
 function toParams(f: Partial<SearchFilters>) {
   const params: Record<string, string> = {};

@@ -8,13 +8,13 @@ export function useFavourites(enabled = true) {
 }
 
 /**
- * Save and unsave, applied to the screen before the server has answered.
+ * Save and unsave, applied to the screen before the server has answered. A heart
+ * that waits for a round trip reads as a broken button, and the correction on
+ * failure is cheap because the whole change is one boolean.
  *
- * A heart that waits for a round trip before filling in reads as a broken
- * button, and the correction on failure is cheap because the whole change is one
- * boolean. The write happens **synchronously** in `onMutate` — awaiting
- * `cancelQueries` first pushes it past React's next render, which is exactly the
- * delay the optimism was there to remove.
+ * The write happens **synchronously** in `onMutate` — awaiting `cancelQueries`
+ * first pushes it past React's next render, which is exactly the delay the
+ * optimism was there to remove.
  */
 export function useToggleFavourite() {
   const qc = useQueryClient();

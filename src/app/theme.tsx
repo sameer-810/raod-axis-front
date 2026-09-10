@@ -1,18 +1,13 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 /**
- * Theme provider.
- *
- * Follows the operating system by default rather than forcing either theme.
- * RoadAxis is dark-led as a brand — the brochure's own surfaces are #0E1621 —
- * and is genuinely used at night at the roadside, so dark is not an afterthought.
- * But it is also a consumer site someone arrives at from a search result, and
- * overriding their stated OS preference on arrival is a decision we have no
- * standing to make. An explicit choice is remembered.
+ * Theme provider. Follows the operating system by default rather than forcing
+ * either theme: RoadAxis is dark-led as a brand and genuinely used at night at
+ * the roadside, but it is also a site people arrive at from a search result. An
+ * explicit choice is remembered.
  *
  * The <script> in index.html applies the class before first paint to avoid a
- * flash; this provider is the source of truth at runtime and its initial read
- * must agree with that script.
+ * flash; this provider is the runtime source of truth and must agree with it.
  */
 
 type Theme = "light" | "dark";

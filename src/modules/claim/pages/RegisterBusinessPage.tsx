@@ -16,14 +16,12 @@ import type { ApplicantFields, Claim } from "../types";
  * Register a business that is not listed yet — FR-ONB-03.
  *
  * The second route into the directory. It ends in the same review queue as a
- * claim, and the listing stays a **draft** until a human has read the
- * documents: publishing first and reviewing later would make the review
- * decorative and let anybody put anything in the directory.
+ * claim, and the listing stays a **draft** until a human has read the documents:
+ * publishing first would make the review decorative.
  *
- * The page checks the directory before taking a registration. Most people who
- * arrive here are already listed and do not know it — an administrator seeded
- * the market — and claiming an existing listing is both quicker for them and
- * better for us than creating a duplicate somebody has to merge later.
+ * The page checks the directory before taking a registration — most people who
+ * arrive here are already listed, and claiming is quicker for them and better for
+ * us than a duplicate somebody has to merge later.
  */
 export function RegisterBusinessPage() {
   const { data: categories = [] } = useCategories();
@@ -65,10 +63,8 @@ export function RegisterBusinessPage() {
       setBusiness((b) => ({ ...b, [key]: e.target.value }));
 
   /**
-   * Postcode → coordinates.
-   *
-   * Required, because a listing without them is excluded from every distance
-   * search — the only view that matters. Derived from the postcode rather than
+   * Postcode → coordinates. Required, because a listing without them is excluded
+   * from every distance search — the only view that matters. Derived rather than
    * typed, since nobody knows their own latitude.
    */
   async function resolvePostcode() {
@@ -88,11 +84,9 @@ export function RegisterBusinessPage() {
   }
 
   /**
-   * Is this already listed?
-   *
-   * Advisory and never blocking — a genuine second branch is a real thing — but
-   * offering the claim route to somebody about to create a duplicate saves them
-   * a week and saves us a merge.
+   * Is this already listed? Advisory and never blocking — a genuine second branch
+   * is a real thing — but offering the claim route to somebody about to create a
+   * duplicate saves them a week and saves us a merge.
    */
   async function checkExisting(lat: number, lng: number) {
     if (!business.name.trim()) return;

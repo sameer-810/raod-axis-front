@@ -20,12 +20,10 @@ const FILTERS: Array<{ value: BookingStatus | ""; label: string }> = [
 ];
 
 /**
- * The business inbox — FR-BIZ-05.
- *
- * Built for a garage owner reading it on a phone between jobs, so the two things
- * they will actually do — ring the customer, or reply on WhatsApp — are on every
- * row rather than one tap deeper. The conversation happens on WhatsApp; this
- * screen exists to make sure nothing is missed and to record what happened.
+ * The business inbox — FR-BIZ-05. Built for a garage owner reading it on a phone
+ * between jobs, so the two things they will actually do — ring the customer, or
+ * reply on WhatsApp — are on every row rather than one tap deeper. The
+ * conversation happens on WhatsApp; this screen records what happened.
  */
 export function PortalRequestsPage() {
   const [status, setStatus] = useState<BookingStatus | "">("");

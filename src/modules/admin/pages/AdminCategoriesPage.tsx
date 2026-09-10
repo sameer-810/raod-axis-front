@@ -17,13 +17,10 @@ import {
 /**
  * Category management — FR-ADM-05.
  *
- * The screen has two halves and the second is the interesting one. On the left,
- * the managed taxonomy. On the right, what businesses have been typing into
- * "mention your service" because the taxonomy did not cover it.
- *
- * That is the honest way a taxonomy grows: by watching what people actually
- * need rather than by guessing in a meeting. A term appearing eleven times is an
- * argument for a category; one appearing once is not.
+ * Two halves, and the second is the interesting one: the managed taxonomy on the
+ * left, and on the right what businesses have typed into "mention your service"
+ * because it did not cover them. A term appearing eleven times is an argument
+ * for a category; one appearing once is not.
  */
 export function AdminCategoriesPage() {
   const isMobile = useIsMobile();

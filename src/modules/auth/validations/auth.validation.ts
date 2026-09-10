@@ -1,10 +1,9 @@
 import { z } from "zod";
 
 /**
- * Client-side validation is a courtesy that saves a round trip. The server
- * validates everything again, and its answer is the one that counts — these
- * rules are deliberately a little looser, so a number the server would happily
- * normalise is never rejected here first.
+ * Client-side validation is a courtesy that saves a round trip; the server
+ * validates everything again and its answer counts. These rules are deliberately
+ * looser, so a number the server would normalise is never rejected here first.
  */
 
 export const emailField = z
@@ -14,11 +13,9 @@ export const emailField = z
   .email("That doesn't look like an email address");
 
 /**
- * Loose on purpose.
- *
- * The server normalises "07700 900123", "+44 7700 900123" and "(07700) 900123"
- * to one value, so rejecting spacing or brackets here would refuse a number the
- * product accepts. This only catches "obviously not a phone number".
+ * Loose on purpose. The server normalises "07700 900123", "+44 7700 900123" and
+ * "(07700) 900123" to one value, so rejecting spacing or brackets here would
+ * refuse a number the product accepts. This catches "obviously not a phone".
  */
 export const phoneField = z
   .string()
@@ -45,9 +42,8 @@ export const verifyCodesSchema = z.object({
 
 export const staffLoginSchema = z.object({
   email: emailField,
-  // No length rule at sign-in. Asserting one here tells an attacker the policy,
-  // and an account created before the policy changed must still be able to get
-  // in and update itself.
+  // No length rule at sign-in. Asserting one tells an attacker the policy, and
+  // an account created before the policy changed must still be able to get in.
   password: z.string().min(1, "Enter your password"),
 });
 

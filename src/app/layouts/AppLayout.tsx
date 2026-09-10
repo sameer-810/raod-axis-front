@@ -7,11 +7,9 @@ import { SidebarProvider } from "./sidebarContext";
 import { PageLoader } from "@/shared/components/PageLoader";
 
 /**
- * The authenticated shell — Business Portal and Admin Console.
- *
- * Dense, conventional and deliberately unremarkable. This is a tool people use
- * daily; the convention is what makes it learnable, and changing it for novelty
- * makes the product worse.
+ * The authenticated shell — Business Portal and Admin Console. Dense and
+ * conventional: a tool people use daily, where the convention is what makes it
+ * learnable.
  */
 export function AppLayout() {
   return (

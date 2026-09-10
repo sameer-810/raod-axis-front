@@ -10,13 +10,12 @@ import { useToggleFavourite } from "../hooks/useFavourites";
  * The save a guest asked for, remembered across the sign-in detour.
  *
  * US-603: pressing save while signed out must ask for an account and then
- * *complete the save*, not return the driver to a page where they have to press
- * the same button again. The second tap is where people give up, and this is the
- * only retention feature in the MVP.
+ * *complete the save*, not return the driver to a page where they press the same
+ * button again. The second tap is where people give up.
  *
  * `sessionStorage`, not Redux: the sign-in interceptor can reload the page, and
- * an intent that does not survive a reload does not survive the journey it
- * exists for. Scoped to the tab, and cleared the moment it is acted on.
+ * an intent that does not survive a reload does not survive the journey it exists
+ * for. Scoped to the tab, and cleared the moment it is acted on.
  */
 const PENDING_KEY = "roadaxis_pending_save";
 
@@ -40,23 +39,16 @@ function writePending(businessId: string | null) {
 }
 
 /**
- * The ❤️ Save control — FR-SOC-06.
+ * The ❤️ Save control — FR-SOC-06. Small, and the closest thing the MVP has to a
+ * retention mechanism. Three decisions worth stating:
  *
- * Small, and disproportionately important. It is the only reason a driver would
- * come back to RoadAxis rather than to the WhatsApp thread they already have,
- * which makes it the closest thing the MVP has to a retention mechanism.
- *
- * Three decisions worth stating:
- *
- *  - **A guest sees it and can press it.** Hiding the control until someone signs
- *    in means they never learn the feature exists. Pressing it explains what it
- *    does and offers the sign-in, which is a far better introduction than an
- *    absence.
- *  - **It stops the click from reaching the card.** A business card is one big
+ *  - **A guest sees it and can press it.** Hiding it until someone signs in means
+ *    they never learn the feature exists; pressing it explains what it does and
+ *    offers the sign-in.
+ *  - **It stops the click reaching the card.** A business card is one big
  *    stretched link; without this, saving a garage navigates to it.
- *  - **The accessible name says what pressing it will do**, and `aria-pressed`
- *    carries the state — so a screen-reader user is not told "Save" on something
- *    already saved.
+ *  - **The accessible name says what pressing it will do**, with `aria-pressed`
+ *    carrying the state.
  */
 export function SaveButton({
   businessId,
@@ -77,11 +69,9 @@ export function SaveButton({
   const saved = Boolean(isFavourite);
 
   /**
-   * Finish what they started before signing in.
-   *
-   * Guarded by a ref as well as by clearing the key, because this component is
-   * rendered once per card: without it, coming back to a search page would fire
-   * one save per visible result that happened to mount in the same tick.
+   * Finish what they started before signing in. Guarded by a ref as well as by
+   * clearing the key, because this component is rendered once per card — without
+   * it, returning to a search page fires one save per visible result.
    */
   const claimed = useRef(false);
   useEffect(() => {

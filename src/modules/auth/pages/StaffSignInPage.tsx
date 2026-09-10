@@ -5,21 +5,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import { getApiErrorMessage } from "@/shared/api/http";
 import { Field } from "@/shared/components/Field";
-import { Logo } from "@/shared/components/Logo";
+import { AuthShell } from "../components/AuthShell";
 import { useAuth, useStaffLogin } from "../hooks/useAuth";
 import { staffLoginSchema, type StaffLoginForm } from "../validations/auth.validation";
 
 /**
  * Staff sign-in — business owners and RoadAxis administrators.
  *
- * A password rather than a code, because these people come back daily and a
- * two-message round trip forty times a week is hostile. It is a separate route
- * from the driver flow rather than a mode switch on one page: two audiences
- * with nothing in common between them, and one screen trying to serve both
- * would ask every driver to work out which they are.
- *
- * No stock photography, no card floating on grey, no sentence that could
- * describe any product. The identity is the mark, the orange and the type.
+ * A password rather than a code: these people come back daily and a two-message
+ * round trip forty times a week is hostile. A separate route rather than a mode
+ * switch, because one screen serving both would ask every driver which they are.
  */
 export function StaffSignInPage() {
   const [params] = useSearchParams();
@@ -57,10 +52,25 @@ export function StaffSignInPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-md flex-col px-4 py-10 md:py-16">
-      <Logo className="mb-6" />
-
-      <h1 className="text-2xl font-semibold tracking-tight text-foreground">Business sign-in</h1>
+    <AuthShell
+      eyebrow="For garages and workshops"
+      headline={
+        <>
+          Your listing.
+          <br />
+          Your inbox.
+        </>
+      }
+      points={[
+        "Booking requests land on the WhatsApp number you already use.",
+        "Keep your hours, photos and services right without ringing anyone.",
+        "See how fast you reply — the number that wins repeat customers.",
+      ]}
+      backTo="/for-business"
+      backLabel="Listing your business"
+    >
+      <p className="ra-eyebrow text-muted-foreground">Business sign-in</p>
+      <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground">Welcome back</h1>
       <p className="mt-2 text-sm text-muted-foreground">
         For garages and workshops managing their RoadAxis listing.
       </p>
@@ -115,11 +125,7 @@ export function StaffSignInPage() {
         )}
 
         {/* Never disabled while typing — see SignInPage for why. */}
-        <button
-          type="submit"
-          className="ra-tap mt-2 w-full rounded-lg bg-primary text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-70"
-          disabled={login.isPending}
-        >
+        <button type="submit" className="ra-btn-primary mt-2 w-full" disabled={login.isPending}>
           {login.isPending ? "Signing in…" : "Sign in"}
         </button>
       </form>
@@ -138,6 +144,6 @@ export function StaffSignInPage() {
           </Link>
         </p>
       </div>
-    </div>
+    </AuthShell>
   );
 }

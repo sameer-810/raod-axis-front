@@ -11,8 +11,7 @@ export function useCategories() {
     queryKey: ["categories"],
     queryFn: categoryApi.list,
     // The taxonomy changes when an administrator edits it, which is rarely.
-    // Re-fetching it on every search screen would be a request per navigation
-    // for data that is the same all day.
+    // Re-fetching per search screen would be a request per navigation.
     staleTime: 30 * 60 * 1000,
   });
 }
@@ -46,12 +45,9 @@ export function useBusiness(slug: string | undefined) {
 }
 
 /**
- * Filter state, held in the URL rather than in component state.
- *
- * FR-DIS-09, and it is not a nicety: a search someone cannot send to a friend,
- * bookmark, or return to with the Back button is a search they have to build
- * again every time. Putting it in the query string gets all three for free and
- * makes the browser's history the undo stack.
+ * Filter state, held in the URL rather than in component state — FR-DIS-09. A
+ * search someone cannot share, bookmark or return to with Back is one they
+ * rebuild every time, and the query string makes history the undo stack.
  */
 export function useSearchFilters() {
   const [params, setParams] = useSearchParams();
@@ -77,12 +73,13 @@ export function useSearchFilters() {
   /**
    * Apply a change to the URL.
    *
-   * The functional form of `setSearchParams` is load-bearing, not a style
-   * choice. Building `next` from the `params` captured in this closure meant two
-   * changes dispatched before React re-rendered both started from the *same*
-   * stale snapshot, and the second silently discarded the first — tap "Open
-   * now" and then "Verified" quickly in the filter sheet and only "Verified"
-   * survived. The updater always receives the current value.
+   * The base is read from `window.location`, not from the hook's `params` and not
+   * from `setSearchParams`'s functional form. Two changes dispatched before React
+   * re-rendered both started from the *same* stale snapshot and the second
+   * silently discarded the first — tap "Open now" then "Verified" quickly in the
+   * filter sheet and only "Verified" survived. React Router builds the functional
+   * form over the `searchParams` captured at the last render, so it has the same
+   * window; it merely narrowed it enough to pass on a desktop and fail on a phone.
    */
   const update = useCallback(
     (patch: Partial<SearchFilters>, options?: { replace?: boolean }) => {
@@ -110,25 +107,25 @@ export function useSearchFilters() {
         if ("sort" in patch) set("sort", patch.sort);
 
         // Any change to what is being searched invalidates the page number.
-        // Without this, narrowing a filter while on page 4 shows an empty list
-        // and reads as "no results" rather than "you are past the end".
+        // Without this, narrowing a filter on page 4 shows an empty list and
+        // reads as "no results" rather than "you are past the end".
         if ("page" in patch) set("page", patch.page && patch.page > 1 ? String(patch.page) : "");
         else next.delete("page");
 
         return next;
       };
 
-      setParams(apply, { replace: options?.replace ?? false });
+      setParams(apply(new URLSearchParams(window.location.search)), {
+        replace: options?.replace ?? false,
+      });
     },
     [setParams],
   );
 
   /**
-   * Filters narrowing the list, excluding search and location.
-   *
-   * Shown as a count on the mobile Filters button, because once the controls are
-   * behind a sheet a silently filtered list reads as a list with records
-   * missing.
+   * Filters narrowing the list, excluding search and location. Shown as a count
+   * on the mobile Filters button, because once the controls are behind a sheet a
+   * silently filtered list reads as a list with records missing.
    */
   const activeCount =
     filters.categories.length +

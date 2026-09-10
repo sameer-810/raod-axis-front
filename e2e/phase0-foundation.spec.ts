@@ -11,8 +11,7 @@ import {
  * Phase 0 — the foundation.
  *
  * These assert the design rules in DESIGN.md rather than the appearance of any
- * particular screen, which is what makes them still useful in Phase 6. A design
- * rule that cannot be tested is an aspiration; these are the ones that can.
+ * particular screen, which is what keeps them useful this far in.
  */
 
 test.describe("Phase 0 · Shell", () => {
@@ -73,10 +72,9 @@ test.describe("Phase 0 · Theme", () => {
 
 test.describe("Phase 0 · The orange rule", () => {
   /**
-   * The rule that the whole colour system rests on, and the one most likely to
-   * be undone by a well-meaning edit. #FF7A00 carries 2.61:1 against white and
-   * 6.86:1 against the brand ink, so a filled orange button MUST take
-   * ink-coloured text.
+   * The rule the whole colour system rests on, and the one most likely to be
+   * undone by a well-meaning edit. #FF7A00 is 2.61:1 against white and 6.86:1
+   * against the brand ink, so a filled orange button MUST take ink-coloured text.
    */
   test("a primary button reaches AA in both themes", async ({ page }) => {
     for (const theme of ["light", "dark"] as const) {
@@ -108,10 +106,9 @@ test.describe("Phase 0 · The orange rule", () => {
     await setTheme(page, "light");
 
     /*
-      A real orange-on-light control: the "All services" link beside the
-      service grid. It used to be the "use my location" affordance, which now
-      sits on the hero and is white on ink — a perfectly good colour that this
-      particular rule has nothing to say about.
+      A real orange-on-light control: the "All services" link beside the service
+      grid. It used to be the "use my location" affordance, which now sits on the
+      hero and is white on ink.
     */
     const link = page.getByRole("link", { name: /all services/i });
     await expect(link).toBeVisible();
@@ -131,9 +128,8 @@ test.describe("Phase 0 · The orange rule", () => {
 
       /*
         Measured against the ground the heading is actually painted on, not
-        against `document.body`. The h1 now sits on the hero — white on ink,
-        over a photograph — and a body-ground reading of it returns 1.05:1,
-        which describes nothing on the screen.
+        against `document.body`. The h1 sits on the hero — white on ink, over a
+        photograph — and a body-ground reading returns 1.05:1.
       */
       const ratio = await contrastOf(page, "h1");
       expect(ratio, `heading in ${theme} is ${ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(4.5);
@@ -142,16 +138,10 @@ test.describe("Phase 0 · The orange rule", () => {
 });
 
 /**
- * The trust row moved.
- *
- * Phase 0 asserted its rules against two hand-written sample cards on a
- * temporary foundation page. Phase 2 replaced that page with the real product,
- * and the same rules — no rating without reviews, no "Unverified" badge, the
- * four facts in a fixed order, figures in mono — are now asserted in
- * `phase2-directory.spec.ts` against records that came out of the database.
- *
- * That is a better test of the same rule, so it is not duplicated here. The
- * rule did not get weaker; the fixture got real.
+ * The trust row moved. Phase 0 asserted its rules against two hand-written
+ * sample cards on a temporary page; Phase 2 replaced that with the real product,
+ * and the same rules are now asserted in `phase2-directory.spec.ts` against
+ * records that came out of the database.
  */
 
 test.describe("Phase 0 · The trust row", () => {
@@ -246,13 +236,10 @@ test.describe("Phase 0 · Mobile", () => {
     // `height: 100%`, so it reports the viewport height and the page is left
     // one screen short of the bottom.
     /**
-     * Scroll, measure, and be willing to do both again.
-     *
-     * The home page fetches its categories after the first paint. Against a
-     * cloud database that reply can land *after* the scroll, growing the page
-     * and pushing the last tile back down the screen — so a single
-     * scroll-then-measure reports a failure that a human scrolling the same page
-     * would never see. Polling re-scrolls to whatever the bottom is now.
+     * Scroll, measure, and be willing to do both again. The home page fetches
+     * its categories after first paint, and against a cloud database that reply
+     * can land *after* the scroll — growing the page and pushing the last tile
+     * back down. Polling re-scrolls to whatever the bottom is now.
      */
     await expect
       .poll(
@@ -263,7 +250,14 @@ test.describe("Phase 0 · Mobile", () => {
             return el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
           });
           const bar = await page.locator(".ra-bottombar").boundingBox();
-          const last = await page.locator(".ra-tile").last().boundingBox();
+          // The last block of content, whatever it is. This used to look for the
+          // last `.ra-tile`, which tied a layout rule to one surface class —
+          // and the moment the home page stopped ending in a tile, the check
+          // measured nothing and reported that nothing as a failure.
+          const last = await page
+            .locator("main section, main article, main .ra-tile, main .ra-cta")
+            .last()
+            .boundingBox();
           // Positive = the tile is under the bar, which is the failure.
           return Math.round(last!.y + last!.height - bar!.y);
         },
@@ -326,12 +320,9 @@ test.describe("Phase 0 · Accessibility", () => {
 test.describe("Phase 0 · Language", () => {
   test("no screen implies a confirmed appointment", async ({ page }) => {
     /**
-     * FR-BKG-10, swept across every public route rather than one page.
-     *
-     * A driver who turns up expecting a held slot is a failure of copywriting,
-     * and it starts with one button labelled "Book". The booking form itself
-     * arrives in Phase 5; this is the guard that stops the wrong word creeping
-     * in before it does.
+     * FR-BKG-10, swept across every public route rather than one page. A driver
+     * who turns up expecting a held slot is a failure of copywriting, and it
+     * starts with one button labelled "Book".
      */
     for (const route of ["/", "/search?lat=53.4808&lng=-2.2426", "/categories", "/sign-in"]) {
       await page.goto(route);

@@ -12,13 +12,11 @@ import { API, contrastRatio, TOUCH_FLOOR } from "./helpers";
 /**
  * Phase 7 — the mobile layer and accessibility, swept across every route.
  *
- * Phases 0–6 each asserted their own screens. This suite asserts the *product*:
- * the same rules, applied to every destination a user can reach, so a regression
- * introduced on one page cannot hide behind the twenty that still pass.
+ * Phases 0–6 each asserted their own screens; this asserts the *product*, so a
+ * regression introduced on one page cannot hide behind the twenty that pass.
  *
- * It writes `qa-audit/metrics.json` — US-701 asks for the per-route figures to be
- * recorded rather than merely asserted, because "no horizontal overflow" is a
- * pass/fail and "how close is each route to overflowing" is the thing that tells
+ * Writes `qa-audit/metrics.json` (US-701): "no horizontal overflow" is a
+ * pass/fail, and how close each route is to overflowing is the thing that tells
  * you which one will break next.
  */
 
@@ -38,10 +36,9 @@ interface Route {
  * Seeded once, used by every test in the file.
  *
  * Sessions are captured as tokens rather than re-driven through the sign-in
- * screens. Eighty-odd tests each doing the two-code OTP dance would spend most
- * of the run signing in, and — more to the point — would burn eighty numbers out
- * of Ofcom's 1,000-number test block. The sign-in *screens* are covered by
- * Phase 1; this suite is about every route behind them.
+ * screens: eighty tests each doing the two-code OTP dance would spend most of
+ * the run signing in and would burn eighty of Ofcom's 1,000 test numbers. Phase
+ * 1 covers the sign-in screens; this suite is about every route behind them.
  */
 const fixture = {
   businessSlug: "",
@@ -91,10 +88,10 @@ async function freePhone(): Promise<string> {
  * One of everything the routes need: a live listing with an owner, a driver who
  * has saved and requested something, and a session for each role.
  *
- * The screens under audit have to have *content* on them. A dashboard with no
- * rows and a list with no items pass every layout rule trivially, and the bug
- * this suite exists to catch — a table that overflows, a row link too small to
- * hit — only appears once there is something on the page.
+ * The screens under audit have to have *content* on them. An empty dashboard
+ * passes every layout rule trivially, and the bugs this exists to catch — a
+ * table that overflows, a row link too small to hit — only appear once there is
+ * something on the page.
  */
 async function seedFixtures() {
   const { ctx, token: adminToken } = await adminContext();
@@ -204,10 +201,9 @@ async function signIn(page: Page, as: Audience) {
 /**
  * Every destination the product has, and who can reach it.
  *
- * `:slug` stays a placeholder. This list is built when Playwright *collects* the
- * file, which is before `beforeAll` has seeded anything — baking the slug in
- * here would put an empty string in three URLs and the failures would look like
- * routing bugs.
+ * `:slug` stays a placeholder: this list is built when Playwright *collects* the
+ * file, before `beforeAll` has seeded anything, so baking the slug in would put
+ * an empty string in three URLs and the failures would look like routing bugs.
  */
 const ROUTES: Route[] = (() => {
   return [
@@ -260,11 +256,8 @@ test.beforeAll(async () => {
 
 test.afterAll(async () => {
   /**
-   * The per-route figures, written rather than only asserted.
-   *
-   * A pass tells you the rule held today. The margin tells you which route is
-   * about to stop holding it, which is the question anybody maintaining this
-   * actually has.
+   * The per-route figures, written rather than only asserted. A pass says the
+   * rule held today; the margin says which route is about to stop holding it.
    */
   if (!metrics.length) return;
   const dir = path.join(process.cwd(), "qa-audit");
@@ -425,11 +418,9 @@ test.describe("Phase 7 · Structure and naming", () => {
         const headings = Array.from(document.querySelectorAll("h1,h2,h3,h4,h5,h6"));
         /**
          * All four ways an image can be named, not just the two obvious ones.
-         *
          * `aria-labelledby` pointing at a `<title>` is how an inline SVG chart
          * is labelled — checking `alt` and `aria-label` alone reports a
-         * correctly described chart as an unnamed image, which then teaches
-         * whoever fixes it to add a redundant attribute.
+         * correctly described chart as an unnamed image.
          */
         const unnamed = Array.from(document.querySelectorAll('img, svg[role="img"]'))
           .filter((el) => {
@@ -504,13 +495,11 @@ test.describe("Phase 7 · Contrast, on real screens rather than on tokens", () =
 
       const failures: string[] = [];
       /**
-       * Chosen for the *colours* they put on screen, not for coverage.
-       *
-       * Between them these routes render every tone the design system has on
-       * every surface it uses: status badges on tinted grounds, muted text on
-       * muted grounds, the permanently-dark rail, and the warning panels that
-       * paint a colour at 10% behind text of the same hue — which is where the
-       * three real failures in this phase were.
+       * Chosen for the *colours* they put on screen, not for coverage. Between
+       * them these routes render every tone the design system has on every
+       * surface it uses: status badges on tinted grounds, muted text on muted
+       * grounds, the permanently-dark rail, and the warning panels that paint a
+       * colour at 10% behind text of the same hue — where the real failures were.
        */
       for (const route of [
         "/",
@@ -532,13 +521,10 @@ test.describe("Phase 7 · Contrast, on real screens rather than on tokens", () =
 
         const bad = await page.evaluate(() => {
           /**
-           * The colour actually behind the text, composited.
-           *
-           * Walking up to "the first element with a background" is not enough:
-           * a warning badge paints its own colour at 10% alpha over the card,
-           * and reading that layer alone reports amber-on-amber at 1.00:1 —
-           * a failure with no user behind it. Every translucent layer is
-           * composited over the one beneath, which is what the eye does.
+           * The colour actually behind the text, composited. Walking up to "the
+           * first element with a background" is not enough: a warning badge
+           * paints its own colour at 10% alpha over the card, and reading that
+           * layer alone reports amber-on-amber at 1.00:1.
            */
           const groundOf = (el: Element): string => {
             const layers: Array<[number, number, number, number]> = [];

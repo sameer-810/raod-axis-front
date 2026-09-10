@@ -2,12 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 
 /**
- * Bottom sheet — the mobile counterpart to a centred dialog.
- *
- * Rises from the edge the thumb is already near, takes the full width, and can
- * be dismissed by dragging down. Dragging is direct manipulation rather than
- * decoration: the sheet follows the finger and is released past a threshold,
- * which is why it is the one place motion is allowed to track input.
+ * Bottom sheet — the mobile counterpart to a centred dialog. Rises from the edge
+ * the thumb is already near, takes the full width, and can be dismissed by
+ * dragging down. Dragging is direct manipulation rather than decoration, which is
+ * why it is the one place motion is allowed to track input.
  */
 export function Sheet({
   open,

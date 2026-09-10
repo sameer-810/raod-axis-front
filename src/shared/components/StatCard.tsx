@@ -1,16 +1,13 @@
 import { cn } from "@/lib/utils";
 
 /**
- * One number and what it means.
+ * One number and what it means. Deliberately without an icon tile: a pastel
+ * rounded square holding a glyph beside a KPI label is the most common ornament in
+ * generated dashboards, and it spends a *colour* on decoration in a product where
+ * colour means status.
  *
- * Deliberately without an icon tile. A pastel rounded square holding a glyph
- * beside a KPI label is the most common ornament in generated dashboards, and
- * it spends a *colour* on decoration in a product where colour means status.
- * The number is the content; it gets the weight.
- *
- * `tone` exists for the one case that earns it — a queue that is overdue, a
- * delivery failure count above zero. Left neutral, which is what most of them
- * should be.
+ * `tone` exists for the one case that earns it — an overdue queue, a delivery
+ * failure count above zero. Left neutral, which is what most should be.
  */
 export function StatCard({
   label,

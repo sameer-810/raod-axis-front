@@ -13,16 +13,13 @@ export function useWhatsAppNumbers(businessId: string | undefined) {
 }
 
 /**
- * What the list will look like once the server agrees.
+ * What the list will look like once the server agrees, applied immediately so a
+ * toggle responds to the tap rather than to the round trip. Without it an owner on
+ * a workshop's connection taps "off", nothing moves, they tap again — and the
+ * second tap switches it back on.
  *
- * Applied immediately so a toggle responds to the tap rather than to the round
- * trip. Without it an owner on a workshop's connection taps "off", nothing
- * moves, they tap again — and the second tap switches it back on. A control
- * that ignores you for 400ms is a control people double-press.
- *
- * The invariants are recomputed here as well as on the server, because a
- * half-applied optimistic state is worse than none: showing two Primaries for a
- * moment teaches an owner the rule is not real.
+ * The invariants are recomputed here as well as on the server: showing two
+ * Primaries for a moment teaches an owner the rule is not real.
  */
 function optimistic(
   numbers: WhatsAppNumber[],
@@ -47,11 +44,9 @@ function optimistic(
 }
 
 /**
- * Shared write behaviour: apply the change locally, roll back on failure, and
- * let the server's answer be the last word.
- *
- * The business is invalidated too — its public profile shows the active numbers
- * and its portal view shows the routing status, and both are now stale.
+ * Shared write behaviour: apply the change locally, roll back on failure, and let
+ * the server's answer be the last word. The business is invalidated too — its
+ * public profile shows the active numbers and its portal view the routing status.
  */
 function useNumberMutation<TArgs>(
   businessId: string,
@@ -67,14 +62,10 @@ function useNumberMutation<TArgs>(
       if (!project) return undefined;
 
       /**
-       * Synchronous, deliberately.
-       *
-       * Awaiting `cancelQueries` first pushed the cache write into a later
-       * microtask, and by then React had already re-rendered the controlled
-       * checkbox from its unchanged props — so the toggle visibly snapped back
-       * before the optimistic state arrived. Writing first and letting the
-       * cancellation run in the background keeps the flip in the same tick as
-       * the tap.
+       * Synchronous, deliberately. Awaiting `cancelQueries` first pushed the cache
+       * write into a later microtask, and by then React had already re-rendered
+       * the controlled checkbox from its unchanged props — so the toggle visibly
+       * snapped back before the optimistic state arrived.
        */
       const previous = qc.getQueryData<WhatsAppNumber[]>(key(businessId));
       if (previous) qc.setQueryData(key(businessId), project(previous, args));

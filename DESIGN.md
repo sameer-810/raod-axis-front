@@ -218,9 +218,9 @@ Rules:
   that survives being narrowed.
 - **…but a desktop layout is not the phone layout at a larger width.** Mobile-first means
   the small screen is never compromised. It does not mean the large screen gets whatever
-  falls out — which is what happened, and it put *zero results* above the fold on a
+  falls out — which is what happened, and it put _zero results_ above the fold on a
   1440 px laptop. See DECISIONS.md D-023 for the table of what differs and why.
-- **Search is the home page.** The hero *contains* the search rather than sitting above
+- **Search is the home page.** The hero _contains_ the search rather than sitting above
   it. The rule is that nothing stands between a driver with a flat tyre and the list of
   tyre shops — that is about the search staying in the first screenful, not about the
   page being plain. Services are one tap away, in a grid, each with its own count.

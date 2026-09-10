@@ -2,22 +2,19 @@
  * @module format
  * @description Every figure a user reads passes through here.
  *
- * Centralised because these are the values that make the product feel local or
- * foreign. A distance in the wrong unit, a date in the American order or a time
- * in the wrong clock all say "this was not built for you" more loudly than any
- * amount of visual design says otherwise.
+ * Centralised because these are the values that make a product feel local or
+ * foreign. A distance in the wrong unit, a date in the American order or a time on
+ * the wrong clock say "this was not built for you" more loudly than any amount of
+ * visual design says otherwise.
  */
 
 const LOCALE = "en-GB";
 
 /**
- * Distance.
- *
- * Metres are what the database stores and what a `2dsphere` query returns.
- * Display follows `VITE_DISTANCE_UNIT`: metric by default, because the client
- * wrote the filter in metres and kilometres ("nearby 500m - 2km"), with
- * imperial a one-line switch because UK drivers think in miles.
- * See DECISIONS.md D-002.
+ * Distance. Metres are what the database stores and what a `2dsphere` query
+ * returns. Display follows `VITE_DISTANCE_UNIT`: metric by default, because the
+ * client wrote the filter in metres ("nearby 500m - 2km"), with imperial a
+ * one-line switch (D-002).
  */
 export function formatDistance(metres: number | null | undefined): string {
   if (metres === null || metres === undefined || !Number.isFinite(metres)) return "";
@@ -116,11 +113,9 @@ export function formatCurrency(amount: number | null | undefined): string {
 }
 
 /**
- * A rating, and the rule that goes with it.
- *
- * Returns null when there are no reviews. A business with no reviews is new,
- * not bad, and rendering "0.0 ★" is a libel we generated ourselves — the trust
- * row shows nothing at all instead. See DESIGN.md, "Trust is a component".
+ * A rating, and the rule that goes with it. Returns null when there are no
+ * reviews: a business with none is new, not bad, and "0.0 ★" is a libel we
+ * generated ourselves. See DESIGN.md, "Trust is a component".
  */
 export function formatRating(
   average: number | null | undefined,

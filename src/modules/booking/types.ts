@@ -2,11 +2,9 @@ export type BookingStatus =
   "new" | "contacted" | "accepted" | "completed" | "declined" | "cancelled";
 
 /**
- * How delivery reads to a human.
- *
- * `tracked: false` is the `deep_link` case — nothing was sent by us, so we
- * genuinely do not know whether it arrived. It must never be rendered as a
- * success or a failure (FR-WAP-04).
+ * How delivery reads to a human. `tracked: false` is the `deep_link` case —
+ * nothing was sent by us, so we genuinely do not know whether it arrived, and it
+ * must never render as a success or a failure (FR-WAP-04).
  */
 export interface Delivery {
   state: "queued" | "sent" | "delivered" | "read" | "failed" | "deep_link" | null;
@@ -46,11 +44,9 @@ export interface BookingRequest {
 }
 
 /**
- * What the driver sees about their own request.
- *
- * No delivery state: telling a driver "delivered" invites them to conclude they
- * are being ignored, and "failed" invites them to conclude the business is
- * broken. Neither is a judgement we should hand them.
+ * What the driver sees about their own request. No delivery state: "delivered"
+ * invites them to conclude they are being ignored, and "failed" that the
+ * business is broken. Neither is a judgement we should hand them.
  */
 export interface DriverBookingRequest {
   id: string;

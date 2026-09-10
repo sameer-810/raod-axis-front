@@ -26,11 +26,9 @@ const STATES = [
 /**
  * The delivery log — FR-WAP-03 and FR-WAP-06.
  *
- * The whole of the ">98% delivery" measure in PRD §6, and the screen that has to
- * be honest about when it cannot answer. In deep-link mode nothing is sent by
- * us at all, so those rows say "not tracked" and are counted separately from
- * both success and failure — averaging them in either direction would make the
- * headline figure meaningless.
+ * The whole of the ">98% delivery" measure in PRD §6, and it has to be honest
+ * about when it cannot answer: in deep-link mode nothing is sent by us, so those
+ * rows say "not tracked" and are counted separately from success and failure.
  */
 export function AdminWhatsAppLogsPage() {
   const [state, setState] = useState("");
@@ -65,8 +63,7 @@ export function AdminWhatsAppLogsPage() {
         <StatCard
           label="Delivery rate"
           // Null, not 100%, when nothing is trackable — a rate computed from no
-          // data is not a rate, and showing a confident number here would be
-          // the exact failure this screen exists to prevent.
+          // data is not a rate.
           value={
             stats?.deliveryRate === null || stats?.deliveryRate === undefined
               ? "—"

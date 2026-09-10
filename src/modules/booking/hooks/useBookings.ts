@@ -15,10 +15,10 @@ export function useBookingRequests(query: {
     queryFn: () => bookingApi.list(query),
     placeholderData: (prev) => prev,
     /**
-     * Booking requests arrive while the page is open — that is the whole point
-     * of an inbox. A minute is often enough that an owner who leaves the tab up
-     * sees a new one without reaching for refresh, and rare enough not to be a
-     * request per second from every open portal.
+     * Booking requests arrive while the page is open — that is what an inbox is.
+     * A minute is often enough that an owner who leaves the tab up sees a new one
+     * without reaching for refresh, and rare enough not to be a request per
+     * second from every open portal.
      */
     refetchInterval: 60_000,
   });
