@@ -216,8 +216,18 @@ Rules:
 
 - **Mobile-first, genuinely.** Designed at 390 px, then given room. Not a desktop layout
   that survives being narrowed.
-- **Search is the home page.** No marketing hero standing between a driver with a flat
-  tyre and the list of tyre shops. Category chips are visible without scrolling.
+- **…but a desktop layout is not the phone layout at a larger width.** Mobile-first means
+  the small screen is never compromised. It does not mean the large screen gets whatever
+  falls out — which is what happened, and it put *zero results* above the fold on a
+  1440 px laptop. See DECISIONS.md D-023 for the table of what differs and why.
+- **Search is the home page.** The hero *contains* the search rather than sitting above
+  it. The rule is that nothing stands between a driver with a flat tyre and the list of
+  tyre shops — that is about the search staying in the first screenful, not about the
+  page being plain. Services are one tap away, in a grid, each with its own count.
+- **Photography is decorative on the hero and forbidden on a business card.** A generic
+  workshop shown on a named garage reads as a photo of their premises, which is a small
+  lie about a real company. A listing with no photo gets its trade's icon on a warm
+  ground — a designed absence, because absence is the majority state. See D-025.
 - **List and map are one search in two views**, sharing filter state, with the state in
   the URL so a search can be sent to somebody.
 - **The list is the default, not the map.** A map is better for "where", a list is better
@@ -228,6 +238,10 @@ Rules:
   it open · how do I reach it · how do I get there · what will it cost me in effort.
   Photographs first, because a photograph of a real workshop is the fastest trust signal
   available and is why we require them.
+- **The profile's actions never scroll away.** A sticky panel in the right column above
+  `lg`, pinned to the bottom edge below it. Someone on that page is deciding whether to
+  contact this business, and in a single column "Request a Booking" ends up three screens
+  below the decision it serves.
 - **"Request a Booking" is the only wording.** Never "Book", never "Confirm", never
   "Appointment". The button, the confirmation, the notification and the status all say
   request, because that is what it is, and a driver who turns up expecting a held slot

@@ -1,5 +1,11 @@
 import { test, expect } from "@playwright/test";
-import { contrastRatio, expectNoHorizontalOverflow, setTheme, TOUCH_FLOOR } from "./helpers";
+import {
+  contrastOf,
+  contrastRatio,
+  expectNoHorizontalOverflow,
+  setTheme,
+  TOUCH_FLOOR,
+} from "./helpers";
 
 /**
  * Phase 0 — the foundation.
@@ -101,19 +107,19 @@ test.describe("Phase 0 · The orange rule", () => {
     await page.goto("/");
     await setTheme(page, "light");
 
-    // A real orange-on-light control: the "use my location" affordance.
-    const link = page.getByRole("button", { name: /use my current location/i });
+    /*
+      A real orange-on-light control: the "All services" link beside the
+      service grid. It used to be the "use my location" affordance, which now
+      sits on the hero and is white on ink — a perfectly good colour that this
+      particular rule has nothing to say about.
+    */
+    const link = page.getByRole("link", { name: /all services/i });
     await expect(link).toBeVisible();
-    const { color, background } = await link.evaluate((el) => {
-      const s = getComputedStyle(el);
-      // The element itself is transparent; the ground is the page.
-      return { color: s.color, background: getComputedStyle(document.body).backgroundColor };
-    });
 
-    const ratio = contrastRatio(color, background);
+    const ratio = await contrastOf(page, "a[href='/categories']");
     expect(
       ratio,
-      `orange text is ${ratio.toFixed(2)}:1 on the page ground — --primary-text must be used, not --primary`,
+      `orange text is ${ratio.toFixed(2)}:1 on its ground — --primary-text must be used, not --primary`,
     ).toBeGreaterThanOrEqual(4.5);
   });
 
@@ -121,14 +127,15 @@ test.describe("Phase 0 · The orange rule", () => {
     for (const theme of ["light", "dark"] as const) {
       await page.goto("/");
       await setTheme(page, theme);
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
-      const heading = page.getByRole("heading", { level: 1 });
-      const { color, background } = await heading.evaluate((el) => ({
-        color: getComputedStyle(el).color,
-        background: getComputedStyle(document.body).backgroundColor,
-      }));
-
-      const ratio = contrastRatio(color, background);
+      /*
+        Measured against the ground the heading is actually painted on, not
+        against `document.body`. The h1 now sits on the hero — white on ink,
+        over a photograph — and a body-ground reading of it returns 1.05:1,
+        which describes nothing on the screen.
+      */
+      const ratio = await contrastOf(page, "h1");
       expect(ratio, `heading in ${theme} is ${ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(4.5);
     }
   });

@@ -226,6 +226,189 @@ table,
   @apply rounded-xl border border-border bg-popover shadow-2xl;
 }
 
+/* ── Layout scaffolding ────────────────────────────────────────────────────
+   Three primitives that were previously re-typed on every page, which is how
+   the public screens drifted apart: one had max-w-4xl, another max-w-6xl, and
+   the search page rendered the phone layout at 1920px.
+─────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * The page container. One width for the whole public product.
+ *
+ * 80rem rather than 64rem because the search screen is a rail plus a two-up
+ * card grid, and at 64rem that grid has to drop to one column on a perfectly
+ * ordinary 1440px laptop.
+ */
+.ra-shell {
+  @apply mx-auto w-full max-w-[80rem] px-4 sm:px-6;
+}
+
+/**
+ * A toolbar pinned under the site header.
+ *
+ * `top-14` is the header's own height. Opaque, not translucent: cards sliding
+ * under a see-through bar read as smears and force a compositing layer on every
+ * scroll frame. The hairline is the only separation it needs.
+ */
+.ra-toolbar {
+  @apply sticky top-14 z-20 border-b border-border bg-background;
+}
+
+/**
+ * A sticky sidebar with its own scrollbar.
+ *
+ * The height calculation is the header (3.5rem) plus the toolbar (~4.5rem) plus
+ * breathing room. Without `overflow-y-auto` a filter list longer than the
+ * viewport simply cannot be reached — the page scrolls, the sticky element does
+ * not, and the last three categories are unreachable at any scroll position.
+ */
+.ra-rail {
+  @apply sticky top-[8.5rem] max-h-[calc(100vh-10rem)] overflow-y-auto pe-2;
+  scrollbar-width: thin;
+}
+
+/** A map, framed like a card. Clips the tiles to the radius. */
+.ra-map-frame {
+  @apply overflow-hidden rounded-xl border border-border bg-muted;
+}
+
+/**
+ * Light map tiles, dimmed for the dark theme.
+ *
+ * A filter, not a purpose-made dark basemap, and it is a compromise: place
+ * names lose a little contrast. It exists because every keyless dark tile set
+ * now watermarks itself, and a dimmed map is better than a bright white
+ * rectangle in a dark interface at the roadside at night. Set
+ * `VITE_MAP_TILE_URL` to a real dark basemap and this stops applying.
+ */
+.ra-map-tiles-dark {
+  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.86) saturate(0.7);
+}
+
+/* ── Hero ──────────────────────────────────────────────────────────────────
+   The one place in the product that uses photography for its own sake, and the
+   only place a gradient is allowed. Everything about it is built so that the
+   photograph is an enhancement: the ink ground and the scrim are what actually
+   guarantee the white text is readable, so a blocked or slow CDN gives a clean
+   dark panel rather than white-on-white.
+─────────────────────────────────────────────────────────────────────────── */
+.ra-hero {
+  @apply relative isolate overflow-hidden;
+  background-color: hsl(var(--sidebar));
+}
+
+.ra-hero-image {
+  @apply absolute inset-0 -z-10 h-full w-full object-cover;
+  /*
+   * The photograph is portrait and the hero is wide, so the crop is anchored to
+   * the right — which puts the mechanic in the empty half of the layout, beside
+   * the headline rather than behind it. `object-position: center` at these
+   * proportions shows a shoulder and a strip of wall.
+   */
+  object-position: 74% 26%;
+  opacity: 0.6;
+}
+
+/*
+ * The scrim, and it is doing real work.
+ *
+ * Heaviest on the leading edge where the white headline sits, and it lifts
+ * across to the right so the photograph is actually visible in the half of the
+ * hero that has no text on it. This is what guarantees the AA contrast on the
+ * headline no matter what the photograph happens to be doing — the picture is
+ * an enhancement, the ink is the contract.
+ */
+.ra-hero::after {
+  content: "";
+  @apply pointer-events-none absolute inset-0 -z-10;
+  background:
+    linear-gradient(
+      100deg,
+      hsl(var(--sidebar) / 0.95) 0%,
+      hsl(var(--sidebar) / 0.9) 30%,
+      hsl(var(--sidebar) / 0.42) 68%,
+      hsl(var(--sidebar) / 0.3) 100%
+    ),
+    linear-gradient(to top, hsl(var(--sidebar)) 1%, transparent 34%);
+}
+
+/**
+ * The search card, lifted off the photograph.
+ *
+ * The one element in the public product that takes a shadow while sitting in
+ * the page. It earns the exception because it is genuinely floating above an
+ * image rather than resting on a surface, and because a hairline border is
+ * invisible against photography — the shadow is what separates it from the
+ * picture at all.
+ */
+.ra-hero-card {
+  @apply rounded-2xl border border-white/10 bg-card p-2 shadow-2xl;
+}
+
+/**
+ * A listing with no photograph.
+ *
+ * Designed rather than empty. In a seeded directory most records have no
+ * picture and never will, so this is not an edge case — it is the majority
+ * state of the most-repeated element in the product, and it has to look
+ * deliberate at forty copies per screen.
+ */
+.ra-photo-empty {
+  @apply flex h-full w-full items-center justify-center text-primary-text/70;
+  background:
+    radial-gradient(120% 120% at 30% 20%, hsl(var(--primary) / 0.16) 0%, transparent 60%),
+    hsl(var(--muted));
+}
+
+/* ── Service tiles ─────────────────────────────────────────────────────── */
+.ra-service-tile {
+  @apply flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors;
+  @apply hover:border-primary/40 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+  min-height: 60px;
+}
+.ra-service-icon {
+  @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary-text;
+}
+
+/**
+ * A closing call to action. Tinted rather than filled: an all-orange panel at
+ * the foot of every public page is the loudest thing on the screen competing
+ * with the primary action inside it.
+ */
+.ra-cta {
+  @apply rounded-2xl border border-primary/25 bg-primary/5 p-5 md:p-6;
+}
+
+/* ── Controls ──────────────────────────────────────────────────────────────
+   Buttons and inputs were written out longhand at every call site — thirty-odd
+   copies of the same eight utility classes, which is why four of them ended up
+   at 40px and two at the wrong radius.
+─────────────────────────────────────────────────────────────────────────── */
+
+.ra-input {
+  @apply rounded-xl border border-input bg-card text-sm transition-colors;
+  @apply focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring;
+}
+
+/** Secondary action: a real border, no fill. */
+.ra-btn {
+  min-height: 44px;
+  @apply inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors;
+  @apply hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  @apply disabled:pointer-events-none disabled:opacity-60;
+}
+
+/**
+ * The primary action. Ink on orange — see the `--primary-foreground` note
+ * above; white on this orange is 2.61:1 and fails AA on every screen at once.
+ */
+.ra-btn-primary {
+  min-height: 44px;
+  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors;
+  @apply hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  @apply disabled:pointer-events-none disabled:opacity-60;
+}
+
 /**
  * Sticky column headers inside scrolling tables. Fully opaque, deliberately —
  * a translucent sticky header lets rows stay half-visible through the column

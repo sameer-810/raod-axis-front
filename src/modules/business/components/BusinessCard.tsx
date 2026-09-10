@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
-import { Navigation, ImageOff } from "lucide-react";
+import { Navigation } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TrustRow } from "@/shared/components/TrustRow";
 import { Badge } from "@/shared/components/Badge";
+import { CategoryIcon } from "@/shared/components/CategoryIcon";
 import { googleMapsDirections } from "@/shared/lib/maps";
 import { SaveButton } from "@/modules/favourite/components/SaveButton";
 import type { BusinessCard as BusinessCardType } from "../types";
@@ -28,16 +29,34 @@ export function BusinessCard({ business }: { business: BusinessCardType }) {
   const href = `/business/${business.slug}`;
   const directions = business.coordinates ? googleMapsDirections(business.coordinates) : null;
 
+  /*
+    Category names and the town, joined only where both exist.
+
+    Built with `filter(Boolean)` rather than by interpolating a separator,
+    because a listing with no category rendered "· Manchester" — a dangling
+    punctuation mark that looks like a missing field, on every imported record
+    in the directory.
+  */
+  const subtitle = [
+    business.categories
+      .map((c) => c.name)
+      .slice(0, 2)
+      .join(" · "),
+    business.address.city,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
-    <article className="ra-card">
-      <div className="flex gap-3 p-3.5">
+    <article className="ra-card flex flex-col">
+      <div className="flex gap-3.5 p-3.5">
         {/*
           A fixed-size thumbnail rather than a hero image. A photo of the actual
           workshop is the fastest trust signal available, but at 390px a
           full-width image pushes the next result off the screen and turns a
           scannable list into a carousel.
         */}
-        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-muted sm:h-24 sm:w-24">
+        <div className="relative h-[88px] w-[88px] shrink-0 overflow-hidden rounded-xl bg-muted">
           {business.primaryPhotoUrl ? (
             <img
               src={business.primaryPhotoUrl}
@@ -46,19 +65,29 @@ export function BusinessCard({ business }: { business: BusinessCardType }) {
               className="h-full w-full object-cover"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-              <ImageOff className="h-5 w-5" aria-hidden="true" />
+            /*
+              A designed absence, not a broken-image glyph.
+
+              Most listings in a seeded directory have no photograph and never
+              will — an administrator imports two hundred garages from a
+              spreadsheet and none of them arrive with pictures. A grey square
+              with a crossed-out camera in it says "this is broken" two hundred
+              times; the trade's own icon on a warm ground says "no photo yet"
+              once and then gets out of the way.
+            */
+            <div className="ra-photo-empty">
+              <CategoryIcon name={business.categories[0]?.icon} className="h-7 w-7" />
               <span className="sr-only">No photo yet</span>
             </div>
           )}
         </div>
 
-        <div className="min-w-0 flex-1">
+        <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex items-start justify-between gap-2">
             {/* h2, not h3: the page's h1 is the search heading and these are
                 its direct children. Skipping a level makes the document
                 outline unusable for anyone navigating by heading. */}
-            <h2 className="min-w-0 text-[15px] font-semibold leading-tight text-foreground">
+            <h2 className="min-w-0 text-[15px] font-semibold leading-snug text-foreground">
               {/* The real anchor. `after:absolute` stretches its hit area over
                   the card without turning the card into a div pretending to be
                   a link. */}
@@ -69,9 +98,9 @@ export function BusinessCard({ business }: { business: BusinessCardType }) {
                 {business.name}
               </Link>
             </h2>
-            <div className="flex shrink-0 items-start gap-1.5">
+            <div className="flex shrink-0 items-start gap-1">
               {business.claimStatus === "unclaimed" && (
-                <Badge className="relative z-10">Unclaimed</Badge>
+                <Badge className="relative z-10 mt-0.5">Unclaimed</Badge>
               )}
               {/*
                 Top-right, where a save control lives on every card in every
@@ -87,16 +116,12 @@ export function BusinessCard({ business }: { business: BusinessCardType }) {
             </div>
           </div>
 
-          <p className="mt-0.5 truncate text-sm text-muted-foreground">
-            {business.categories
-              .map((c) => c.name)
-              .slice(0, 3)
-              .join(" · ")}
-            {business.address.city ? ` · ${business.address.city}` : ""}
-          </p>
+          {subtitle && (
+            <p className="mt-0.5 truncate text-sm text-muted-foreground">{subtitle}</p>
+          )}
 
           <TrustRow
-            className="mt-2"
+            className="mt-auto pt-2"
             verified={business.isVerified}
             averageRating={business.averageRating}
             reviewCount={business.reviewCount}
@@ -107,7 +132,7 @@ export function BusinessCard({ business }: { business: BusinessCardType }) {
       </div>
 
       {directions && (
-        <div className="relative z-10 flex border-t border-border">
+        <div className="relative z-10 mt-auto flex border-t border-border">
           <a
             href={directions}
             target="_blank"

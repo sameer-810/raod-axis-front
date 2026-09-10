@@ -45,6 +45,66 @@ export function contrastRatio(a: string, b: string): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
+/**
+ * The colour actually painted behind an element, as a browser-side function
+ * body — one implementation, injected wherever it is needed.
+ *
+ * It is a string because Playwright serialises the function passed to
+ * `page.evaluate` and cannot capture anything from this module's scope. Two
+ * copies of this algorithm is exactly the drift that let a real failure hide:
+ * the naive version stops at the first element with a `background-color` and
+ * reports a warning badge — amber text on a 10% amber tint — as 1.00:1, a
+ * catastrophe no user has ever seen, while a heading on a photographic hero is
+ * measured against the *page* ground two hundred pixels away and reads 1.05:1.
+ *
+ * So: walk up, collect every layer, and composite them the way an eye does.
+ */
+export const GROUND_OF = `
+  const layers = [];
+  let node = el;
+  while (node) {
+    const bg = getComputedStyle(node).backgroundColor;
+    const m = bg.match(/rgba?\\(\\s*([\\d.]+)[,\\s]+([\\d.]+)[,\\s]+([\\d.]+)(?:[,/\\s]+([\\d.]+))?/i);
+    if (m) {
+      const alpha = m[4] === undefined ? 1 : Number(m[4]);
+      if (alpha > 0) {
+        layers.push([Number(m[1]), Number(m[2]), Number(m[3]), alpha]);
+        if (alpha >= 1) break;
+      }
+    }
+    node = node.parentElement;
+  }
+  layers.push([255, 255, 255, 1]);
+  let [r, g, b] = layers[layers.length - 1];
+  for (let i = layers.length - 2; i >= 0; i--) {
+    const [lr, lg, lb, la] = layers[i];
+    r = lr * la + r * (1 - la);
+    g = lg * la + g * (1 - la);
+    b = lb * la + b * (1 - la);
+  }
+  return 'rgb(' + Math.round(r) + ', ' + Math.round(g) + ', ' + Math.round(b) + ')';
+`;
+
+/**
+ * The contrast ratio of one element's text against what is really behind it.
+ *
+ * Use this rather than reading `document.body`'s background: the hero paints
+ * white text on ink over a photograph, and a body-ground measurement of it
+ * returns a number describing nothing that exists on the screen.
+ */
+export async function contrastOf(page: Page, selector: string): Promise<number> {
+  const { color, background } = await page.evaluate(
+    ({ sel, groundSource }) => {
+      const el = document.querySelector(sel);
+      if (!el) throw new Error(`No element matched ${sel}`);
+      const groundOf = new Function("el", groundSource) as (e: Element) => string;
+      return { color: getComputedStyle(el).color, background: groundOf(el) };
+    },
+    { sel: selector, groundSource: GROUND_OF },
+  );
+  return contrastRatio(color, background);
+}
+
 /** No route may scroll sideways. The most common mobile-layout failure there is. */
 export async function expectNoHorizontalOverflow(page: Page) {
   const overflow = await page.evaluate(() => ({

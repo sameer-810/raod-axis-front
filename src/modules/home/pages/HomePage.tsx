@@ -1,29 +1,68 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Search, LocateFixed, MessageCircle, Navigation, Store } from "lucide-react";
+import {
+  Search,
+  LocateFixed,
+  MessageCircle,
+  Navigation,
+  Store,
+  ArrowRight,
+  ShieldCheck,
+  Clock,
+  MapPin,
+} from "lucide-react";
 import { useGeolocation } from "@/shared/hooks/useGeolocation";
 import { geocodeUk } from "@/shared/lib/geocode";
-import { useCategories } from "@/modules/business/hooks/useBusinesses";
+import { useSeo } from "@/shared/hooks/useSeo";
+import { CategoryIcon } from "@/shared/components/CategoryIcon";
+import { useCategories, useFacets } from "@/modules/business/hooks/useBusinesses";
 
 /**
- * The home page, which is the search page.
+ * The workshop photograph behind the hero.
  *
- * No marketing hero. Nothing stands between a driver with a flat tyre and the
- * list of tyre shops — the research is unambiguous that search is the highest-
- * leverage surface in a marketplace, and a full-screen banner is the most
- * common way that surface gets pushed below the fold.
+ * Unsplash, which licenses for commercial use with no attribution required, and
+ * hot-linked from their CDN rather than served from our own box — it is faster
+ * from anywhere in the country and costs nothing to store.
  *
- * Category chips are visible without scrolling, because tapping "Tyres" is
- * faster than typing it and is what most arrivals actually want.
+ * It is a picture of *a* mechanic, never of a listed business. That distinction
+ * is the whole reason there is no stock photography on the business cards: a
+ * generic workshop shown on "Deansgate Tyre & Exhaust" reads as a photo of
+ * their premises, which would be a small lie told about a real company.
+ * Decorative imagery is honest here and dishonest there.
+ */
+const HERO =
+  "https://images.unsplash.com/photo-1615906655593-ad0386982a0f?ixlib=rb-4.1.0&q=72&fm=jpg&crop=entropy&cs=srgb";
+
+/**
+ * The home page, which is still the search page.
+ *
+ * The hero **contains** the search rather than sitting above it. The rule that
+ * matters — nothing stands between a driver with a flat tyre and the list of
+ * tyre shops — is about the search staying in the first screenful, not about
+ * the page being plain. A marketplace whose front door looks unfinished loses
+ * people before the search is ever used, and the previous version of this page
+ * was a heading, two inputs and a row of grey chips on white.
+ *
+ * So: one screen, one job, done with some confidence. Search first, then the
+ * services people actually came for, then the pitch to garage owners.
  */
 export function HomePage() {
   const navigate = useNavigate();
   const geo = useGeolocation();
   const { data: categories = [] } = useCategories();
+  const { data: facets } = useFacets();
   const [query, setQuery] = useState("");
   const [place, setPlace] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  useSeo({
+    title: "Find trusted automotive services near you",
+    description:
+      "RoadAxis lists garages, tyre centres, mobile fitters and recovery services across the UK. See who is open now, how far away they are, and request a booking on WhatsApp.",
+  });
+
+  const countFor = (slug: string) => facets?.find((f) => f.slug === slug)?.count;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -63,138 +102,245 @@ export function HomePage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10 md:py-16">
-      <div className="ra-public">
-        <section>
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
-            Find trusted automotive services near you.
-          </h1>
-          <p className="mt-3 max-w-xl text-base text-muted-foreground">
-            Garages, tyre centres, mobile fitters and recovery — with opening hours, directions and
-            a way to reach them in one tap.
-          </p>
+    <div>
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      <section className="ra-hero">
+        {/*
+          The photograph is decoration, so it is `aria-hidden` and carries no
+          alt text — describing it to a screen reader would announce a stock
+          photo before the search box. The ink underneath is what actually
+          guarantees the text contrast: if the image never loads, the hero is a
+          clean dark panel rather than white-on-white.
+        */}
+        <img
+          src={`${HERO}&w=1600`}
+          srcSet={`${HERO}&w=800 800w, ${HERO}&w=1600 1600w, ${HERO}&w=2200 2200w`}
+          sizes="100vw"
+          alt=""
+          aria-hidden="true"
+          fetchPriority="high"
+          className="ra-hero-image"
+        />
 
-          <form onSubmit={submit} className="mt-6 flex flex-col gap-2 sm:flex-row">
-            <div className="relative min-w-0 flex-1">
-              <Search
-                className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                aria-hidden="true"
-              />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                type="search"
-                placeholder="Tyres, brakes, a garage name…"
-                aria-label="What do you need?"
-                className="h-12 w-full rounded-lg border border-input bg-card ps-9 pe-3 text-sm transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring"
-              />
+        <div className="ra-shell relative py-12 md:py-20">
+          <div className="max-w-2xl">
+            <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur-sm">
+              <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+              Independent garages across the UK
+            </p>
+            <h1 className="text-[32px] font-semibold leading-[1.1] tracking-tight text-white md:text-5xl">
+              Find a garage
+              <br />
+              you can trust.
+            </h1>
+            <p className="mt-4 max-w-lg text-[15px] leading-relaxed text-white/80 md:text-lg">
+              Tyres, brakes, servicing, recovery — with opening hours, directions and a way to
+              reach them in one tap.
+            </p>
+          </div>
+
+          {/* The search card. Lifted off the photograph, because this is the one
+              thing on the page that has to be found instantly. */}
+          <form onSubmit={submit} className="ra-hero-card mt-7 md:mt-9">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center">
+              <div className="relative min-w-0 flex-1">
+                <Search
+                  className="pointer-events-none absolute start-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  type="search"
+                  placeholder="Tyres, brakes, a garage name…"
+                  aria-label="What do you need?"
+                  className="ra-input h-12 w-full border-transparent bg-transparent ps-10 pe-3 md:bg-transparent"
+                />
+              </div>
+
+              <div className="hidden h-7 w-px shrink-0 bg-border md:block" aria-hidden="true" />
+
+              <div className="relative min-w-0 md:w-56">
+                <MapPin
+                  className="pointer-events-none absolute start-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <input
+                  value={place}
+                  onChange={(e) => setPlace(e.target.value)}
+                  placeholder="Town or postcode"
+                  aria-label="Where?"
+                  className="ra-input h-12 w-full border-transparent bg-transparent ps-10 pe-3"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={busy}
+                className="ra-btn-primary h-12 shrink-0 md:px-7"
+              >
+                {busy ? "Searching…" : "Search"}
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </button>
             </div>
-            <input
-              value={place}
-              onChange={(e) => setPlace(e.target.value)}
-              placeholder="Town or postcode"
-              aria-label="Where?"
-              className="h-12 rounded-lg border border-input bg-card px-3 text-sm transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring sm:w-48"
-            />
-            <button
-              type="submit"
-              disabled={busy}
-              className="ra-tap flex items-center justify-center rounded-lg bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-70"
-            >
-              {busy ? "Searching…" : "Search"}
-            </button>
           </form>
 
           {error && (
-            <p role="alert" className="mt-2 text-sm text-warning">
+            <p role="alert" className="mt-3 text-sm text-white/90">
               {error}
             </p>
           )}
 
-          <button
-            type="button"
-            onClick={nearMe}
-            className="ra-tap mt-2 inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-primary-text transition-colors hover:underline"
-          >
-            <LocateFixed className="h-4 w-4" aria-hidden="true" />
-            {geo.status === "prompting" ? "Finding you…" : "Use my current location"}
-          </button>
-          {geo.status === "denied" && (
-            <p className="mt-1 text-sm text-muted-foreground">
-              No problem — type a town or postcode above.
-            </p>
-          )}
-        </section>
-
-        {categories.length > 0 && (
-          <section aria-labelledby="browse">
-            <h2
-              id="browse"
-              className="text-sm font-medium uppercase tracking-[0.08em] text-muted-foreground"
+          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+            <button
+              type="button"
+              onClick={nearMe}
+              className="ra-tap inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-80"
             >
-              Browse by service
-            </h2>
-            {/* Above the fold, and a strip rather than a grid — eleven wrapped
-                chips at 390px is four rows of navigation before any content. */}
-            <div className="ra-chips mt-3">
-              {categories.map((c) => (
-                <Link key={c.slug} to={`/search?category=${c.slug}`} className="ra-chip">
-                  {c.name}
+              <LocateFixed className="h-4 w-4" aria-hidden="true" />
+              {geo.status === "prompting" ? "Finding you…" : "Use my current location"}
+            </button>
+            {geo.status === "denied" && (
+              <p className="text-sm text-white/70">No problem — type a town or postcode above.</p>
+            )}
+          </div>
+
+          {/* Three claims, each of which the product actually keeps. */}
+          <ul className="mt-7 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/75">
+            <li className="inline-flex items-center gap-1.5">
+              <ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />
+              Verified businesses
+            </li>
+            <li className="inline-flex items-center gap-1.5">
+              <Clock className="h-4 w-4 text-primary" aria-hidden="true" />
+              See who is open now
+            </li>
+            <li className="inline-flex items-center gap-1.5">
+              <MessageCircle className="h-4 w-4 text-primary" aria-hidden="true" />
+              Request a booking on WhatsApp
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <div className="ra-shell py-10 md:py-14">
+        <div className="ra-public">
+          {/* ── Services ───────────────────────────────────────────────── */}
+          {categories.length > 0 && (
+            <section aria-labelledby="browse">
+              <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+                <div>
+                  <h2 id="browse" className="text-xl font-semibold tracking-tight text-foreground">
+                    What do you need doing?
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Tap a service to see who does it near you.
+                  </p>
+                </div>
+                <Link
+                  to="/categories"
+                  className="ra-tap inline-flex items-center gap-1 text-sm font-medium text-primary-text hover:underline"
+                >
+                  All services
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
+              </div>
+
+              {/*
+                A grid of tiles, not the old scrolling chip strip. Eleven names
+                in a row of pills is a horizontal list nobody scrolls past the
+                third item of; a grid shows every service at once, and an icon
+                makes each one findable without reading.
+              */}
+              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+                {categories.map((c) => {
+                  const count = countFor(c.slug);
+                  return (
+                    <Link key={c.slug} to={`/search?category=${c.slug}`} className="ra-service-tile">
+                      <span className="ra-service-icon">
+                        <CategoryIcon name={c.icon} className="h-5 w-5" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-semibold text-foreground">
+                          {c.name}
+                        </span>
+                        {count !== undefined && (
+                          <span className="block font-mono text-xs tabular-nums text-muted-foreground">
+                            {count} {count === 1 ? "place" : "places"}
+                          </span>
+                        )}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* ── How it works ───────────────────────────────────────────── */}
+          <section aria-labelledby="how">
+            <h2 id="how" className="mb-4 text-xl font-semibold tracking-tight text-foreground">
+              How it works
+            </h2>
+            <ol className="grid gap-3 sm:grid-cols-3">
+              {[
+                {
+                  icon: Search,
+                  title: "Discover",
+                  body: "Search by service and distance. See who is open right now, and how far away they are.",
+                },
+                {
+                  icon: MessageCircle,
+                  title: "Contact",
+                  body: "Message them on WhatsApp, or send a booking request with the date and time you want.",
+                },
+                {
+                  icon: Navigation,
+                  title: "Go",
+                  body: "They reply to confirm. Open directions straight in Google Maps and drive over.",
+                },
+              ].map((s, i) => (
+                <li key={s.title} className="ra-tile relative">
+                  <span
+                    className="absolute end-4 top-4 font-mono text-3xl font-semibold tabular-nums text-muted-foreground/15"
+                    aria-hidden="true"
+                  >
+                    {i + 1}
+                  </span>
+                  <s.icon className="h-5 w-5 text-primary-text" aria-hidden="true" />
+                  <p className="mt-3 text-base font-semibold text-foreground">{s.title}</p>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
+                </li>
               ))}
+            </ol>
+          </section>
+
+          {/*
+            The supply side of the marketplace, and the reason the Claim flow
+            exists at all. It does not hide in a footer: without businesses there
+            is nothing for a driver to find.
+          */}
+          <section className="ra-cta">
+            <div className="flex flex-wrap items-center justify-between gap-5">
+              <div className="flex items-start gap-3.5">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary-text">
+                  <Store className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <div>
+                  <p className="text-base font-semibold text-foreground">Run a garage?</p>
+                  <p className="mt-1 max-w-md text-sm text-muted-foreground">
+                    You may already be listed. Claim your listing to manage your details, hours
+                    and photos — free while we are building the network.
+                  </p>
+                </div>
+              </div>
+              <Link to="/for-business" className="ra-btn-primary shrink-0">
+                List your business
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
             </div>
           </section>
-        )}
-
-        <section aria-labelledby="how">
-          <h2 id="how" className="sr-only">
-            How it works
-          </h2>
-          <div className="grid gap-3 sm:grid-cols-3">
-            {[
-              {
-                icon: Search,
-                title: "Discover",
-                body: "Search by service and distance. See who's open now.",
-              },
-              {
-                icon: MessageCircle,
-                title: "Contact",
-                body: "Message them, or send a booking request.",
-              },
-              { icon: Navigation, title: "Go", body: "Open directions straight in Google Maps." },
-            ].map((s) => (
-              <div key={s.title} className="ra-tile">
-                <s.icon className="h-5 w-5 text-primary-text" aria-hidden="true" />
-                <p className="mt-2.5 text-sm font-semibold text-foreground">{s.title}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{s.body}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/*
-          The supply side of the marketplace, and the reason the Claim flow
-          exists at all. It does not hide in a footer: without businesses there
-          is nothing for a driver to find.
-        */}
-        <section className="ra-tile flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <Store className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
-            <div>
-              <p className="text-sm font-semibold text-foreground">Run a garage?</p>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                Claim your listing or add your business — free while we're building the network.
-              </p>
-            </div>
-          </div>
-          <Link
-            to="/for-business"
-            className="ra-tap flex items-center rounded-lg border border-border px-4 text-sm font-medium transition-colors hover:bg-accent"
-          >
-            List your business
-          </Link>
-        </section>
+        </div>
       </div>
     </div>
   );

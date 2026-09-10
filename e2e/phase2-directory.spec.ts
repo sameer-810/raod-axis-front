@@ -82,15 +82,21 @@ test.describe("Phase 2 · The home page is the search page", () => {
     await expect(page.getByRole("button", { name: "Search" })).toBeVisible();
   });
 
-  test("category chips are reachable without scrolling", async ({ page }) => {
+  test("services are reachable in the first screenful", async ({ page }) => {
     await page.goto("/");
-    const chip = page.getByRole("link", { name: "Tyres", exact: true });
-    await expect(chip).toBeVisible();
-    const box = await chip.boundingBox();
+    /*
+      A prefix match, not an exact one. These are tiles now rather than chips,
+      and each carries its own count — "Tyres 11 places" — which is the whole
+      reason the tile is better than the chip it replaced: it says in advance
+      whether tapping it is worth the tap.
+    */
+    const tile = page.getByRole("link", { name: /^Tyres\b/ });
+    await expect(tile).toBeVisible();
+    const box = await tile.boundingBox();
     const viewport = page.viewportSize()!;
-    // Tapping a category is faster than typing one, and is what most arrivals
-    // actually want — so it cannot be below the fold.
-    expect(box!.y, "category chips are below the fold").toBeLessThan(viewport.height);
+    // Tapping a service is faster than typing one, and is what most arrivals
+    // actually want — so it cannot be far below the fold.
+    expect(box!.y, "the services grid is below the fold").toBeLessThan(viewport.height * 1.3);
   });
 
   test("searching from home carries the query into the results", async ({ page }) => {
@@ -340,14 +346,26 @@ test.describe("Phase 2 · The business profile", () => {
       .first()
       .click();
 
-    const link = page.getByRole("link", { name: /directions/i }).first();
+    /*
+      The visible copy. The profile renders its actions twice — a sticky rail
+      above `lg`, a pinned bottom bar below it — and only one is ever displayed,
+      so `.first()` in DOM order picks whichever the markup happens to list
+      first rather than the one on screen.
+    */
+    const link = page
+      .getByRole("link", { name: /directions/i })
+      .filter({ visible: true })
+      .first();
     await expect(link).toBeVisible();
     const href = await link.getAttribute("href");
     expect(href).toContain("google.com/maps/dir/");
     // GeoJSON stores [lng, lat] and every map URL is lat,lng. A transposition
     // does not throw — it puts a Manchester garage in the North Sea.
     expect(href).toMatch(/destination=53\.4\d+%2C-2\.\d+/);
-    expect(link).toHaveAttribute("target", "_blank");
+    // `await`, which was missing: an un-awaited web-first assertion resolves
+    // after the test body has finished and is reported as an unhandled
+    // rejection with no useful location attached to it.
+    await expect(link).toHaveAttribute("target", "_blank");
   });
 
   test("an unclaimed listing invites its owner without warning the driver", async ({ page }) => {
@@ -422,7 +440,18 @@ test.describe("Phase 2 · Administration", () => {
     await page.goto("/search");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await withFilters(page, async () => {
-      await expect(page.getByRole("button", { name })).toBeVisible();
+      /*
+        Text, not a role: the same filter is a checkbox in the desktop rail and
+        a chip button in the phone sheet, and this assertion is about the
+        category having reached the public product at all.
+
+        `filter({ visible: true })` because both layouts are in the DOM at every
+        width — one of them is display:none — so `.first()` picks whichever
+        comes first in source order and, on a phone, that is the hidden one.
+      */
+      await expect(
+        page.getByText(name, { exact: true }).filter({ visible: true }).first(),
+      ).toBeVisible();
     });
 
     // Clean up: an unused category deletes cleanly.
@@ -496,6 +525,16 @@ test.describe("Phase 2 · On a phone", () => {
       .locator("a:visible")
       .filter({ hasText: /directions/i })
       .first();
+    /**
+     * Asserted visible before it is measured.
+     *
+     * `boundingBox()` does not auto-wait for visibility — it returns `null` the
+     * moment the element is attached but not yet painted, and the test then
+     * dies on `null.y` with a message about a property rather than about the
+     * layout it was checking. `toBeVisible` retries; the measurement that
+     * follows is then always of something on screen.
+     */
+    await expect(directions).toBeVisible();
     const box = await directions.boundingBox();
     const viewport = page.viewportSize()!;
     // Pinned above the tab bar. Someone on this page is nearly always about to

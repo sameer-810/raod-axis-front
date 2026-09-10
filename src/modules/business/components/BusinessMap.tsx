@@ -70,6 +70,37 @@ function FitToResults({ businesses }: { businesses: BusinessCard[] }) {
   return null;
 }
 
+/**
+ * Where the map tiles come from.
+ *
+ * Configurable, and defaulted to OpenStreetMap's own tiles.
+ *
+ * This used to point at CARTO's keyless basemaps, which were ideal — a muted
+ * light set and a matching dark set, so the map belonged to the page instead of
+ * being a bright rectangle in a dark interface. CARTO has since started
+ * stamping **"API KEY REQUIRED"** diagonally across tiles served without one,
+ * which is not a broken map so much as a billboard on the highest-intent screen
+ * in the product.
+ *
+ * OSM's standard tiles need no key and look right. Their usage policy permits
+ * modest traffic with attribution and a real User-Agent, and explicitly does not
+ * cover a busy commercial product — so this reads two environment variables and
+ * the README says to set them before launch. A paid key (MapTiler, CARTO,
+ * Thunderforest) is a few pounds a month and drops in without a code change.
+ *
+ * There is no keyless dark basemap worth having, so dark mode dims and slightly
+ * desaturates the light tiles in CSS instead. It is not as good as a purpose-made
+ * dark set, and it is honest about being a fallback rather than shipping a
+ * watermark.
+ */
+function tileConfig(theme: string) {
+  const url = import.meta.env.VITE_MAP_TILE_URL || "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+  const attribution =
+    import.meta.env.VITE_MAP_TILE_ATTRIBUTION ||
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+  return { url, attribution, dim: theme === "dark" && !import.meta.env.VITE_MAP_TILE_URL };
+}
+
 export function BusinessMap({
   businesses,
   centre,
@@ -80,6 +111,7 @@ export function BusinessMap({
   activeId?: string | null;
 }) {
   const { theme } = useTheme();
+  const tiles = tileConfig(theme);
 
   const withCoords = useMemo(() => businesses.filter((b) => b.coordinates), [businesses]);
 
@@ -102,16 +134,10 @@ export function BusinessMap({
       aria-label="Map of search results"
     >
       <TileLayer
-        // CARTO's tiles come in a light and a dark set, so the map belongs to
-        // the page rather than being a bright rectangle in a dark interface —
-        // and dark mode is genuinely used here, at night, at the roadside.
-        url={
-          theme === "dark"
-            ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-        }
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        url={tiles.url}
+        attribution={tiles.attribution}
         maxZoom={19}
+        className={tiles.dim ? "ra-map-tiles-dark" : undefined}
       />
 
       <FitToResults businesses={withCoords} />

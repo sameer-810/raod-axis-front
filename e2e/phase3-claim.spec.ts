@@ -80,7 +80,25 @@ async function applyOnPage(page: Page, suffix: string, files = [licence()]) {
   await page.getByLabel("Your phone").fill("07700900321");
   await page.getByLabel("Your role").fill("Owner");
   await page.locator('input[type="file"]').setInputFiles(files);
+
+  /**
+   * Wait for the application to actually land.
+   *
+   * The submission carries the ownership documents, so with a real media
+   * provider configured it is an upload to Cloudinary rather than a write to a
+   * local disk — hundreds of milliseconds, not tens. A caller that navigates
+   * straight after the click cancels the request in flight, and the failure
+   * surfaces much later as an empty queue, which reads as a bug in the queue.
+   */
+  // `/claims/business/:id` for an existing listing, `/claims/register` for a new
+  // one — this helper drives the first, but matching both keeps it honest if a
+  // caller ever points it at the other.
+  const submitted = page.waitForResponse(
+    (r) => /\/claims\/(business|register)/.test(r.url()) && r.request().method() === "POST",
+  );
   await page.getByRole("button", { name: /send application/i }).click();
+  const res = await submitted;
+  expect(res.status(), `claim submission failed: ${await res.text()}`).toBe(201);
 }
 
 test.describe("Phase 3 · Owners find their own listing", () => {
@@ -239,7 +257,7 @@ test.describe("Phase 3 · Registering a new business", () => {
 
     const name = `${TAG} Brand New Garage`;
     await page.getByLabel("Business name").fill(name);
-    await page.getByLabel("Street address").fill("14 Deansgate");
+    await page.getByLabel("Street address").fill("14 Register Way");
     await page.getByLabel("Town or city").fill("Manchester");
     await page.getByLabel("Postcode").fill("M3 2RJ");
     await page.getByLabel("Postcode").blur();
