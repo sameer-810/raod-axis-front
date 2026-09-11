@@ -10,11 +10,27 @@
  *
  *   node scripts/audit-shots.mjs        → ../docs/*.png
  */
+import { execFileSync } from "node:child_process";
 import { chromium } from "@playwright/test";
 
 const API = "http://localhost:5005/api";
 const WEB = "http://localhost:5175";
 const OUT = "../docs";
+
+/**
+ * Sweep first, always.
+ *
+ * The public screens are the directory itself, so anything a test run left
+ * behind is in the screenshot. Running the suite before taking these once put
+ * 340 businesses called "p7mtwy3f8l Audit Motors" on the search page — the
+ * whole document, past the first glance, made worthless.
+ */
+console.log("sweeping test data…");
+execFileSync("npm", ["run", "clean:test-data"], {
+  cwd: "../raod-axis-back",
+  stdio: "inherit",
+  shell: process.platform === "win32",
+});
 
 const directory = (await (await fetch(`${API}/businesses?limit=20&sort=rating`)).json()).data;
 const featured =
