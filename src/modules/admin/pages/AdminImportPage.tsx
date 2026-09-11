@@ -328,7 +328,13 @@ export function AdminImportPage() {
                 ]}
               />
             </div>
-            {/* The line number is the only way back to the cell that is wrong. */}
+            {/*
+              A real table at every width, deliberately — no `mobileRow`. This
+              is a report read once, and its whole value is the line numbers
+              lining up against the file open in another window. Cards would
+              give that up to save a sideways scroll on a screen almost nobody
+              imports a spreadsheet from.
+            */}
             <DataTable
               label="Import results"
               rows={rows}
@@ -338,20 +344,6 @@ export function AdminImportPage() {
               stickyFirstColumn={false}
               minWidth={560}
               empty={<EmptyState inline title="No rows in this group" />}
-              mobileRow={(r) => (
-                <div className="ra-card p-3.5">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-medium text-foreground">
-                      <span className="me-2 font-mono text-xs text-muted-foreground">
-                        #{r.line}
-                      </span>
-                      {r.name}
-                    </p>
-                    <RowStatus status={r.status} />
-                  </div>
-                  <p className="mt-1 text-[13px] text-muted-foreground">{r.message}</p>
-                </div>
-              )}
             />
           </section>
         </>

@@ -85,16 +85,29 @@ export function Menu({
         return;
       setOpen(false);
     };
-    const onScroll = () => setOpen(false);
+    /**
+     * Follow the trigger rather than close.
+     *
+     * Closing on any scroll event dismisses the menu on the momentum that is
+     * still settling when a thumb lifts — and on the scroll a browser performs
+     * to bring the trigger into view in the first place, so on a long list the
+     * menu closed before it was ever seen. It only gives up once the trigger
+     * has actually left the viewport.
+     */
+    const onReflow = () => {
+      const r = triggerRef.current?.getBoundingClientRect();
+      if (!r || r.bottom < 0 || r.top > window.innerHeight) setOpen(false);
+      else place();
+    };
     document.addEventListener("mousedown", onDown);
-    window.addEventListener("resize", onScroll);
-    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", onReflow);
+    window.addEventListener("scroll", onReflow, true);
     return () => {
       document.removeEventListener("mousedown", onDown);
-      window.removeEventListener("resize", onScroll);
-      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", onReflow);
+      window.removeEventListener("scroll", onReflow, true);
     };
-  }, [open]);
+  }, [open, place]);
 
   // Focus the panel on open so arrow keys work; hand focus back to the trigger
   // on close — but only on a real close, never on mount.

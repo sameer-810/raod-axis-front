@@ -420,9 +420,12 @@ test.describe("Phase 2 · Administration", () => {
     await page.goto("/admin/categories");
 
     const name = `E2E Cat ${Date.now().toString(36)}`;
-    await page.getByRole("button", { name: "Add", exact: true }).click();
+    await page.getByRole("button", { name: /^add category$/i }).click();
     await page.getByLabel("Category name").fill(name);
-    await page.getByRole("button", { name: /add category/i }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: /^add category$/i })
+      .click();
 
     // `exact`, because the confirmation toast is still on screen and contains
     // the same name inside a longer sentence — as does the row's own
@@ -445,16 +448,28 @@ test.describe("Phase 2 · Administration", () => {
       ).toBeVisible();
     });
 
-    // Clean up: an unused category deletes cleanly.
+    // Clean up: an unused category deletes cleanly. Delete lives behind the
+    // row's action menu — fifty rows each carrying a visible destructive
+    // control is how people stop seeing destructive controls.
     await page.goto("/admin/categories");
-    await page.getByRole("button", { name: `Delete ${name}` }).click();
+    await page.getByRole("button", { name: `Actions for ${name}` }).click();
+    await page.getByRole("menuitem", { name: /^delete$/i }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: /^delete$/i })
+      .click();
     await expect(page.getByText(name, { exact: true })).toHaveCount(0);
   });
 
   test("deleting a category that is in use is refused with a count", async ({ page }) => {
     await signInAsAdmin(page);
     await page.goto("/admin/categories");
-    await page.getByRole("button", { name: "Delete Tyres" }).click();
+    await page.getByRole("button", { name: "Actions for Tyres" }).click();
+    await page.getByRole("menuitem", { name: /^delete$/i }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: /^delete$/i })
+      .click();
     // "You can't" without a number leaves an administrator with no next step.
     await expect(page.getByText(/business(es)? use this category/i)).toBeVisible();
   });

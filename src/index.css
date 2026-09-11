@@ -979,8 +979,9 @@ table,
 }
 
 /* ── Switch ─────────────────────────────────────────────────────────────── */
+/* The drawn track. The real input is stretched over it — see Switch.tsx. */
 .ra-switch {
-  @apply relative inline-flex h-6 w-10 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent bg-muted-foreground/35 transition-colors;
+  @apply absolute inset-0 inline-flex items-center rounded-full border-2 border-transparent bg-muted-foreground/35 transition-colors;
   transition-duration: var(--dur-base);
 }
 .ra-switch[aria-checked="true"] {

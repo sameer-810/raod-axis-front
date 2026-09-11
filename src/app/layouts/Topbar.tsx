@@ -13,8 +13,9 @@ import { usePalette } from "./CommandPalette";
  * on a phone it is the page's title bar. Opaque, deliberately: a frosted bar
  * leaves table rows half-visible through it as they scroll.
  *
- * The `<h1>` here exists only below `md` — above it the page's own header is
- * the h1, so there is exactly one at every width.
+ * Neither the phone title nor the breadcrumb is a heading. Both are chrome that
+ * names where you are; the page's own `<h1>` is the document's heading at every
+ * width, and on a phone it is `sr-only` so the name is not printed twice.
  */
 export function Topbar() {
   const { pathname } = useLocation();
@@ -29,9 +30,12 @@ export function Topbar() {
   return (
     <header className="ra-safe-top flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background px-3 md:px-6">
       <Logo showWordmark={false} className="md:hidden" />
-      <h1 className="min-w-0 flex-1 truncate text-[15px] font-semibold text-foreground md:hidden">
+      <p
+        aria-hidden="true"
+        className="min-w-0 flex-1 truncate text-[15px] font-semibold text-foreground md:hidden"
+      >
         {title}
-      </h1>
+      </p>
 
       <nav aria-label="Breadcrumb" className="hidden min-w-0 flex-1 md:block">
         <ol className="flex items-center gap-1 text-[13px] text-muted-foreground">

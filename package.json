@@ -11,6 +11,12 @@
     "e2e:ui": "playwright test --ui",
     "e2e:report": "playwright show-report",
     "format": "prettier --write .",
+    "shots:public": "node scripts/audit-shots.mjs",
+    "shots:console": "node scripts/console-shots.mjs",
+    "pdf:client": "node scripts/render-pdf.mjs ui-presentation.html RoadAxis-Interface.pdf",
+    "pdf:audit": "node scripts/render-pdf.mjs ui-audit.html RoadAxis-UI-Audit.pdf",
+    "pdf:whatsapp": "node scripts/render-pdf.mjs whatsapp-setup-guide.html RoadAxis-WhatsApp-Setup-Guide.pdf",
+    "docs:client": "npm run shots:public && npm run shots:console && npm run pdf:client",
     "validate": "npm run lint && npm run format",
     "preview": "vite preview"
   },
