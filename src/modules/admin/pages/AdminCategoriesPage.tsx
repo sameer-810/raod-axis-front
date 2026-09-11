@@ -1,11 +1,19 @@
 import { useState } from "react";
-import { Plus, Trash2, Lightbulb } from "lucide-react";
+import { Plus, Trash2, Lightbulb, Tags } from "lucide-react";
 import { toast } from "@/shared/lib/toast";
 import { getApiErrorMessage } from "@/shared/api/http";
 import { Badge } from "@/shared/components/Badge";
 import { Field } from "@/shared/components/Field";
-import { Sheet } from "@/shared/components/Sheet";
-import { useIsMobile } from "@/shared/hooks/useMediaQuery";
+import { Button } from "@/shared/components/Button";
+import { PageHeader } from "@/shared/components/PageHeader";
+import { DataTable, type Column } from "@/shared/components/DataTable";
+import { Dialog, ConfirmDialog } from "@/shared/components/Dialog";
+import { SectionCard } from "@/shared/components/SectionCard";
+import { Switch } from "@/shared/components/Switch";
+import { EmptyState } from "@/shared/components/EmptyState";
+import { RowMenu } from "@/shared/components/Menu";
+import { CategoryIcon } from "@/shared/components/CategoryIcon";
+import type { Category } from "@/modules/business/types";
 import {
   useAdminCategories,
   useCategorySuggestions,
@@ -15,15 +23,12 @@ import {
 } from "../hooks/useAdmin";
 
 /**
- * Category management — FR-ADM-05.
- *
- * Two halves, and the second is the interesting one: the managed taxonomy on the
- * left, and on the right what businesses have typed into "mention your service"
- * because it did not cover them. A term appearing eleven times is an argument
- * for a category; one appearing once is not.
+ * Category management — FR-ADM-05. Two halves, and the second is the
+ * interesting one: the managed taxonomy, and what businesses have typed into
+ * "mention your service" because it did not cover them. A term appearing
+ * eleven times is an argument for a category; one appearing once is not.
  */
 export function AdminCategoriesPage() {
-  const isMobile = useIsMobile();
   const { data: categories = [], isLoading } = useAdminCategories();
   const { data: suggestions = [] } = useCategorySuggestions();
   const create = useCreateCategory();
@@ -33,6 +38,7 @@ export function AdminCategoriesPage() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<Category | null>(null);
 
   async function add(e: React.FormEvent) {
     e.preventDefault();
@@ -47,24 +53,75 @@ export function AdminCategoriesPage() {
     }
   }
 
-  async function toggle(id: string, isActive: boolean) {
+  async function toggle(c: Category, isActive: boolean) {
     try {
-      await update.mutateAsync({ id, payload: { isActive } });
+      await update.mutateAsync({ id: c.id, payload: { isActive } });
     } catch (err) {
       toast.error(getApiErrorMessage(err));
     }
   }
 
-  async function destroy(id: string, label: string) {
+  async function destroy(c: Category) {
     try {
-      await remove.mutateAsync(id);
-      toast.success(`${label} deleted`);
+      await remove.mutateAsync(c.id);
+      toast.success(`${c.name} deleted`);
+      setDeleting(null);
     } catch (err) {
-      // The server refuses when businesses are using it and names the count, so
-      // an administrator knows to reassign them or switch it off instead.
+      // The server refuses when businesses are using it and names the count.
       toast.error(getApiErrorMessage(err));
+      setDeleting(null);
     }
   }
+
+  const columns: Column<Category>[] = [
+    {
+      key: "order",
+      header: "#",
+      width: "3rem",
+      cell: (c) => (
+        <span className="font-mono text-xs tabular-nums text-muted-foreground">{c.sortOrder}</span>
+      ),
+    },
+    {
+      key: "name",
+      header: "Category",
+      wrap: true,
+      cell: (c) => (
+        <span className="flex items-center gap-2.5">
+          <span className="ra-service-icon h-7 w-7 rounded-md">
+            <CategoryIcon name={c.icon ?? c.name} className="h-3.5 w-3.5" />
+          </span>
+          <span className="font-medium text-foreground">{c.name}</span>
+          {!c.isActive && <Badge tone="warning">Hidden</Badge>}
+        </span>
+      ),
+    },
+    {
+      key: "slug",
+      header: "URL",
+      hideBelow: "md",
+      cell: (c) => (
+        <span className="font-mono text-xs text-muted-foreground">/search?category={c.slug}</span>
+      ),
+    },
+    {
+      key: "shown",
+      header: "Shown",
+      align: "end",
+      width: "6rem",
+      cell: (c) => (
+        <span className="inline-flex justify-end" onClick={(e) => e.stopPropagation()}>
+          <Switch
+            checked={c.isActive}
+            onChange={(v) => void toggle(c, v)}
+            label={`Show ${c.name} publicly`}
+          />
+        </span>
+      ),
+    },
+  ];
+
+  const max = Math.max(...suggestions.map((s) => s.count), 1);
 
   const form = (
     <form onSubmit={add} className="space-y-1">
@@ -75,137 +132,154 @@ export function AdminCategoriesPage() {
         placeholder="e.g. Windscreens"
         hint="The URL is generated from the name and stays fixed if you rename it later."
         error={error ?? undefined}
+        data-autofocus
       />
-      <button
-        type="submit"
-        disabled={create.isPending}
-        className="ra-tap w-full rounded-lg bg-primary text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-70"
-      >
-        {create.isPending ? "Adding…" : "Add category"}
-      </button>
+      <div className="flex justify-end gap-2 pt-2">
+        <Button variant="secondary" onClick={() => setOpen(false)}>
+          Cancel
+        </Button>
+        <Button type="submit" variant="primary" loading={create.isPending}>
+          Add category
+        </Button>
+      </div>
     </form>
   );
 
   return (
     <div className="ra-page">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="hidden text-xl font-semibold tracking-tight text-foreground md:block">
-            Categories
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            <span className="font-mono tabular-nums">{categories.length}</span> categories · changes
-            reach the public filter immediately
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="ra-tap flex items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-        >
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          Add
-        </button>
-      </div>
+      <PageHeader
+        title="Categories"
+        description="The service taxonomy drivers filter by. Changes reach the public filter immediately."
+        meta={
+          <span>
+            <span className="font-mono tabular-nums text-foreground">{categories.length}</span>{" "}
+            categories ·{" "}
+            <span className="font-mono tabular-nums text-foreground">
+              {categories.filter((c) => c.isActive).length}
+            </span>{" "}
+            shown
+          </span>
+        }
+        actions={
+          <Button variant="primary" icon={Plus} onClick={() => setOpen(true)}>
+            Add category
+          </Button>
+        }
+      />
 
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          {isLoading ? (
-            <div className="ra-panel px-4 py-12 text-center text-sm text-muted-foreground">
-              Loading…
-            </div>
-          ) : (
-            <ul className="ra-panel divide-y divide-border">
-              {categories.map((c) => (
-                <li key={c.id} className="flex items-center justify-between gap-3 px-4 py-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground">
-                      {c.name}
-                      {!c.isActive && (
-                        <Badge className="ms-2" tone="warning">
-                          Hidden
-                        </Badge>
-                      )}
-                    </p>
-                    <p className="truncate font-mono text-xs text-muted-foreground">/{c.slug}</p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <label className="ra-tap flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
-                      <input
-                        type="checkbox"
-                        checked={c.isActive}
-                        onChange={(e) => toggle(c.id, e.target.checked)}
-                        className="rounded border-input accent-primary"
-                      />
-                      <span className="hidden sm:inline">Shown</span>
-                      <span className="sr-only sm:hidden">Show {c.name} publicly</span>
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => destroy(c.id, c.name)}
-                      aria-label={`Delete ${c.name}`}
-                      title="Delete"
-                      className="ra-tap flex items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+          <DataTable
+            label="Categories"
+            rows={categories}
+            columns={columns}
+            rowKey={(c) => c.id}
+            loading={isLoading}
+            density="comfortable"
+            minWidth={520}
+            rowActions={(c) => [
+              {
+                label: c.isActive ? "Hide from the public" : "Show publicly",
+                onSelect: () => void toggle(c, !c.isActive),
+              },
+              { type: "separator" as const },
+              { label: "Delete", icon: Trash2, destructive: true, onSelect: () => setDeleting(c) },
+            ]}
+            rowActionsLabel={(c) => `Actions for ${c.name}`}
+            empty={
+              <EmptyState
+                inline
+                icon={Tags}
+                title="No categories yet"
+                description="Add the first one, or run the seed."
+              />
+            }
+            mobileRow={(c) => (
+              <div className="ra-card flex items-center gap-3 p-3.5">
+                <span className="ra-service-icon h-9 w-9">
+                  <CategoryIcon name={c.icon ?? c.name} className="h-4 w-4" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    {c.name}
+                    {!c.isActive && <Badge tone="warning">Hidden</Badge>}
+                  </p>
+                  <p className="truncate font-mono text-xs text-muted-foreground">/{c.slug}</p>
+                </div>
+                <Switch
+                  checked={c.isActive}
+                  onChange={(v) => void toggle(c, v)}
+                  label={`Show ${c.name} publicly`}
+                />
+                <RowMenu
+                  items={[
+                    {
+                      label: "Delete",
+                      icon: Trash2,
+                      destructive: true,
+                      onSelect: () => setDeleting(c),
+                    },
+                  ]}
+                  label={`Actions for ${c.name}`}
+                  size="md"
+                  variant="secondary"
+                />
+              </div>
+            )}
+          />
         </div>
 
-        <section aria-labelledby="suggestions" className="ra-tile h-fit">
-          <h2
-            id="suggestions"
-            className="flex items-center gap-2 text-sm font-semibold text-foreground"
-          >
-            <Lightbulb className="h-4 w-4 text-warning" aria-hidden="true" />
-            What businesses are typing
-          </h2>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            Services entered under “mention your service” because nothing in the list covered them.
-            A term appearing often is an argument for a new category.
-          </p>
+        <SectionCard
+          title={
+            <span className="flex items-center gap-2">
+              <Lightbulb className="h-4 w-4 text-warning" aria-hidden="true" />
+              What businesses are typing
+            </span>
+          }
+          description="Services entered under “mention your service” because nothing in the list covered them. A term appearing often is an argument for a new category."
+          className="h-fit"
+        >
           {suggestions.length === 0 ? (
-            <p className="mt-3 text-sm text-muted-foreground">Nothing yet.</p>
+            <p className="text-sm text-muted-foreground">Nothing yet.</p>
           ) : (
-            <ul className="mt-3 space-y-1.5">
-              {suggestions.slice(0, 15).map((s) => (
-                <li key={s.service} className="flex items-center justify-between gap-3 text-sm">
-                  <span className="truncate text-foreground">{s.service}</span>
-                  <span className="shrink-0 font-mono tabular-nums text-muted-foreground">
-                    {s.count}
-                  </span>
+            <ol className="space-y-2">
+              {suggestions.slice(0, 12).map((s) => (
+                <li key={s.service}>
+                  <div className="flex items-center justify-between gap-3 text-[13px]">
+                    <span className="truncate text-foreground">{s.service}</span>
+                    <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
+                      {s.count}
+                    </span>
+                  </div>
+                  <div
+                    className="mt-1 h-1 overflow-hidden rounded-full bg-muted"
+                    aria-hidden="true"
+                  >
+                    <div
+                      className="h-full rounded-full bg-primary/70"
+                      style={{ width: `${Math.max(6, (s.count / max) * 100)}%` }}
+                    />
+                  </div>
                 </li>
               ))}
-            </ul>
+            </ol>
           )}
-        </section>
+        </SectionCard>
       </div>
 
-      {isMobile ? (
-        <Sheet open={open} onOpenChange={setOpen} title="Add category">
-          {form}
-        </Sheet>
-      ) : (
-        open && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="ra-overlay w-full max-w-sm p-6">
-              <h2 className="mb-4 text-base font-semibold text-foreground">Add category</h2>
-              {form}
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="ra-tap mt-2 w-full rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )
-      )}
+      <Dialog open={open} onClose={() => setOpen(false)} title="Add category" size="sm">
+        {form}
+      </Dialog>
+
+      <ConfirmDialog
+        open={Boolean(deleting)}
+        onClose={() => setDeleting(null)}
+        title={`Delete ${deleting?.name ?? "category"}?`}
+        description="Refused if any business is listed under it — hide it instead, or reassign them first."
+        confirmLabel="Delete"
+        busy={remove.isPending}
+        onConfirm={() => deleting && destroy(deleting)}
+      />
     </div>
   );
 }

@@ -11,10 +11,12 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/app/hooks";
-import { StatCard } from "@/shared/components/StatCard";
+import { Stat, StatGroup } from "@/shared/components/StatGroup";
 import { Badge } from "@/shared/components/Badge";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { PageLoader } from "@/shared/components/PageLoader";
+import { SectionCard } from "@/shared/components/SectionCard";
+import { ButtonLink } from "@/shared/components/Button";
 import { formatAge, formatDateFriendly, formatDuration } from "@/shared/lib/format";
 import { BookingStatusBadge } from "@/modules/booking/components/StatusBadge";
 import { useBookingRequests } from "@/modules/booking/hooks/useBookings";
@@ -22,14 +24,11 @@ import { useMyAnalytics } from "@/modules/analytics/hooks/useAnalytics";
 import { useMyBusinesses, type OwnedBusiness } from "../hooks/useMyBusiness";
 
 /**
- * The portal dashboard — the screen an owner opens every morning.
- *
- * It answers four questions in the order an owner asks them: **can customers
- * reach me**, **has anyone asked for anything**, **how am I doing**, and **what is
- * my listing still missing**.
- *
- * Everything here links to the screen where it can be acted on. A dashboard that
- * only reports is a report.
+ * The portal dashboard — the screen an owner opens every morning. Four
+ * questions in the order they ask them: can customers reach me, has anyone
+ * asked for anything, how am I doing, what is my listing still missing.
+ * Everything links to where it can be acted on; a dashboard that only reports
+ * is a report.
  */
 export function PortalOverviewPage() {
   const user = useAppSelector((s) => s.auth.user);
@@ -38,20 +37,23 @@ export function PortalOverviewPage() {
   if (isLoading) return <PageLoader />;
 
   const isAdmin = user?.role === "admin";
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
   return (
     <div className="ra-page">
-      <div>
-        <p className="ra-eyebrow text-muted-foreground">Overview</p>
-        <h1 className="mt-1.5 text-2xl font-bold tracking-tight text-foreground">
+      {/* The greeting stays visible on a phone — it is a greeting, not a page name. */}
+      <header>
+        <p className="ra-eyebrow text-muted-foreground">{greeting}</p>
+        <h1 className="mt-1 font-display text-2xl font-semibold tracking-tight text-foreground">
           Welcome back, {user?.name?.split(" ")[0]}
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-[13.5px] text-muted-foreground">
           {businesses?.length
             ? "Here's how your listing is doing."
             : "Your listing appears here once a claim is approved."}
         </p>
-      </div>
+      </header>
 
       {!businesses || businesses.length === 0 ? (
         isAdmin ? (
@@ -60,9 +62,9 @@ export function PortalOverviewPage() {
             title="You manage the platform, not a listing"
             description="Administrators reach every business through the console."
             action={
-              <Link to="/admin/businesses" className="ra-btn-primary">
+              <ButtonLink to="/admin/businesses" variant="primary">
                 Open the console
-              </Link>
+              </ButtonLink>
             }
           />
         ) : (
@@ -71,9 +73,9 @@ export function PortalOverviewPage() {
             title="No business yet"
             description="Claim your listing and it'll show up here, with the numbers customers reach you on."
             action={
-              <Link to="/for-business" className="ra-btn-primary">
+              <ButtonLink to="/for-business" variant="primary">
                 Claim your business
-              </Link>
+              </ButtonLink>
             }
           />
         )
@@ -91,12 +93,6 @@ function BusinessDashboard({ business }: { business: OwnedBusiness }) {
   const recent = inbox?.items.slice(0, 5) ?? [];
   const waiting = inbox?.items.filter((r) => r.status === "new").length ?? 0;
 
-  /*
-    What the listing is still missing. Each item is something a driver sees, or
-    does not — a listing with no photograph is the most common state in the
-    directory and the biggest single reason a card gets scrolled past. The
-    checklist turns "your listing is live" into "here is what to do next".
-  */
   const checklist = [
     {
       done: business.photos.length > 0,
@@ -131,13 +127,14 @@ function BusinessDashboard({ business }: { business: OwnedBusiness }) {
   ];
   const doneCount = checklist.filter((c) => c.done).length;
   const complete = Math.round((doneCount / checklist.length) * 100);
+  const reachable = business.routing.deliverable;
 
   return (
     <section aria-labelledby={`b-${business.id}`} className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
           id={`b-${business.id}`}
-          className="flex items-center gap-2.5 text-lg font-bold text-foreground"
+          className="flex items-center gap-2.5 font-display text-lg font-semibold text-foreground"
         >
           {business.name}
           {business.isVerified && (
@@ -146,44 +143,47 @@ function BusinessDashboard({ business }: { business: OwnedBusiness }) {
             </Badge>
           )}
         </h2>
-        <Link to={`/business/${business.slug}`} className="ra-btn h-10 gap-1.5 px-3 text-sm">
-          <ExternalLink className="h-4 w-4" aria-hidden="true" />
+        <ButtonLink
+          to={`/business/${business.slug}`}
+          variant="secondary"
+          size="sm"
+          icon={ExternalLink}
+        >
           View public page
-        </Link>
+        </ButtonLink>
       </div>
 
-      {/*
-        The headline fact, stated in words. WhatsApp is the only channel this
-        product has, so "can customers reach me" is not a detail on a settings
-        screen — it is the dashboard.
-      */}
+      {/* The headline fact, in words. WhatsApp is the only channel, so "can
+          customers reach me" is the dashboard, not a settings detail. */}
       <Link
         to="/portal/whatsapp"
         className={cn(
-          "flex items-start gap-3 rounded-lg border px-4 py-3 transition-colors",
-          business.routing.deliverable
+          "ra-focus flex items-center gap-3 rounded-lg border px-4 py-3 transition-colors",
+          reachable
             ? "border-border bg-card hover:bg-accent/40"
             : "border-destructive/30 bg-destructive/10 hover:bg-destructive/15",
         )}
       >
-        <MessageCircle
+        <span
           className={cn(
-            "mt-0.5 h-5 w-5 shrink-0",
-            business.routing.deliverable ? "text-success" : "text-destructive",
+            "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
+            reachable ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive",
           )}
           aria-hidden="true"
-        />
+        >
+          <MessageCircle className="h-4 w-4" />
+        </span>
         <div className="min-w-0 flex-1">
-          {business.routing.deliverable ? (
+          {reachable ? (
             <>
               <p className="text-sm font-medium text-foreground">
                 Booking requests go to {business.routing.label}
               </p>
-              <p className="mt-0.5 font-mono text-sm tabular-nums text-muted-foreground">
+              <p className="mt-0.5 font-mono text-[13px] tabular-nums text-muted-foreground">
                 {business.routing.phoneMasked}
               </p>
               {business.routing.usedFallback && (
-                <p className="mt-1 text-sm text-warning">
+                <p className="mt-1 text-[13px] text-warning-text">
                   Your primary number is switched off, so this one is covering.
                 </p>
               )}
@@ -191,7 +191,7 @@ function BusinessDashboard({ business }: { business: OwnedBusiness }) {
           ) : (
             <>
               <p className="text-sm font-medium text-foreground">Customers can't reach you</p>
-              <p className="mt-0.5 text-sm text-muted-foreground">
+              <p className="mt-0.5 text-[13px] text-muted-foreground">
                 {business.routing.reason === "no_numbers"
                   ? "Add a WhatsApp number to start receiving booking requests."
                   : "Every number is switched off. Switch one back on."}
@@ -199,29 +199,27 @@ function BusinessDashboard({ business }: { business: OwnedBusiness }) {
             </>
           )}
         </div>
-        <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+        <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
       </Link>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
+      <StatGroup>
+        <Stat
           label="Waiting for a reply"
           value={waiting}
           tone={waiting > 0 ? "warning" : "neutral"}
           hint={waiting > 0 ? "New requests you haven't answered" : "Nothing waiting on you"}
         />
-        <StatCard
+        <Stat
           label="Median first reply"
-          // "—" until something has been answered. A zero here would read as
-          // instant, which is the opposite of what it means.
           value={formatDuration(analytics?.performance.medianResponseMinutes)}
           hint="Last 30 days — the number that wins repeat customers"
         />
-        <StatCard
+        <Stat
           label="Profile views"
           value={business.viewCount ?? 0}
           hint="Unique visitors, all time"
         />
-        <StatCard
+        <Stat
           label="Rating"
           value={business.averageRating ?? "—"}
           hint={
@@ -230,26 +228,28 @@ function BusinessDashboard({ business }: { business: OwnedBusiness }) {
               : "No reviews yet"
           }
         />
-      </div>
+      </StatGroup>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
-        {/* ── Recent requests ────────────────────────────────────────── */}
-        <div className="ra-panel">
-          <div className="flex items-center justify-between border-b border-border px-4 py-3">
-            <h3 className="text-sm font-semibold text-foreground">Recent requests</h3>
+        <SectionCard
+          title="Recent requests"
+          as="h3"
+          flush
+          aside={
             <Link
               to="/portal/requests"
-              className="ra-tap -my-2 inline-flex items-center gap-1 text-sm font-medium text-primary-text hover:underline"
+              className="ra-focus inline-flex min-h-[44px] items-center gap-1 rounded text-[13px] font-medium text-primary-text hover:underline md:min-h-0"
             >
               All requests
               <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
-          </div>
+          }
+        >
           {recent.length === 0 ? (
             <div className="px-4 py-8 text-center">
-              <CalendarClock className="mx-auto h-7 w-7 text-muted-foreground" aria-hidden="true" />
+              <CalendarClock className="mx-auto h-6 w-6 text-muted-foreground" aria-hidden="true" />
               <p className="mt-2 text-sm font-medium text-foreground">No requests yet</p>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-1 text-[13px] text-muted-foreground">
                 When a driver asks you for a time, it lands here and on your WhatsApp.
               </p>
             </div>
@@ -259,7 +259,7 @@ function BusinessDashboard({ business }: { business: OwnedBusiness }) {
                 <li key={r.id}>
                   <Link
                     to="/portal/requests"
-                    className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-accent/40"
+                    className="ra-focus-inset flex min-h-[44px] items-center gap-3 px-4 py-2 transition-colors hover:bg-accent/40 md:min-h-12"
                   >
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-foreground">
@@ -279,33 +279,38 @@ function BusinessDashboard({ business }: { business: OwnedBusiness }) {
               ))}
             </ul>
           )}
-        </div>
+        </SectionCard>
 
-        {/* ── Listing checklist ──────────────────────────────────────── */}
-        <div className="ra-panel">
-          <div className="flex items-center justify-between border-b border-border px-4 py-3">
-            <h3 className="text-sm font-semibold text-foreground">Your listing</h3>
+        <SectionCard
+          title="Your listing"
+          as="h3"
+          flush
+          aside={
             <span className="font-mono text-xs tabular-nums text-muted-foreground">
               {complete}% complete
             </span>
-          </div>
+          }
+        >
           <div className="px-4 pt-3">
             <div className="h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden="true">
-              <div className="h-full bg-primary" style={{ width: `${complete}%` }} />
+              <div
+                className="h-full rounded-full bg-primary transition-[width] duration-slow ease-out"
+                style={{ width: `${complete}%` }}
+              />
             </div>
           </div>
-          <ul className="divide-y divide-border">
+          <ul className="mt-2 divide-y divide-border">
             {checklist.map((item) => (
               <li key={item.label}>
                 {item.done ? (
-                  <div className="flex items-center gap-3 px-4 py-2.5 text-sm text-muted-foreground">
+                  <div className="flex min-h-10 items-center gap-3 px-4 py-2 text-[13px] text-muted-foreground">
                     <Check className="h-4 w-4 shrink-0 text-success" aria-hidden="true" />
                     <span className="line-through decoration-border">{item.label}</span>
                   </div>
                 ) : (
                   <Link
                     to={item.to}
-                    className="flex items-start gap-3 px-4 py-2.5 transition-colors hover:bg-accent/40"
+                    className="ra-focus-inset flex min-h-[44px] items-start gap-3 px-4 py-2.5 transition-colors hover:bg-accent/40"
                   >
                     <Circle
                       className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
@@ -322,7 +327,7 @@ function BusinessDashboard({ business }: { business: OwnedBusiness }) {
               </li>
             ))}
           </ul>
-        </div>
+        </SectionCard>
       </div>
     </section>
   );

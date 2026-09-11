@@ -50,6 +50,8 @@ export interface BusinessCard extends Trust {
   distanceMetres: number | null;
   coordinates: Coordinates | null;
   claimStatus: "unclaimed" | "pending" | "claimed";
+  /** Visibility. Public search only ever returns `live`; the console sees all three. */
+  status?: "draft" | "live" | "suspended";
   /** When it went public. The start of the 30-day claim clock in PRD §6. */
   listedAt?: string | null;
   /**

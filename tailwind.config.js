@@ -79,6 +79,17 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      backgroundColor: {
+        "surface-2": "hsl(var(--surface-2))",
+      },
+      transitionTimingFunction: {
+        out: "var(--ease-out)",
+      },
+      transitionDuration: {
+        fast: "var(--dur-fast)",
+        base: "var(--dur-base)",
+        slow: "var(--dur-slow)",
+      },
       /**
        * Interface in Inter Tight, data in IBM Plex Mono. See DESIGN.md.
        *

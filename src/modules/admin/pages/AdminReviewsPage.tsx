@@ -3,8 +3,12 @@ import { Link } from "react-router-dom";
 import { MessageSquareQuote, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/shared/components/EmptyState";
-import { Sheet } from "@/shared/components/Sheet";
 import { Badge } from "@/shared/components/Badge";
+import { Button } from "@/shared/components/Button";
+import { PageHeader } from "@/shared/components/PageHeader";
+import { Pagination } from "@/shared/components/Pagination";
+import { ConfirmDialog } from "@/shared/components/Dialog";
+import { Skeleton } from "@/shared/components/Skeleton";
 import { formatDateTime } from "@/shared/lib/format";
 import { toast } from "@/shared/lib/toast";
 import { getApiErrorMessage } from "@/shared/api/http";
@@ -13,28 +17,28 @@ import { useAllReviews, useRemoveReview } from "@/modules/review/hooks/useReview
 import type { AdminReview } from "@/modules/review/types";
 
 /**
- * Review moderation — FR-SOC-05. Removal is soft, requires a reason and is
- * audited: the person who wrote it will ask why it went, and "an administrator
- * removed it" with no record is an answer nobody can give.
+ * Review moderation — FR-SOC-05. A list rather than a table, because the
+ * content is prose: what somebody wrote is the thing being judged, and a
+ * truncated cell hides exactly that.
+ *
+ * Removal is soft, requires a reason and is audited: the person who wrote it
+ * will ask why it went.
  */
 export function AdminReviewsPage() {
   const [includeRemoved, setIncludeRemoved] = useState(false);
   const [page, setPage] = useState(1);
   const [target, setTarget] = useState<AdminReview | null>(null);
-  const [reason, setReason] = useState("");
 
   const { data, isLoading } = useAllReviews({ includeRemoved, page });
   const remove = useRemoveReview();
-
   const items = data?.items ?? [];
 
-  async function confirm() {
+  async function confirm(reason: string) {
     if (!target) return;
     try {
-      await remove.mutateAsync({ id: target.id, reason: reason.trim() });
+      await remove.mutateAsync({ id: target.id, reason });
       toast.success("Review removed");
       setTarget(null);
-      setReason("");
     } catch (err) {
       toast.error(getApiErrorMessage(err));
     }
@@ -42,44 +46,65 @@ export function AdminReviewsPage() {
 
   return (
     <div className="ra-page">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="hidden text-xl font-semibold tracking-tight text-foreground md:block">
-            Reviews
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            What drivers have said, and what has been taken down.
-          </p>
-        </div>
-        <label className="ra-tap flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 text-sm">
-          <input
-            type="checkbox"
-            checked={includeRemoved}
-            onChange={(e) => {
-              setIncludeRemoved(e.target.checked);
-              setPage(1);
-            }}
-            className="h-4 w-4 rounded border-input accent-primary"
-          />
-          Show removed
-        </label>
-      </div>
+      <PageHeader
+        title="Reviews"
+        description="What drivers have said about listings, newest first, and what has been taken down."
+        meta={
+          <span>
+            <span className="font-mono tabular-nums text-foreground">{data?.meta.total ?? 0}</span>{" "}
+            reviews
+          </span>
+        }
+        actions={
+          <label className="ra-control inline-flex cursor-pointer select-none items-center gap-2 rounded-lg border border-border bg-card px-3 text-[13px] font-medium text-foreground hover:bg-accent">
+            <input
+              type="checkbox"
+              checked={includeRemoved}
+              onChange={(e) => {
+                setIncludeRemoved(e.target.checked);
+                setPage(1);
+              }}
+              className="h-4 w-4 rounded border-input accent-primary"
+            />
+            Show removed
+          </label>
+        }
+      />
 
       {isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <ul className="ra-panel divide-y divide-border" aria-busy="true">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <li key={i} className="space-y-2 px-4 py-4">
+              <Skeleton className="h-4 w-1/3" />
+              <Skeleton className="h-3 w-3/4" />
+            </li>
+          ))}
+        </ul>
       ) : items.length === 0 ? (
         <EmptyState
           icon={MessageSquareQuote}
           title="No reviews yet"
-          description="Ratings left by drivers will appear here."
+          description="Ratings left by drivers appear here as they are posted."
         />
       ) : (
-        <ul className="space-y-3">
+        <ul className="ra-panel divide-y divide-border">
           {items.map((review) => (
-            <li key={review.id} className={cn("ra-panel p-4", review.isRemoved && "opacity-60")}>
+            <li
+              key={review.id}
+              className={cn("px-4 py-4 md:px-5", review.isRemoved && "bg-surface-2")}
+            >
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <StarDisplay rating={review.rating} />
-                <span className="text-sm font-medium text-foreground">{review.driverName}</span>
+                <div className="flex items-center gap-2">
+                  <StarDisplay rating={review.rating} />
+                </div>
+                <span
+                  className={cn(
+                    "text-sm font-medium",
+                    review.isRemoved ? "text-muted-foreground line-through" : "text-foreground",
+                  )}
+                >
+                  {review.driverName}
+                </span>
                 {review.fromContact && (
                   <span className="inline-flex items-center gap-1 text-xs text-success">
                     <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
@@ -93,16 +118,24 @@ export function AdminReviewsPage() {
               </div>
 
               {review.business?.slug && (
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="mt-1 text-[13px] text-muted-foreground">
                   on{" "}
-                  <Link to={`/business/${review.business.slug}`} className="hover:underline">
+                  <Link
+                    to={`/business/${review.business.slug}`}
+                    className="font-medium text-foreground hover:underline"
+                  >
                     {review.business.name}
                   </Link>
                 </p>
               )}
 
               {review.text && (
-                <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-foreground">
+                <p
+                  className={cn(
+                    "mt-2 max-w-3xl whitespace-pre-line text-sm leading-relaxed",
+                    review.isRemoved ? "text-muted-foreground" : "text-foreground",
+                  )}
+                >
                   {review.text}
                 </p>
               )}
@@ -113,13 +146,9 @@ export function AdminReviewsPage() {
                 </p>
               ) : (
                 <div className="mt-3 flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() => setTarget(review)}
-                    className="ra-tap rounded-lg border border-border px-3 text-sm font-medium transition-colors hover:bg-accent"
-                  >
+                  <Button size="sm" variant="secondary" onClick={() => setTarget(review)}>
                     Remove
-                  </button>
+                  </Button>
                 </div>
               )}
             </li>
@@ -127,80 +156,33 @@ export function AdminReviewsPage() {
         </ul>
       )}
 
-      {data && data.meta.totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <button
-            type="button"
-            disabled={page <= 1}
-            onClick={() => setPage((p) => p - 1)}
-            className="ra-tap rounded-lg border border-border px-4 text-sm disabled:opacity-50"
-          >
-            Previous
-          </button>
-          <span className="text-sm text-muted-foreground">
-            Page {data.meta.page} of {data.meta.totalPages}
-          </span>
-          <button
-            type="button"
-            disabled={!data.meta.hasNextPage}
-            onClick={() => setPage((p) => p + 1)}
-            className="ra-tap rounded-lg border border-border px-4 text-sm disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
+      {data && data.meta.total > 0 && (
+        <Pagination
+          page={data.meta.page}
+          totalPages={data.meta.totalPages}
+          total={data.meta.total}
+          pageSize={20}
+          onChange={setPage}
+          noun="reviews"
+        />
       )}
 
-      <Sheet
+      <ConfirmDialog
         open={Boolean(target)}
-        onOpenChange={(open) => {
-          if (open) return;
-          setTarget(null);
-          setReason("");
-        }}
+        onClose={() => setTarget(null)}
         title="Remove this review"
-      >
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            It stops appearing on the business's profile and the rating is recalculated without it.
-            Nothing is deleted — the record and your reason are kept.
-          </p>
-          <div className="space-y-1.5">
-            <label htmlFor="remove-reason" className="block text-sm font-medium text-foreground">
-              Why is it being removed?
-            </label>
-            <textarea
-              id="remove-reason"
-              rows={3}
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="Names a member of staff"
-              className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-            {/* The author will ask. "Abusive" is enough; nothing is not. */}
-            <p className="text-xs text-muted-foreground">
-              At least a few words. This is what the audit log records.
-            </p>
-          </div>
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setTarget(null)}
-              className="ra-tap rounded-lg border border-border px-4 text-sm font-medium transition-colors hover:bg-accent"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={confirm}
-              disabled={reason.trim().length < 5 || remove.isPending}
-              className="ra-tap rounded-lg bg-destructive px-4 text-sm font-medium text-destructive-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
-            >
-              {remove.isPending ? "Removing…" : "Remove review"}
-            </button>
-          </div>
-        </div>
-      </Sheet>
+        description="It stops appearing on the business's profile and the rating is recalculated without it. Nothing is deleted — the record and your reason are kept."
+        confirmLabel="Remove review"
+        busy={remove.isPending}
+        onConfirm={confirm}
+        reason={{
+          label: "Why is it being removed?",
+          placeholder: "Names a member of staff",
+          hint: "At least a few words. This is what the audit log records.",
+          minLength: 5,
+          multiline: true,
+        }}
+      />
     </div>
   );
 }

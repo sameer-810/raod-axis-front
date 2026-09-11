@@ -1,7 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 import { PublicLayout } from "./app/layouts/PublicLayout";
-import { AppLayout } from "./app/layouts/AppLayout";
 import { RequireAuth } from "./app/router/RequireAuth";
 import { NotFoundPage } from "./app/router/NotFoundPage";
 import { PageLoader } from "./shared/components/PageLoader";
@@ -16,6 +15,11 @@ import { PageLoader } from "./shared/components/PageLoader";
  * Every page is lazy — a driver landing on a business profile from a search
  * result should not download the admin console to see it.
  */
+/* The console shell — sidebar, palette, menus — is a driver's-eye no-show:
+   nothing on the public side needs it, so it stays out of the first chunk. */
+const AppLayout = lazy(() =>
+  import("./app/layouts/AppLayout").then((m) => ({ default: m.AppLayout })),
+);
 const HomePage = lazy(() =>
   import("./modules/home/pages/HomePage").then((m) => ({ default: m.HomePage })),
 );

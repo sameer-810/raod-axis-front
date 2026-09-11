@@ -4,6 +4,12 @@ import { ScrollText } from "lucide-react";
 import { http } from "@/shared/api/http";
 import { Badge } from "@/shared/components/Badge";
 import { EmptyState } from "@/shared/components/EmptyState";
+import { PageHeader } from "@/shared/components/PageHeader";
+import { FilterBar, FilterSelect } from "@/shared/components/FilterBar";
+import { Timeline, type TimelineEntry } from "@/shared/components/Timeline";
+import { Pagination } from "@/shared/components/Pagination";
+import { Avatar } from "@/shared/components/Avatar";
+import { Skeleton } from "@/shared/components/Skeleton";
 import { formatAge, formatDateTime } from "@/shared/lib/format";
 
 interface AuditEntry {
@@ -32,9 +38,45 @@ const CONSEQUENTIAL = new Set([
   "user.deactivated",
 ]);
 
+const ENTITY_TYPES = [
+  { value: "", label: "All records" },
+  { value: "business", label: "Businesses" },
+  { value: "claim", label: "Claims" },
+  { value: "user", label: "Accounts" },
+  { value: "category", label: "Categories" },
+];
+const ACTIONS = [
+  { value: "", label: "All actions" },
+  { value: "claim.approved", label: "Claim approved" },
+  { value: "claim.rejected", label: "Claim rejected" },
+  { value: "business.suspended", label: "Business suspended" },
+  { value: "business.ownership_transferred", label: "Ownership transferred" },
+  { value: "whatsapp_number.deactivated", label: "Number switched off" },
+  { value: "user.deactivated", label: "Account deactivated" },
+];
+
+/** "Today", "Yesterday", then the date. */
+function dayLabel(iso: string) {
+  const d = new Date(iso);
+  const today = new Date();
+  const same = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+  if (same(d, today)) return "Today";
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  if (same(d, yesterday)) return "Yesterday";
+  return new Intl.DateTimeFormat("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(d);
+}
+
 /**
- * The audit log — FR-ADM-08. Read-only by design: there is no route that writes,
- * edits or deletes an entry, because a log anybody can amend is not evidence.
+ * The audit log — FR-ADM-08. Read-only by design: nothing writes, edits or
+ * deletes an entry, because a log anybody can amend is not evidence.
  */
 export function AdminAuditPage() {
   const [action, setAction] = useState("");
@@ -60,149 +102,176 @@ export function AdminAuditPage() {
       }>("/audit", { params });
       return { items: res.data.data, meta: res.data.meta };
     },
+    placeholderData: (prev) => prev,
   });
 
   const items = data?.items ?? [];
 
+  const groups = items.reduce<Array<{ label: string; entries: TimelineEntry[] }>>((acc, entry) => {
+    const label = dayLabel(entry.at);
+    let group = acc[acc.length - 1];
+    if (!group || group.label !== label) {
+      group = { label, entries: [] };
+      acc.push(group);
+    }
+    const consequential = CONSEQUENTIAL.has(entry.action);
+    group.entries.push({
+      id: entry.id,
+      tone: consequential ? "warning" : "neutral",
+      marker: <Avatar name={entry.actor.name} size="md" className="ring-2 ring-card" />,
+      title: (
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="font-medium">{entry.actor.name}</span>
+          {entry.actor.role && (
+            <span className="text-xs capitalize text-muted-foreground">
+              {entry.actor.role.replace("_", " ")}
+            </span>
+          )}
+          <ActionBadge action={entry.action} />
+          {entry.entity.label && (
+            <span className="text-muted-foreground">
+              on <span className="text-foreground">{entry.entity.label}</span>
+            </span>
+          )}
+        </span>
+      ),
+      meta: <span title={formatDateTime(entry.at)}>{formatAge(entry.at)}</span>,
+      body:
+        entry.reason || (entry.changes && Object.keys(entry.changes).length > 0) ? (
+          <div className="space-y-1.5">
+            {entry.reason && (
+              <blockquote className="border-s-2 border-border ps-3 text-[13px] italic text-foreground">
+                {entry.reason}
+              </blockquote>
+            )}
+            {entry.changes && Object.keys(entry.changes).length > 0 && (
+              <dl className="flex flex-wrap gap-1.5">
+                {Object.entries(entry.changes).map(([field, { from, to }]) => (
+                  <div
+                    key={field}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface-2 px-2 py-0.5 font-mono text-[11px]"
+                  >
+                    <dt className="text-muted-foreground">{field}</dt>
+                    <dd className="flex items-center gap-1">
+                      <span className="text-muted-foreground line-through">{render(from)}</span>
+                      <span aria-hidden="true" className="text-muted-foreground">
+                        →
+                      </span>
+                      <span className="text-foreground">{render(to)}</span>
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+          </div>
+        ) : undefined,
+    });
+    return acc;
+  }, []);
+
   return (
     <div className="ra-page">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="hidden text-xl font-semibold tracking-tight text-foreground md:block">
-            Audit log
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            <span className="font-mono tabular-nums">{data?.meta.total ?? 0}</span> entries · newest
-            first
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <label className="sr-only" htmlFor="entity-type">
-            Record type
-          </label>
-          <select
-            id="entity-type"
-            value={entityType}
-            onChange={(e) => {
-              setEntityType(e.target.value);
+      <PageHeader
+        title="Audit log"
+        description="Who did what, to which record, and what changed. Written by the system as things happen; nobody can edit it."
+        meta={
+          <span>
+            <span className="font-mono tabular-nums text-foreground">{data?.meta.total ?? 0}</span>{" "}
+            entries · newest first
+          </span>
+        }
+      />
+
+      <FilterBar
+        chips={[
+          entityType && {
+            key: "type",
+            label: `Record: ${ENTITY_TYPES.find((e) => e.value === entityType)?.label}`,
+            onRemove: () => {
+              setEntityType("");
               setPage(1);
-            }}
-            className="h-11 rounded-lg border border-input bg-card px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            <option value="">All records</option>
-            <option value="business">Businesses</option>
-            <option value="claim">Claims</option>
-            <option value="user">Accounts</option>
-            <option value="category">Categories</option>
-          </select>
-          <label className="sr-only" htmlFor="action">
-            Action
-          </label>
-          <select
-            id="action"
-            value={action}
-            onChange={(e) => {
-              setAction(e.target.value);
+            },
+          },
+          action && {
+            key: "action",
+            label: `Action: ${ACTIONS.find((a) => a.value === action)?.label}`,
+            onRemove: () => {
+              setAction("");
               setPage(1);
-            }}
-            className="h-11 rounded-lg border border-input bg-card px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            <option value="">All actions</option>
-            <option value="claim.approved">Claim approved</option>
-            <option value="claim.rejected">Claim rejected</option>
-            <option value="business.suspended">Business suspended</option>
-            <option value="business.ownership_transferred">Ownership transferred</option>
-            <option value="whatsapp_number.deactivated">Number switched off</option>
-            <option value="user.deactivated">Account deactivated</option>
-          </select>
-        </div>
+            },
+          },
+        ].filter((c): c is { key: string; label: string; onRemove: () => void } => Boolean(c))}
+        onClearAll={
+          action || entityType
+            ? () => {
+                setAction("");
+                setEntityType("");
+                setPage(1);
+              }
+            : undefined
+        }
+      >
+        <FilterSelect
+          id="entity-type"
+          label="Record type"
+          value={entityType}
+          onChange={(v) => {
+            setEntityType(v);
+            setPage(1);
+          }}
+          options={ENTITY_TYPES}
+        />
+        <FilterSelect
+          id="action"
+          label="Action"
+          value={action}
+          onChange={(v) => {
+            setAction(v);
+            setPage(1);
+          }}
+          options={ACTIONS}
+        />
+      </FilterBar>
+
+      <div className="ra-panel p-4 md:p-6">
+        {isLoading ? (
+          <div className="space-y-4" aria-busy="true">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex gap-3">
+                <Skeleton className="h-8 w-8 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-3.5 w-2/3" />
+                  <Skeleton className="h-3 w-1/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : items.length === 0 ? (
+          <EmptyState
+            inline
+            icon={ScrollText}
+            title="Nothing recorded yet"
+            description={
+              action || entityType
+                ? "No entries match these filters."
+                : "Administrative changes appear here as they happen."
+            }
+          />
+        ) : (
+          <Timeline groups={groups} />
+        )}
       </div>
 
-      {isLoading ? (
-        <div className="ra-panel px-4 py-12 text-center text-sm text-muted-foreground">
-          Loading…
-        </div>
-      ) : items.length === 0 ? (
-        <EmptyState
-          icon={ScrollText}
-          title="Nothing recorded yet"
-          description="Administrative changes appear here as they happen."
+      {data && data.meta.total > 0 && (
+        <Pagination
+          page={data.meta.page}
+          totalPages={data.meta.totalPages}
+          total={data.meta.total}
+          pageSize={50}
+          onChange={setPage}
+          labels={{ prev: "Newer", next: "Older" }}
+          noun="entries"
         />
-      ) : (
-        <ul className="ra-panel divide-y divide-border">
-          {items.map((entry) => (
-            <li key={entry.id} className="px-4 py-3">
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="flex flex-wrap items-center gap-2 text-sm">
-                    <span className="font-medium text-foreground">{entry.actor.name}</span>
-                    {entry.actor.role && (
-                      <span className="text-xs capitalize text-muted-foreground">
-                        {entry.actor.role.replace("_", " ")}
-                      </span>
-                    )}
-                    <ActionBadge action={entry.action} />
-                  </p>
-                  <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                    {entry.entity.label ?? entry.entity.type}
-                  </p>
-                </div>
-                <p
-                  className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground"
-                  title={formatDateTime(entry.at)}
-                >
-                  {formatAge(entry.at)}
-                </p>
-              </div>
-
-              {entry.reason && (
-                <p className="mt-1.5 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-sm text-foreground">
-                  {entry.reason}
-                </p>
-              )}
-
-              {/* Only the fields that moved. A full snapshot of every record
-                  would bury the line somebody is looking for. */}
-              {entry.changes && Object.keys(entry.changes).length > 0 && (
-                <dl className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs">
-                  {Object.entries(entry.changes).map(([field, { from, to }]) => (
-                    <div key={field} className="flex items-center gap-1.5">
-                      <dt className="text-muted-foreground">{field}</dt>
-                      <dd className="font-mono text-muted-foreground">
-                        <span className="line-through">{render(from)}</span>{" "}
-                        <span className="text-foreground">{render(to)}</span>
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {data && data.meta.totalPages > 1 && (
-        <div className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2 text-sm">
-          <button
-            type="button"
-            disabled={!data.meta.hasPrevPage}
-            onClick={() => setPage((p) => p - 1)}
-            className="ra-tap rounded-lg px-3 font-medium text-muted-foreground disabled:opacity-40"
-          >
-            Newer
-          </button>
-          <span className="font-mono text-xs tabular-nums text-muted-foreground">
-            {data.meta.page} / {data.meta.totalPages}
-          </span>
-          <button
-            type="button"
-            disabled={!data.meta.hasNextPage}
-            onClick={() => setPage((p) => p + 1)}
-            className="ra-tap rounded-lg px-3 font-medium text-muted-foreground disabled:opacity-40"
-          >
-            Older
-          </button>
-        </div>
       )}
     </div>
   );

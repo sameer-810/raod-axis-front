@@ -1,17 +1,39 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Plus, Search, Ban, RotateCcw, Pencil, ExternalLink } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Link, useNavigate } from "react-router-dom";
+import { Plus, Ban, RotateCcw, Pencil, ExternalLink, Store, BadgeCheck } from "lucide-react";
 import { toast } from "@/shared/lib/toast";
 import { getApiErrorMessage } from "@/shared/api/http";
 import { Badge } from "@/shared/components/Badge";
+import { Button, ButtonLink } from "@/shared/components/Button";
+import { PageHeader } from "@/shared/components/PageHeader";
+import { FilterBar, FilterSelect } from "@/shared/components/FilterBar";
+import { DataTable, DensityToggle, type Column } from "@/shared/components/DataTable";
+import { Pagination } from "@/shared/components/Pagination";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { RecordCard } from "@/shared/components/RecordCard";
+import { RowMenu } from "@/shared/components/Menu";
+import { ConfirmDialog } from "@/shared/components/Dialog";
 import { Fab } from "@/shared/components/Fab";
-import { useIsMobile } from "@/shared/hooks/useMediaQuery";
+import { useDensity } from "@/shared/hooks/useDensity";
 import { formatDate } from "@/shared/lib/format";
 import { useAdminBusinesses, useSetBusinessStatus } from "../hooks/useAdmin";
 import type { BusinessCard } from "@/modules/business/types";
+
+type Visibility = "" | "draft" | "live" | "suspended";
+type Ownership = "" | "unclaimed" | "pending" | "claimed";
+
+const VISIBILITY = [
+  { value: "", label: "All visibility" },
+  { value: "live", label: "Live" },
+  { value: "draft", label: "Draft" },
+  { value: "suspended", label: "Suspended" },
+];
+const OWNERSHIP = [
+  { value: "", label: "All ownership" },
+  { value: "unclaimed", label: "Unclaimed" },
+  { value: "pending", label: "Claim pending" },
+  { value: "claimed", label: "Claimed" },
+];
 
 /**
  * The directory, as an administrator sees it. The one screen showing all three
@@ -19,299 +41,328 @@ import type { BusinessCard } from "@/modules/business/types";
  * independent, and the interesting records are the ones where they disagree.
  */
 export function AdminBusinessesPage() {
-  const isMobile = useIsMobile();
+  const navigate = useNavigate();
+  const [density, setDensity] = useDensity();
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<"" | "draft" | "live" | "suspended">("");
-  const [claimStatus, setClaimStatus] = useState<"" | "unclaimed" | "pending" | "claimed">("");
+  const [status, setStatus] = useState<Visibility>("");
+  const [claimStatus, setClaimStatus] = useState<Ownership>("");
   const [page, setPage] = useState(1);
-  const [confirm, setConfirm] = useState<BusinessCard | null>(null);
-  const [reason, setReason] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [suspending, setSuspending] = useState<BusinessCard[] | null>(null);
 
-  const { data, isLoading } = useAdminBusinesses({
+  const { data, isLoading, isFetching } = useAdminBusinesses({
     search,
     status: status || undefined,
     claimStatus: claimStatus || undefined,
     page,
   });
   const setBusinessStatus = useSetBusinessStatus();
-
   const items = data?.items ?? [];
 
-  async function suspend() {
-    if (!confirm) return;
+  const resetPage = () => {
+    setPage(1);
+    setSelected(new Set());
+  };
+
+  async function suspend(list: BusinessCard[], reason: string) {
     try {
-      await setBusinessStatus.mutateAsync({ id: confirm.id, status: "suspended", reason });
-      toast.success(`${confirm.name} suspended`);
-      setConfirm(null);
-      setReason("");
+      for (const b of list) {
+        await setBusinessStatus.mutateAsync({ id: b.id, status: "suspended", reason });
+      }
+      toast.success(
+        list.length === 1 ? `${list[0].name} suspended` : `${list.length} listings suspended`,
+      );
+      setSuspending(null);
+      setSelected(new Set());
     } catch (err) {
       toast.error(getApiErrorMessage(err));
     }
   }
 
-  async function restore(business: BusinessCard) {
+  async function restore(list: BusinessCard[]) {
     try {
-      await setBusinessStatus.mutateAsync({ id: business.id, status: "live" });
-      toast.success(`${business.name} is live again`);
+      for (const b of list) await setBusinessStatus.mutateAsync({ id: b.id, status: "live" });
+      toast.success(
+        list.length === 1 ? `${list[0].name} is live again` : `${list.length} listings restored`,
+      );
+      setSelected(new Set());
     } catch (err) {
       toast.error(getApiErrorMessage(err));
     }
   }
+
+  const byId = (ids: string[]) => items.filter((b) => ids.includes(b.id));
+
+  const rowActions = (b: BusinessCard) => [
+    { label: "Edit listing", icon: Pencil, onSelect: () => navigate(`/admin/businesses/${b.id}`) },
+    { label: "View public page", icon: ExternalLink, href: `/business/${b.slug}`, external: true },
+    { type: "separator" as const },
+    // Only the move this listing can actually make.
+    ...(b.status === "live"
+      ? [
+          {
+            label: "Suspend listing",
+            icon: Ban,
+            destructive: true,
+            onSelect: () => setSuspending([b]),
+          },
+        ]
+      : [
+          {
+            label: b.status === "draft" ? "Publish now" : "Restore to live",
+            icon: RotateCcw,
+            onSelect: () => void restore([b]),
+          },
+        ]),
+  ];
+
+  const columns: Column<BusinessCard>[] = [
+    {
+      key: "name",
+      header: "Business",
+      sortable: false,
+      wrap: true,
+      cell: (b) => (
+        <div className="flex min-w-0 items-center gap-2">
+          <Link
+            to={`/admin/businesses/${b.id}`}
+            className="ra-focus truncate rounded font-medium text-foreground hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {b.name}
+          </Link>
+          {b.isVerified && (
+            <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-success" aria-label="Verified" />
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "location",
+      header: "Location",
+      cell: (b) => (
+        <span className="text-muted-foreground">
+          {b.address.city}
+          {b.address.postcode && (
+            <span className="ms-1.5 font-mono text-xs tabular-nums">{b.address.postcode}</span>
+          )}
+        </span>
+      ),
+    },
+    {
+      key: "categories",
+      header: "Categories",
+      hideBelow: "lg",
+      cell: (b) => (
+        <span className="text-muted-foreground">
+          {b.categories.map((c) => c.name).join(", ") || "—"}
+        </span>
+      ),
+    },
+    { key: "state", header: "State", cell: (b) => <StatusBadges business={b} /> },
+    {
+      key: "listed",
+      header: "Listed",
+      align: "end",
+      hideBelow: "xl",
+      cell: (b) => (
+        <span className="text-xs text-muted-foreground">{formatDate(b.listedAt) || "—"}</span>
+      ),
+    },
+  ];
+
+  const chips = [
+    status && {
+      key: "status",
+      label: `Visibility: ${VISIBILITY.find((v) => v.value === status)?.label}`,
+      onRemove: () => {
+        setStatus("");
+        resetPage();
+      },
+    },
+    claimStatus && {
+      key: "claim",
+      label: `Ownership: ${OWNERSHIP.find((v) => v.value === claimStatus)?.label}`,
+      onRemove: () => {
+        setClaimStatus("");
+        resetPage();
+      },
+    },
+  ].filter((c): c is { key: string; label: string; onRemove: () => void } => Boolean(c));
 
   return (
     <div className="ra-page">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="hidden text-xl font-semibold tracking-tight text-foreground md:block">
-            Businesses
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            <span className="font-mono tabular-nums">{data?.meta.total ?? 0}</span> listings
-          </p>
-        </div>
-        <Link
-          to="/admin/businesses/new"
-          className="hidden items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 md:flex"
-        >
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          New listing
-        </Link>
-      </div>
-
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <div className="relative min-w-0 flex-1">
-          <Search
-            className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden="true"
-          />
-          <input
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            type="search"
-            placeholder="Search by name, city or postcode"
-            aria-label="Search listings"
-            className="h-11 w-full rounded-lg border border-input bg-card ps-9 pe-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-        </div>
-        <label className="sr-only" htmlFor="status">
-          Visibility
-        </label>
-        <select
-          id="status"
-          value={status}
-          onChange={(e) => {
-            setStatus(e.target.value as typeof status);
-            setPage(1);
-          }}
-          className="h-11 rounded-lg border border-input bg-card px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        >
-          <option value="">All visibility</option>
-          <option value="live">Live</option>
-          <option value="draft">Draft</option>
-          <option value="suspended">Suspended</option>
-        </select>
-        <label className="sr-only" htmlFor="claim">
-          Ownership
-        </label>
-        <select
-          id="claim"
-          value={claimStatus}
-          onChange={(e) => {
-            setClaimStatus(e.target.value as typeof claimStatus);
-            setPage(1);
-          }}
-          className="h-11 rounded-lg border border-input bg-card px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        >
-          <option value="">All ownership</option>
-          <option value="unclaimed">Unclaimed</option>
-          <option value="pending">Claim pending</option>
-          <option value="claimed">Claimed</option>
-        </select>
-      </div>
-
-      {isLoading ? (
-        <div className="ra-panel px-4 py-12 text-center text-sm text-muted-foreground">
-          Loading…
-        </div>
-      ) : items.length === 0 ? (
-        <EmptyState
-          title="No listings match"
-          description="Try a different search, or clear the filters."
-        />
-      ) : isMobile ? (
-        <div className="space-y-2">
-          {items.map((b) => (
-            <RecordCard
-              key={b.id}
-              title={b.name}
-              to={`/admin/businesses/${b.id}`}
-              meta={[b.address.city, b.categories.map((c) => c.name).join(", ")]}
-              badge={<StatusBadges business={b} />}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="ra-panel max-h-[calc(100vh-20rem)] min-h-[20rem] overflow-auto">
-          <table className="w-full min-w-[820px] text-sm">
-            <thead className="ra-thead">
-              <tr className="border-b border-border">
-                {["Business", "Location", "Categories", "State", "Listed", ""].map((h) => (
-                  <th
-                    key={h}
-                    scope="col"
-                    className="whitespace-nowrap px-4 py-2.5 text-start text-xs font-medium uppercase tracking-[0.06em] text-muted-foreground"
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {items.map((b) => (
-                <tr key={b.id} className="transition-colors hover:bg-accent/40">
-                  {/* The anchor column: which record am I looking at. */}
-                  <td className="px-4 py-2">
-                    <Link
-                      to={`/admin/businesses/${b.id}`}
-                      className="font-medium text-foreground hover:underline"
-                    >
-                      {b.name}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-2 text-muted-foreground">
-                    {b.address.city}
-                    {b.address.postcode ? ` · ${b.address.postcode}` : ""}
-                  </td>
-                  <td className="max-w-[220px] truncate px-4 py-2 text-muted-foreground">
-                    {b.categories.map((c) => c.name).join(", ") || "—"}
-                  </td>
-                  <td className="px-4 py-2">
-                    <StatusBadges business={b} />
-                  </td>
-                  {/* How long it has been sitting unclaimed is the number this
-                      screen exists to surface — PRD §6 targets 80% claimed
-                      within 30 days of listing. */}
-                  <td className="px-4 py-2 font-mono text-xs tabular-nums text-muted-foreground">
-                    {formatDate(b.listedAt) || "—"}
-                  </td>
-                  {/* Actions last, after the data you read in order to decide. */}
-                  <td className="px-4 py-2">
-                    <div className="flex items-center justify-end gap-1">
-                      <a
-                        href={`/business/${b.slug}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={`View ${b.name} on the public site`}
-                        title="View public page"
-                        className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
-                      >
-                        <ExternalLink className="h-3.5 w-3.5" />
-                      </a>
-                      <Link
-                        to={`/admin/businesses/${b.id}`}
-                        aria-label={`Edit ${b.name}`}
-                        title="Edit"
-                        className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Link>
-                      {/* Quiet until hover. Fifty rows of filled red trains
-                          people to stop seeing red as dangerous. */}
-                      <button
-                        type="button"
-                        onClick={() => setConfirm(b)}
-                        aria-label={`Suspend ${b.name}`}
-                        title="Suspend"
-                        className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                      >
-                        <Ban className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => restore(b)}
-                        aria-label={`Restore ${b.name}`}
-                        title="Restore"
-                        className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
-                      >
-                        <RotateCcw className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {data && data.meta.totalPages > 1 && (
-        <div className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2 text-sm">
-          <button
-            type="button"
-            disabled={!data.meta.hasPrevPage}
-            onClick={() => setPage((p) => p - 1)}
-            className="ra-tap rounded-lg px-3 font-medium text-muted-foreground disabled:opacity-40"
-          >
-            Previous
-          </button>
-          <span className="font-mono text-xs tabular-nums text-muted-foreground">
-            {data.meta.page} / {data.meta.totalPages}
+      <PageHeader
+        title="Businesses"
+        description="Every listing in the directory — live, draft and suspended — with who owns it and whether we vouch for it."
+        meta={
+          <span>
+            <span className="font-mono tabular-nums text-foreground">{data?.meta.total ?? 0}</span>{" "}
+            listings
+            {isFetching && !isLoading && (
+              <span className="ms-2 text-muted-foreground/70">· updating</span>
+            )}
           </span>
-          <button
-            type="button"
-            disabled={!data.meta.hasNextPage}
-            onClick={() => setPage((p) => p + 1)}
-            className="ra-tap rounded-lg px-3 font-medium text-muted-foreground disabled:opacity-40"
+        }
+        actions={
+          <ButtonLink
+            to="/admin/businesses/new"
+            variant="primary"
+            icon={Plus}
+            className="hidden md:inline-flex"
           >
-            Next
-          </button>
-        </div>
-      )}
+            New listing
+          </ButtonLink>
+        }
+      />
 
-      <Fab label="New listing" onClick={() => (window.location.href = "/admin/businesses/new")} />
+      <FilterBar
+        search={{
+          value: search,
+          onChange: (v) => {
+            setSearch(v);
+            resetPage();
+          },
+          placeholder: "Search by name, city or postcode",
+          label: "Search listings",
+        }}
+        chips={chips}
+        onClearAll={
+          chips.length
+            ? () => {
+                setStatus("");
+                setClaimStatus("");
+                resetPage();
+              }
+            : undefined
+        }
+        trailing={<DensityToggle density={density} onChange={setDensity} />}
+      >
+        <FilterSelect
+          id="status"
+          label="Visibility"
+          value={status}
+          onChange={(v) => {
+            setStatus(v as Visibility);
+            resetPage();
+          }}
+          options={VISIBILITY}
+        />
+        <FilterSelect
+          id="claim"
+          label="Ownership"
+          value={claimStatus}
+          onChange={(v) => {
+            setClaimStatus(v as Ownership);
+            resetPage();
+          }}
+          options={OWNERSHIP}
+        />
+      </FilterBar>
 
-      {confirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="ra-overlay w-full max-w-sm p-6">
-            <h2 className="text-base font-semibold text-foreground">Suspend {confirm.name}?</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              It disappears from public search immediately. Nothing is deleted.
-            </p>
-            <label htmlFor="reason" className="mt-4 block text-sm font-medium text-foreground">
-              Reason
-            </label>
-            <input
-              id="reason"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="e.g. Reported as a fake listing"
-              className="mt-1.5 h-11 w-full rounded-lg border border-input bg-card px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+      <DataTable
+        label="Businesses"
+        rows={items}
+        columns={columns}
+        rowKey={(b) => b.id}
+        loading={isLoading}
+        density={density}
+        selectable
+        selected={selected}
+        onSelectedChange={setSelected}
+        bulkActions={(ids) => (
+          <>
+            <Button
+              size="sm"
+              variant="secondary"
+              icon={RotateCcw}
+              onClick={() => void restore(byId(ids))}
+            >
+              Restore
+            </Button>
+            <Button
+              size="sm"
+              variant="danger-outline"
+              icon={Ban}
+              onClick={() => setSuspending(byId(ids))}
+            >
+              Suspend
+            </Button>
+          </>
+        )}
+        onRowClick={(b) => navigate(`/admin/businesses/${b.id}`)}
+        rowActions={rowActions}
+        rowActionsLabel={(b) => `Actions for ${b.name}`}
+        empty={
+          <EmptyState
+            inline
+            icon={Store}
+            title={search || chips.length ? "No listings match" : "No listings yet"}
+            description={
+              search || chips.length
+                ? "Try a different search, or clear the filters."
+                : "Seed the directory by hand or from a spreadsheet."
+            }
+            action={
+              !search && !chips.length ? (
+                <ButtonLink to="/admin/businesses/import" variant="secondary">
+                  Import listings
+                </ButtonLink>
+              ) : undefined
+            }
+          />
+        }
+        mobileRow={(b) => (
+          <RecordCard
+            title={b.name}
+            to={`/admin/businesses/${b.id}`}
+            meta={[b.address.city, b.categories.map((c) => c.name).join(", ")]}
+            badge={<StatusBadges business={b} />}
+            actions={
+              <RowMenu
+                items={rowActions(b)}
+                label={`Actions for ${b.name}`}
+                size="md"
+                variant="secondary"
+              />
+            }
+          />
+        )}
+        footer={
+          data && (
+            <Pagination
+              page={data.meta.page}
+              totalPages={data.meta.totalPages}
+              total={data.meta.total}
+              pageSize={data.meta.limit || 20}
+              onChange={setPage}
+              noun="listings"
             />
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setConfirm(null);
-                  setReason("");
-                }}
-                className="ra-tap rounded-lg border border-border px-4 text-sm font-medium hover:bg-accent"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={suspend}
-                className="ra-tap rounded-lg bg-destructive px-4 text-sm font-medium text-destructive-foreground hover:bg-destructive/90"
-              >
-                Suspend
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          )
+        }
+      />
+
+      <Fab label="New listing" onClick={() => navigate("/admin/businesses/new")} />
+
+      <ConfirmDialog
+        open={Boolean(suspending)}
+        onClose={() => setSuspending(null)}
+        title={
+          suspending?.length === 1
+            ? `Suspend ${suspending[0].name}?`
+            : `Suspend ${suspending?.length ?? 0} listings?`
+        }
+        description="It disappears from public search immediately. Nothing is deleted, and it can be restored."
+        confirmLabel="Suspend"
+        busy={setBusinessStatus.isPending}
+        onConfirm={(reason) => suspending && suspend(suspending, reason)}
+        reason={{
+          label: "Reason",
+          placeholder: "e.g. Reported as a fake listing",
+          hint: "Recorded in the audit log.",
+          minLength: 3,
+        }}
+      />
     </div>
   );
 }
@@ -323,7 +374,9 @@ export function AdminBusinessesPage() {
  */
 function StatusBadges({ business }: { business: BusinessCard }) {
   return (
-    <div className={cn("flex flex-wrap items-center gap-1")}>
+    <div className="flex flex-wrap items-center gap-1">
+      {business.status === "draft" && <Badge tone="warning">Draft</Badge>}
+      {business.status === "suspended" && <Badge tone="destructive">Suspended</Badge>}
       {business.isVerified && <Badge tone="success">Verified</Badge>}
       {business.claimStatus === "unclaimed" && <Badge>Unclaimed</Badge>}
       {business.claimStatus === "pending" && <Badge tone="warning">Claim pending</Badge>}

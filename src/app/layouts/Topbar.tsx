@@ -1,49 +1,80 @@
 import { Link, useLocation } from "react-router-dom";
-import { Moon, Sun, LogOut, ExternalLink } from "lucide-react";
-import { useAppDispatch, useAppSelector } from "@/app/hooks";
-import { clearAuth } from "@/modules/auth/authSlice";
+import { Moon, Sun, ExternalLink, Search, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useAppSelector } from "@/app/hooks";
 import { useTheme } from "@/app/theme";
-import { MENU } from "./menu";
 import { Logo } from "@/shared/components/Logo";
+import { Kbd, MOD } from "@/shared/components/Kbd";
+import { sectionOf } from "./menu";
+import { usePalette } from "./CommandPalette";
 
 /**
- * Opaque, deliberately. A frosted bar leaves table rows half-visible through it
- * as they scroll — at speed that reads as a smear — and forces a compositing
- * layer on every scroll frame.
+ * A slim bar. On a desktop it carries the breadcrumb and the global controls;
+ * on a phone it is the page's title bar. Opaque, deliberately: a frosted bar
+ * leaves table rows half-visible through it as they scroll.
+ *
+ * The `<h1>` here exists only below `md` — above it the page's own header is
+ * the h1, so there is exactly one at every width.
  */
 export function Topbar() {
   const { pathname } = useLocation();
   const { theme, toggleTheme } = useTheme();
-  const dispatch = useAppDispatch();
-  const user = useAppSelector((s) => s.auth.user);
+  const { setOpen } = usePalette();
+  const role = useAppSelector((s) => s.auth.user?.role);
 
-  // The current screen's name, so the mobile header says where you are — the
-  // list pages hide their own <h1> below `md` to avoid saying it twice.
-  const current = MENU.find((m) => m.to && pathname.startsWith(m.to) && m.to !== "/portal");
-  const title = pathname === "/portal" ? "Overview" : (current?.label ?? "RoadAxis");
+  const { heading, item } = sectionOf(pathname);
+  const title = pathname === "/portal" ? "Overview" : (item?.label ?? "RoadAxis");
+  const workspace = role === "admin" ? "Admin console" : "Business portal";
 
   return (
-    <header className="ra-safe-top flex h-14 shrink-0 items-center gap-3 border-b border-border bg-background px-4 md:px-6">
+    <header className="ra-safe-top flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background px-3 md:px-6">
       <Logo showWordmark={false} className="md:hidden" />
-      <h1 className="min-w-0 flex-1 truncate text-base font-semibold text-foreground md:text-sm md:font-medium md:text-muted-foreground">
+      <h1 className="min-w-0 flex-1 truncate text-[15px] font-semibold text-foreground md:hidden">
         {title}
       </h1>
 
-      {/* Getting back to the public site matters more here than in an internal
-          tool: an owner's first question after editing is "how does it look?" */}
-      <Link
-        to="/"
-        className="ra-tap hidden items-center gap-1.5 rounded-lg px-2.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground md:flex md:min-h-0 md:py-1.5"
+      <nav aria-label="Breadcrumb" className="hidden min-w-0 flex-1 md:block">
+        <ol className="flex items-center gap-1 text-[13px] text-muted-foreground">
+          <li className="truncate">{workspace}</li>
+          {heading && (
+            <>
+              <li aria-hidden="true">
+                <ChevronRight className="h-3.5 w-3.5" />
+              </li>
+              <li className="truncate">{heading}</li>
+            </>
+          )}
+          <li aria-hidden="true">
+            <ChevronRight className="h-3.5 w-3.5" />
+          </li>
+          <li className="truncate font-medium text-foreground" aria-current="page">
+            {title}
+          </li>
+        </ol>
+      </nav>
+
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label="Search and commands"
+        className={cn(
+          "ra-focus ra-control ra-control-sm inline-flex items-center gap-2 rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
+          "min-w-[44px] justify-center px-0 md:min-w-0 md:justify-start md:border md:border-border md:bg-card md:px-2.5 md:hover:bg-accent",
+        )}
       >
-        <ExternalLink className="h-4 w-4" aria-hidden="true" />
-        View site
-      </Link>
+        <Search className="h-4 w-4" aria-hidden="true" />
+        <span className="hidden text-[13px] md:inline">Search</span>
+        <span className="hidden items-center gap-0.5 md:inline-flex" aria-hidden="true">
+          <Kbd>{MOD}</Kbd>
+          <Kbd>K</Kbd>
+        </span>
+      </button>
 
       <button
         type="button"
         onClick={toggleTheme}
         aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
-        className="ra-tap flex items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        className="ra-focus ra-control ra-control-sm inline-flex min-w-[44px] items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground md:min-w-0 md:w-8"
       >
         {theme === "dark" ? (
           <Sun className="h-4 w-4" aria-hidden="true" />
@@ -52,24 +83,16 @@ export function Topbar() {
         )}
       </button>
 
-      <div className="hidden items-center gap-2 border-l border-border pl-3 md:flex">
-        <div className="text-right leading-tight">
-          <p className="text-sm font-medium text-foreground">{user?.name}</p>
-          <p className="text-xs capitalize text-muted-foreground">
-            {user?.role?.replace("_", " ")}
-          </p>
-        </div>
-      </div>
-
-      <button
-        type="button"
-        onClick={() => dispatch(clearAuth())}
-        aria-label="Sign out"
-        title="Sign out"
-        className="ra-tap flex items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      {/* Getting back to the public site matters more here than in an
+          internal tool: an owner's first question after editing is "how does
+          it look?" */}
+      <Link
+        to="/"
+        className="ra-focus ra-control ra-control-sm hidden items-center gap-1.5 rounded-md px-2 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground md:inline-flex"
       >
-        <LogOut className="h-4 w-4" aria-hidden="true" />
-      </button>
+        <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+        View site
+      </Link>
     </header>
   );
 }

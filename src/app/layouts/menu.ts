@@ -24,6 +24,10 @@ export type MenuItem = {
   icon?: React.ComponentType<{ className?: string }>;
   /** Roles allowed to see this item. Omit = every authenticated role. */
   roles?: Role[];
+  /** A "go to" sequence: "g b" jumps to Businesses. Two keys, no modifier. */
+  shortcut?: string;
+  /** Words the palette also matches — "inbox" finds Booking Requests. */
+  keywords?: string[];
 };
 
 export type MenuSection = {
@@ -33,20 +37,20 @@ export type MenuSection = {
 
 /**
  * The authenticated navigation, shared by the Business Portal and the Admin
- * Console.
- *
- * One menu filtered by role rather than two. Two menus drift: a route gets added
- * to one and not the other. Empty sections are dropped, so an owner never sees
- * an "Administration" heading with nothing under it.
- */
-/**
- * Only destinations that exist. Items are added with the phase that builds them,
- * exactly as routes are in App.tsx — a menu advertising screens that 404 teaches
- * people the navigation is unreliable, and they stop reading it.
+ * Console. One menu filtered by role rather than two, so a route cannot be
+ * added to one and forgotten in the other. Empty sections are dropped.
  */
 const SECTIONS: MenuSection[] = [
   {
-    items: [{ label: "Overview", to: "/portal", icon: LayoutDashboard }],
+    items: [
+      {
+        label: "Overview",
+        to: "/portal",
+        icon: LayoutDashboard,
+        shortcut: "g o",
+        keywords: ["home", "dashboard"],
+      },
+    ],
   },
   {
     heading: "My business",
@@ -57,6 +61,8 @@ const SECTIONS: MenuSection[] = [
         to: "/portal/listing",
         icon: Store,
         roles: ["business_owner"],
+        shortcut: "g l",
+        keywords: ["edit", "photos", "hours", "services"],
       },
       {
         label: "Booking Requests",
@@ -64,6 +70,8 @@ const SECTIONS: MenuSection[] = [
         to: "/portal/requests",
         icon: CalendarClock,
         roles: ["business_owner"],
+        shortcut: "g r",
+        keywords: ["inbox", "bookings", "customers"],
       },
       {
         label: "WhatsApp Numbers",
@@ -71,41 +79,84 @@ const SECTIONS: MenuSection[] = [
         to: "/portal/whatsapp",
         icon: MessageSquare,
         roles: ["business_owner"],
+        shortcut: "g w",
+        keywords: ["phone", "routing"],
       },
       {
         label: "Performance",
         to: "/portal/performance",
         icon: BarChart3,
         roles: ["business_owner"],
+        shortcut: "g p",
+        keywords: ["analytics", "views", "stats"],
       },
     ],
   },
   {
     heading: "Directory",
     items: [
-      { label: "Businesses", to: "/admin/businesses", icon: Store, roles: ["admin"] },
-      { label: "Claims", to: "/admin/claims", icon: ClipboardCheck, roles: ["admin"] },
-      { label: "Categories", to: "/admin/categories", icon: Tags, roles: ["admin"] },
-      { label: "Reviews", to: "/admin/reviews", icon: Star, roles: ["admin"] },
+      {
+        label: "Businesses",
+        to: "/admin/businesses",
+        icon: Store,
+        roles: ["admin"],
+        shortcut: "g b",
+        keywords: ["listings", "garages"],
+      },
+      {
+        label: "Claims",
+        to: "/admin/claims",
+        icon: ClipboardCheck,
+        roles: ["admin"],
+        shortcut: "g c",
+        keywords: ["queue", "ownership", "review"],
+      },
+      {
+        label: "Categories",
+        to: "/admin/categories",
+        icon: Tags,
+        roles: ["admin"],
+        shortcut: "g t",
+        keywords: ["taxonomy", "services"],
+      },
+      {
+        label: "Reviews",
+        to: "/admin/reviews",
+        icon: Star,
+        roles: ["admin"],
+        shortcut: "g v",
+        keywords: ["ratings", "moderation"],
+      },
       {
         label: "Import listings",
         shortLabel: "Import",
         to: "/admin/businesses/import",
         icon: Upload,
         roles: ["admin"],
+        shortcut: "g i",
+        keywords: ["csv", "spreadsheet", "bulk"],
       },
     ],
   },
   {
     heading: "Operations",
     items: [
-      { label: "Analytics", to: "/admin/analytics", icon: BarChart3, roles: ["admin"] },
+      {
+        label: "Analytics",
+        to: "/admin/analytics",
+        icon: BarChart3,
+        roles: ["admin"],
+        shortcut: "g a",
+        keywords: ["dashboard", "kpi", "stats"],
+      },
       {
         label: "WhatsApp Logs",
         shortLabel: "Logs",
         to: "/admin/whatsapp-logs",
         icon: MessageSquare,
         roles: ["admin"],
+        shortcut: "g d",
+        keywords: ["delivery", "messages", "failed"],
       },
     ],
   },
@@ -118,6 +169,8 @@ const SECTIONS: MenuSection[] = [
         to: "/admin/audit",
         icon: ScrollText,
         roles: ["admin"],
+        shortcut: "g u",
+        keywords: ["history", "who did what"],
       },
     ],
   },
@@ -135,18 +188,29 @@ export function filterSections(role: Role | undefined): MenuSection[] {
   );
 }
 
-/** Flat list across sections — used by the command palette. */
+/** Flat list across sections — used by the command palette and the breadcrumb. */
 export const MENU: MenuItem[] = SECTIONS.flatMap((s) => s.items);
 export { SECTIONS };
 
+/** The section a path belongs to, for the breadcrumb. Longest prefix wins, so
+ *  /admin/businesses/import reads "Import listings", not "Businesses". */
+export function sectionOf(pathname: string): { heading?: string; item?: MenuItem } {
+  let best: { heading?: string; item?: MenuItem; length: number } = { length: -1 };
+  for (const s of SECTIONS) {
+    for (const item of s.items) {
+      if (!item.to) continue;
+      const match = item.to === "/portal" ? pathname === "/portal" : pathname.startsWith(item.to);
+      if (match && item.to.length > best.length)
+        best = { heading: s.heading, item, length: item.to.length };
+    }
+  }
+  return { heading: best.heading, item: best.item };
+}
+
 /**
- * Destination priority for the mobile tab bar, most-used first.
- *
- * A ranking rather than a menu: the first four a role can see become tabs and
- * the rest stay in the sheet. Ordered by daily reach, not by the sidebar's
- * subject grouping — an owner opens Booking Requests every day and Settings
- * twice a year, and the admin's Claims sits high because in the first months
- * clearing that queue is most of the job.
+ * Destination priority for the mobile tab bar, most-used first. A ranking
+ * rather than a menu: the first four a role can see become tabs and the rest
+ * stay in the sheet.
  */
 const MOBILE_TAB_ORDER = [
   "/portal",
@@ -160,11 +224,7 @@ const MOBILE_TAB_ORDER = [
   "/admin/audit",
 ];
 
-/**
- * The four tabs for a role, in bar order. Resolved against the same
- * role-filtered menu the sidebar uses, so a permission can never be granted here
- * that the sidebar would deny.
- */
+/** The four tabs for a role, in bar order, from the same role-filtered menu the sidebar uses. */
 export function mobileTabs(role: Role | undefined): MenuItem[] {
   const allowed = new Map(
     filterMenu(

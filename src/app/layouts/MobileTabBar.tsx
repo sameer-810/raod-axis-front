@@ -1,21 +1,25 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
-import { MoreHorizontal } from "lucide-react";
+import { Link, NavLink } from "react-router-dom";
+import { MoreHorizontal, ExternalLink, LogOut, Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAppSelector } from "@/app/hooks";
+import { useAppDispatch, useAppSelector } from "@/app/hooks";
+import { clearAuth } from "@/modules/auth/authSlice";
+import { useTheme } from "@/app/theme";
 import { filterSections, mobileTabs } from "./menu";
 import { Sheet } from "@/shared/components/Sheet";
+import { Avatar } from "@/shared/components/Avatar";
 
 /**
- * Bottom navigation, below `md` only.
- *
- * At the bottom edge because that is what a right thumb reaches without
- * regripping. Four destinations plus More — a fifth label truncates at 390px.
- * Which four comes from `mobileTabs()` against the same role-filtered menu the
- * sidebar uses, so the bar is a view onto the menu, never a second copy of it.
+ * Bottom navigation, below `md` only. Four destinations plus More — a fifth
+ * label truncates at 390px. Which four comes from `mobileTabs()` against the
+ * same role-filtered menu the sidebar uses, so the bar is a view onto the menu.
+ * The account lives in the More sheet, where the sidebar's footer would be.
  */
 export function MobileTabBar() {
-  const role = useAppSelector((s) => s.auth.user?.role);
+  const user = useAppSelector((s) => s.auth.user);
+  const role = user?.role;
+  const dispatch = useAppDispatch();
+  const { theme, toggleTheme } = useTheme();
   const [moreOpen, setMoreOpen] = useState(false);
   const tabs = mobileTabs(role);
   const sections = filterSections(role);
@@ -56,12 +60,22 @@ export function MobileTabBar() {
         </ul>
       </nav>
 
-      <Sheet open={moreOpen} onOpenChange={setMoreOpen} title="All sections">
+      <Sheet open={moreOpen} onOpenChange={setMoreOpen} title="Menu">
         <div className="space-y-5">
+          <div className="flex items-center gap-3 rounded-lg border border-border bg-surface-2 p-3">
+            <Avatar name={user?.name} size="lg" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-foreground">{user?.name}</p>
+              <p className="truncate text-xs capitalize text-muted-foreground">
+                {user?.role?.replace("_", " ")} · {user?.email}
+              </p>
+            </div>
+          </div>
+
           {sections.map((section, i) => (
             <div key={section.heading ?? i}>
               {section.heading && (
-                <p className="pb-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                <p className="pb-1.5 font-mono text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
                   {section.heading}
                 </p>
               )}
@@ -88,6 +102,45 @@ export function MobileTabBar() {
               </ul>
             </div>
           ))}
+
+          <div className="border-t border-border pt-3">
+            <ul className="space-y-0.5">
+              <li>
+                <Link
+                  to="/"
+                  onClick={() => setMoreOpen(false)}
+                  className="ra-tap flex items-center gap-3 rounded-lg px-2 text-sm font-medium text-foreground hover:bg-accent"
+                >
+                  <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                  View the public site
+                </Link>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="ra-tap flex w-full items-center gap-3 rounded-lg px-2 text-sm font-medium text-foreground hover:bg-accent"
+                >
+                  {theme === "dark" ? (
+                    <Sun className="h-4 w-4" aria-hidden="true" />
+                  ) : (
+                    <Moon className="h-4 w-4" aria-hidden="true" />
+                  )}
+                  {theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => dispatch(clearAuth())}
+                  className="ra-tap flex w-full items-center gap-3 rounded-lg px-2 text-sm font-medium text-foreground hover:bg-accent"
+                >
+                  <LogOut className="h-4 w-4" aria-hidden="true" />
+                  Sign out
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
       </Sheet>
     </>

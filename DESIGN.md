@@ -249,20 +249,55 @@ Rules:
 
 ## Layout — portal and console
 
-The reference project's rules apply, because they were right and the problem is the same:
+The console is a different product from the public side and gets its own scale. A driver
+reads the public pages once, under stress; an administrator lives in these forty times a
+day. Density is a kindness here and an obstacle there.
 
-- **Do not redesign the shell.** Collapsible rail, role-filtered menu, breadcrumbs,
-  command palette. The convention is what makes it learnable.
-- Tables are the primary surface: aligned numeric columns, sticky headers, no zebra
-  striping, row hover.
-- **The leftmost column is the anchor** — the business or customer name. Actions go
-  last, after the data you read in order to decide whether to act.
-- **The header stays pinned**; the body scrolls inside the panel.
-- Row actions are quiet icon buttons, labelled for screen readers. Fifty rows each
-  carrying a red filled "Delete" trains people to stop seeing red as dangerous.
-- **The whole row opens the record**, as an enhancement layered on a real anchor — the
-  identifying cell keeps its `<a href>`. Row activation stands down when the click landed
-  on something interactive, when text is selected, and on modifier/middle clicks.
+**The shell.** Collapsible rail, role-filtered menu, breadcrumb, command palette. The
+convention is what makes it learnable — this is not the place to be novel. Three zones in
+the rail: what you are working as (the workspace label under the mark), where you can go,
+and who you are. The account menu lives at the foot of the rail, not in the top bar, so
+the bar above the content can be about the content.
+
+**Scale.** Tables are 13px, controls 36px on a desktop and 32px where they are secondary.
+Below `md` every control becomes the 44px touch floor through one class (`.ra-control`),
+so the floor cannot be forgotten on one of them. The visual weight is a desktop decision;
+the hit box is a phone one.
+
+**Tables.**
+
+- **The leftmost column is the anchor** — the business or customer name, and it keeps a
+  real `<a href>`. Actions go last, after the data you read in order to decide.
+- Sticky header, frozen first column with a shadow on the scrolled edge so it reads as a
+  layer rather than a seam. No zebra striping; a hairline and a hover tint are enough.
+- **Text left, figures right**, in tabular numerals, so a column of dates or counts lines
+  up by place value.
+- **Row actions are a trailing "⋯" menu, never hover-only** — a control that appears on
+  hover does not exist to a keyboard or a thumb. The menu offers only the move the record
+  can actually make: a live listing can be suspended, a suspended one restored, and
+  neither is ever offered both.
+- **Selection brings a bulk bar** that replaces the toolbar in place and names the count.
+  It appears only when something is selected.
+- **Keyboard: ↑↓ between rows, Enter opens, Space selects** — and only when the row itself
+  has focus, or the keydown from a control inside it opens the record by accident.
+- **Density is a user setting**, remembered per browser. Compact for somebody clearing a
+  400-row import; comfortable for an owner reading five requests.
+- **Skeleton rows at the real row height** while loading, so nothing jumps; an empty state
+  inside the frame, never a blank panel.
+- **Active filters are chips with a clear-all.** A filtered table that looks identical to
+  an unfiltered one is how people misread data.
+
+**Panels.** A record opens in a side drawer, not a new page — a reviewer working down a
+queue never loses their place. Below `md` the same drawer is a bottom sheet. Everything
+modal traps focus, closes on Escape, and hands focus back to whatever opened it.
+
+**Metrics travel in one panel** with hairline dividers, not as a row of four floating
+cards. The detached "KPI row" is the single most recognisable template fingerprint; a
+grouped strip reads as one instrument.
+
+**The keyboard is a first-class way around.** ⌘K opens search and commands, `g` then a
+letter jumps to a section, `?` lists the lot. Every shortcut is discoverable from the
+palette, so nobody has to be told.
 
 ---
 

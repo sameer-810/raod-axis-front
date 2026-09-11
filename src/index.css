@@ -89,6 +89,15 @@
     --ring: 29 100% 45%;
     --radius: 0.625rem;
 
+    /* A second, quieter ground for grouping inside a card — table headers, the
+       footer of a drawer, a selected row. One step off `--card`, never grey. */
+    --surface-2: 40 20% 97%;
+    /* Motion. One curve, three durations; nothing else is allowed. */
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --dur-fast: 120ms;
+    --dur-base: 160ms;
+    --dur-slow: 220ms;
+
     /* The rail stays brand-dark in both themes, exactly as the brochure is. */
     --sidebar: 215 40% 9%;
     --sidebar-foreground: 220 14% 84%;
@@ -141,6 +150,7 @@
     --border: 210 20% 20%;
     --input: 210 20% 20%;
     --ring: 29 100% 52%;
+    --surface-2: 210 26% 12%;
 
     --sidebar: 215 45% 7%;
     --sidebar-foreground: 220 14% 84%;
@@ -180,6 +190,15 @@
   }
   h1 {
     letter-spacing: -0.025em;
+  }
+  /*
+   * A designed focus ring, everywhere, by default. Components that draw their
+   * own ring set `outline-none` and take responsibility for it; nothing else
+   * may remove this without replacing it.
+   */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
   }
 }
 
@@ -715,4 +734,317 @@ table,
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ── Console ───────────────────────────────────────────────────────────────
+   The authenticated tool: Business Portal and Admin Console. A different job
+   from the public product — read forty times a day, mostly tables — so it gets
+   its own scale: 13px in tables, 32–36px controls on a desktop, and every
+   interactive state designed rather than defaulted. On a phone the same
+   controls grow to the 44px floor; the visuals do not change, the hit box does.
+─────────────────────────────────────────────────────────────────────────── */
+
+/** The one focus ring, as a class, for elements that draw their own. */
+.ra-focus {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+}
+.ra-focus-inset {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring;
+}
+
+/**
+ * A control height: 44px on a phone, `--control-h` (default 36px) above `md`.
+ * Buttons, inputs, selects and row-action triggers all share this one rule, so
+ * the touch floor cannot be forgotten on one of them.
+ */
+.ra-control {
+  min-height: 44px;
+}
+@media (min-width: 768px) {
+  .ra-control {
+    min-height: var(--control-h, 36px);
+    height: var(--control-h, 36px);
+  }
+}
+.ra-control-sm {
+  --control-h: 32px;
+}
+.ra-control-lg {
+  --control-h: 44px;
+}
+
+/** Sidebar row. 32px on a desktop; the sidebar does not exist on a phone. */
+.ra-nav-item {
+  @apply flex h-8 items-center gap-2.5 rounded-md px-2 text-[13px] font-medium text-sidebar-foreground/75 transition-colors;
+  transition-duration: var(--dur-fast);
+  @apply hover:bg-white/[0.06] hover:text-sidebar-foreground;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring;
+}
+.ra-nav-item[aria-current="page"] {
+  @apply bg-white/[0.08] text-white;
+}
+.ra-nav-item[aria-current="page"] > svg {
+  @apply text-sidebar-primary;
+}
+
+/** Keycap — for the shortcut hints in menus and the palette. */
+.ra-kbd {
+  @apply inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded border border-border bg-muted px-1 font-mono text-[10.5px] font-medium text-muted-foreground;
+}
+
+/* ── Tables ─────────────────────────────────────────────────────────────── */
+.ra-table {
+  @apply w-full border-collapse text-[13px];
+}
+.ra-table th {
+  @apply h-9 whitespace-nowrap border-b border-border bg-surface-2 px-3 text-start text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground;
+}
+.ra-table th:first-child,
+.ra-table td:first-child {
+  @apply ps-4;
+}
+.ra-table td {
+  @apply border-b border-border/70 px-3 align-middle;
+}
+.ra-table tbody tr:last-child td {
+  @apply border-b-0;
+}
+.ra-table[data-density="compact"] td {
+  @apply h-10 py-0;
+}
+.ra-table[data-density="comfortable"] td {
+  @apply h-12 py-0;
+}
+.ra-table tbody tr {
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+.ra-table tbody tr[data-interactive="true"] {
+  @apply cursor-pointer;
+}
+.ra-table tbody tr[data-interactive="true"]:hover {
+  @apply bg-accent/50;
+}
+.ra-table tbody tr[data-selected="true"] {
+  @apply bg-primary/[0.06];
+}
+.ra-table tbody tr[data-selected="true"]:hover {
+  @apply bg-primary/[0.09];
+}
+.ra-table tbody tr[tabindex]:focus-visible {
+  @apply outline-none;
+  box-shadow: inset 0 0 0 2px hsl(var(--ring));
+}
+/** A left accent for the rows that need acting on — a new request, a failed send. */
+.ra-table tbody tr[data-tone="attention"] td:first-child {
+  box-shadow: inset 3px 0 0 hsl(var(--primary));
+}
+.ra-table tbody tr[data-tone="danger"] td:first-child {
+  box-shadow: inset 3px 0 0 hsl(var(--destructive));
+}
+/** Frozen first column, with a shadow so it reads as a layer rather than a seam. */
+.ra-table [data-sticky="true"] {
+  @apply sticky start-0 z-[1] bg-card;
+}
+.ra-table th[data-sticky="true"] {
+  @apply bg-surface-2;
+}
+.ra-table-scroll[data-scrolled="true"] [data-sticky="true"] {
+  box-shadow: 4px 0 8px -4px rgb(0 0 0 / 0.12);
+}
+
+/** Skeleton shimmer. Static under reduced motion. */
+.ra-skeleton {
+  @apply rounded bg-muted;
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(var(--card) / 0.6) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: ra-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes ra-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ── Overlays ───────────────────────────────────────────────────────────── */
+.ra-backdrop {
+  @apply fixed inset-0 z-50 bg-black/40;
+  animation: overlay-in var(--dur-fast) ease-out;
+}
+.ra-drawer {
+  @apply fixed inset-y-0 end-0 z-50 flex w-full max-w-[30rem] flex-col border-s border-border bg-popover shadow-2xl;
+  animation: ra-drawer-in var(--dur-slow) var(--ease-out);
+}
+@keyframes ra-drawer-in {
+  from {
+    transform: translateX(16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+.ra-dialog {
+  @apply fixed start-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-popover shadow-2xl;
+  animation: ra-dialog-in var(--dur-base) var(--ease-out);
+}
+@keyframes ra-dialog-in {
+  from {
+    transform: translate(-50%, -50%) scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+.ra-menu {
+  @apply fixed z-[60] min-w-[12rem] rounded-lg border border-border bg-popover p-1 shadow-xl;
+  animation: ra-menu-in var(--dur-fast) var(--ease-out);
+  transform-origin: top right;
+}
+@keyframes ra-menu-in {
+  from {
+    transform: scale(0.98) translateY(-2px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+.ra-menu-item {
+  @apply flex w-full cursor-default select-none items-center gap-2.5 rounded-md px-2 text-[13px] text-foreground outline-none;
+  min-height: 44px;
+}
+@media (min-width: 768px) {
+  .ra-menu-item {
+    min-height: 32px;
+    height: 32px;
+  }
+}
+.ra-menu-item[data-active="true"] {
+  @apply bg-accent;
+}
+.ra-menu-item[data-destructive="true"] {
+  @apply text-destructive;
+}
+.ra-menu-item[data-destructive="true"][data-active="true"] {
+  @apply bg-destructive/10;
+}
+.ra-menu-item[aria-disabled="true"] {
+  @apply opacity-50;
+}
+.ra-menu-separator {
+  @apply my-1 h-px bg-border;
+}
+
+/** The palette is a dialog with a list in it; it sits high, not centred. */
+.ra-palette {
+  @apply fixed start-1/2 top-[12vh] z-50 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 overflow-hidden rounded-xl border border-border bg-popover shadow-2xl;
+  animation: ra-palette-in var(--dur-base) var(--ease-out);
+}
+@keyframes ra-palette-in {
+  from {
+    transform: translate(-50%, -4px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+/* ── Stat groups ────────────────────────────────────────────────────────── */
+/**
+ * Metrics travel in one panel with hairline dividers, not as a row of four
+ * floating cards — the "KPI row" is the single most recognisable template
+ * fingerprint, and a grouped strip reads as one instrument instead.
+ */
+/* A 1px gap over a border-coloured ground draws the dividers, whatever the
+   column count — so the same group is a 2×2 on a phone and a strip on a desktop. */
+.ra-stat-group {
+  @apply grid gap-px overflow-hidden rounded-lg border border-border bg-border;
+}
+.ra-stat-group > .ra-tile {
+  @apply rounded-none border-0 bg-card;
+}
+
+/* ── Switch ─────────────────────────────────────────────────────────────── */
+.ra-switch {
+  @apply relative inline-flex h-6 w-10 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent bg-muted-foreground/35 transition-colors;
+  transition-duration: var(--dur-base);
+}
+.ra-switch[aria-checked="true"] {
+  @apply bg-success;
+}
+.ra-switch-thumb {
+  @apply pointer-events-none block h-5 w-5 rounded-full bg-white shadow transition-transform;
+  transition-duration: var(--dur-base);
+  transition-timing-function: var(--ease-out);
+}
+.ra-switch[aria-checked="true"] .ra-switch-thumb {
+  transform: translateX(16px);
+}
+
+/* ── Segmented control ──────────────────────────────────────────────────── */
+.ra-segmented {
+  @apply inline-flex items-center gap-0.5 rounded-lg border border-border bg-surface-2 p-0.5;
+}
+.ra-segment {
+  --control-h: 30px;
+  @apply ra-control inline-flex items-center rounded-md px-3 text-[13px] font-medium text-muted-foreground transition-colors;
+  @apply hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+}
+.ra-segment[aria-pressed="true"],
+.ra-segment[aria-selected="true"] {
+  @apply bg-card text-foreground shadow-sm;
+}
+/* A short segment ("All", an icon) is tall enough on a phone but not wide enough. */
+@media (max-width: 767px) {
+  .ra-segment {
+    min-width: 44px;
+  }
+}
+
+/* ── Timeline ───────────────────────────────────────────────────────────── */
+.ra-timeline {
+  @apply relative;
+}
+/* The rail runs through the centre of a 32px marker column. */
+.ra-timeline::before {
+  content: "";
+  @apply absolute bottom-3 start-[15px] top-3 w-px bg-border;
+}
+.ra-timeline-dot {
+  @apply absolute start-2 top-3.5 flex h-4 w-4 items-center justify-center rounded-full border-2 border-card bg-muted-foreground/40;
+}
+.ra-timeline-dot[data-tone="warning"] {
+  @apply bg-warning;
+}
+.ra-timeline-dot[data-tone="success"] {
+  @apply bg-success;
+}
+.ra-timeline-dot[data-tone="destructive"] {
+  @apply bg-destructive;
+}
+
+/* ── Settings-style form ────────────────────────────────────────────────── */
+/**
+ * A sticky section index beside a long form. Without it "opening hours" is
+ * somewhere below the fold and nobody knows how far.
+ */
+.ra-form-nav a {
+  @apply ra-focus flex h-8 items-center rounded-md px-2.5 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground;
+}
+.ra-form-nav a[aria-current="true"] {
+  @apply bg-accent font-medium text-foreground;
 }

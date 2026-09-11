@@ -1,9 +1,24 @@
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Upload, FileSpreadsheet, CheckCircle2, XCircle, MinusCircle } from "lucide-react";
+import {
+  Upload,
+  FileSpreadsheet,
+  CheckCircle2,
+  XCircle,
+  MinusCircle,
+  Download,
+  X,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { http, getApiErrorMessage } from "@/shared/api/http";
-import { StatCard } from "@/shared/components/StatCard";
+import { Stat, StatGroup } from "@/shared/components/StatGroup";
+import { PageHeader } from "@/shared/components/PageHeader";
+import { Stepper } from "@/shared/components/Stepper";
+import { SectionCard } from "@/shared/components/SectionCard";
+import { Button } from "@/shared/components/Button";
+import { SegmentedControl } from "@/shared/components/SegmentedControl";
+import { DataTable, type Column } from "@/shared/components/DataTable";
+import { EmptyState } from "@/shared/components/EmptyState";
 import { toast } from "@/shared/lib/toast";
 
 interface RowResult {
@@ -25,10 +40,8 @@ interface ImportSummary {
 }
 
 /**
- * The template, built here rather than downloaded. The API serves the same
- * header line but is behind `authenticate`, and a plain `<a href>` would
- * download a 401 as a file. The importer is where the columns are defined for
- * real; its row-by-row messages catch any drift between the two.
+ * The template, built here rather than downloaded: the API's copy is behind
+ * `authenticate`, and a plain `<a href>` would download a 401 as a file.
  */
 function downloadTemplate() {
   const header =
@@ -50,18 +63,23 @@ const COLUMNS = [
   ["description, custom_services", "Optional."],
 ];
 
+const STEPS = [
+  { label: "Choose a CSV", description: "One row per listing" },
+  { label: "Preview", description: "Every row checked, nothing written" },
+  { label: "Import", description: "The rows that passed go live" },
+];
+
 /**
- * Bulk listing import — FR-ADM-09.
- *
- * The most destructive screen in the product: one bad file puts several hundred
- * wrong records in front of the public at once. So the flow is
- * preview-then-commit, and the preview is not a summary — it is the same
- * parsing, validation and duplicate check, reported row by row with line numbers.
+ * Bulk listing import — FR-ADM-09. The most destructive screen in the product,
+ * so the flow is preview-then-commit and the preview is not a summary: it is the
+ * same parsing, validation and duplicate check, reported row by row.
  */
 export function AdminImportPage() {
   const [file, setFile] = useState<File | null>(null);
   const [summary, setSummary] = useState<ImportSummary | null>(null);
   const [busy, setBusy] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const [show, setShow] = useState<"all" | "failed" | "skipped" | "ok">("all");
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function send(commit: boolean) {
@@ -76,6 +94,7 @@ export function AdminImportPage() {
         form,
       );
       setSummary(res.data.data);
+      setShow("all");
       toast.success(res.data.message);
     } catch (err) {
       toast.error(getApiErrorMessage(err));
@@ -84,187 +103,256 @@ export function AdminImportPage() {
     }
   }
 
+  function choose(f: File | null) {
+    setFile(f);
+    setSummary(null);
+  }
+
   const ready = summary?.dryRun ? (summary.valid ?? 0) : 0;
+  const committed = summary ? !summary.dryRun : false;
+  const step = committed ? 3 : summary ? 2 : file ? 1 : 0;
+
+  const rows = (summary?.results ?? []).filter((r) =>
+    show === "all"
+      ? true
+      : show === "failed"
+        ? r.status === "failed"
+        : show === "skipped"
+          ? r.status === "skipped"
+          : r.status === "valid" || r.status === "created",
+  );
+
+  const columns: Column<RowResult>[] = [
+    {
+      key: "line",
+      header: "Line",
+      width: "4rem",
+      cell: (r) => (
+        <span className="font-mono text-xs tabular-nums text-muted-foreground">{r.line}</span>
+      ),
+    },
+    {
+      key: "name",
+      header: "Name",
+      cell: (r) =>
+        r.slug ? (
+          <Link to={`/business/${r.slug}`} className="font-medium text-foreground hover:underline">
+            {r.name}
+          </Link>
+        ) : (
+          <span className="font-medium text-foreground">{r.name}</span>
+        ),
+    },
+    {
+      key: "status",
+      header: "Result",
+      width: "8rem",
+      cell: (r) => <RowStatus status={r.status} />,
+    },
+    {
+      key: "message",
+      header: "Detail",
+      wrap: true,
+      cell: (r) => <span className="text-muted-foreground">{r.message}</span>,
+    },
+  ];
 
   return (
     <div className="ra-page">
-      <div>
-        <h1 className="hidden text-xl font-semibold tracking-tight text-foreground md:block">
-          Import listings
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Seed the directory from a spreadsheet. Nothing is written until you have seen the preview.
-        </p>
-      </div>
+      <PageHeader
+        title="Import listings"
+        description="Seed the directory from a spreadsheet. Nothing is written until you have seen the preview and pressed a second button."
+      >
+        <Stepper steps={STEPS} current={step} className="pt-1" />
+      </PageHeader>
 
-      <section aria-labelledby="upload" className="ra-panel p-4">
-        <h2 id="upload" className="text-base font-semibold text-foreground">
-          1. Choose a CSV
-        </h2>
-
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => inputRef.current?.click()}
-            className="ra-tap flex items-center gap-2 rounded-lg border border-border px-4 text-sm font-medium transition-colors hover:bg-accent"
-          >
-            <Upload className="h-4 w-4" aria-hidden="true" />
-            {file ? "Choose a different file" : "Choose file"}
-          </button>
-          {/*
-            tabIndex={-1} and aria-hidden, or this input duplicates the button's
-            accessible name and a screen reader announces the control twice.
-          */}
-          <input
-            ref={inputRef}
-            type="file"
-            accept=".csv,text/csv"
-            tabIndex={-1}
-            aria-hidden="true"
-            className="sr-only"
-            onChange={(e) => {
-              setFile(e.target.files?.[0] ?? null);
-              setSummary(null);
-            }}
-          />
-          {file && (
-            <span className="flex items-center gap-2 text-sm text-muted-foreground">
-              <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />
-              {file.name}
-            </span>
-          )}
-          <button
-            type="button"
-            onClick={downloadTemplate}
-            className="ra-tap ms-auto flex items-center text-sm text-primary-text hover:underline"
-          >
-            Download the column template
-          </button>
-        </div>
-
-        <details className="mt-4">
-          <summary className="ra-tap inline-flex cursor-pointer items-center text-sm text-muted-foreground">
-            What the columns mean
-          </summary>
-          <dl className="mt-2 space-y-1.5 text-sm">
-            {COLUMNS.map(([name, meaning]) => (
-              <div key={name} className="flex flex-wrap gap-x-2">
-                <dt className="font-mono text-xs text-foreground">{name}</dt>
-                <dd className="text-muted-foreground">{meaning}</dd>
-              </div>
-            ))}
-          </dl>
-        </details>
-      </section>
-
-      <section aria-labelledby="preview" className="ra-panel p-4">
-        <h2 id="preview" className="text-base font-semibold text-foreground">
-          2. Preview
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Checks every row against the same rules a listing typed by hand has to meet, and against
-          what is already in the directory.
-        </p>
-        <button
-          type="button"
-          disabled={!file || busy}
-          onClick={() => send(false)}
-          className="ra-tap mt-3 rounded-lg border border-border px-4 text-sm font-medium transition-colors hover:bg-accent disabled:opacity-50"
+      <div className="grid gap-4 lg:grid-cols-2">
+        <SectionCard
+          title="1. Choose a CSV"
+          id="upload"
+          aside={
+            <Button variant="ghost" size="sm" icon={Download} onClick={downloadTemplate}>
+              Download the column template
+            </Button>
+          }
         >
-          {busy ? "Checking…" : "Check the file"}
-        </button>
-      </section>
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragging(false);
+              choose(e.dataTransfer.files?.[0] ?? null);
+            }}
+            className={cn(
+              "flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed px-4 py-8 text-center transition-colors",
+              dragging ? "border-primary bg-primary/[0.06]" : "border-border bg-surface-2",
+            )}
+          >
+            {file ? (
+              <>
+                <FileSpreadsheet className="h-6 w-6 text-primary-text" aria-hidden="true" />
+                <p className="text-sm font-medium text-foreground">{file.name}</p>
+                <p className="font-mono text-xs tabular-nums text-muted-foreground">
+                  {(file.size / 1024).toFixed(0)} KB
+                </p>
+                <div className="mt-1 flex gap-2">
+                  <Button size="sm" variant="secondary" onClick={() => inputRef.current?.click()}>
+                    Choose a different file
+                  </Button>
+                  <Button size="sm" variant="ghost" icon={X} onClick={() => choose(null)}>
+                    Remove
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <Upload className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+                <p className="text-sm text-foreground">Drop a CSV here, or</p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  icon={Upload}
+                  onClick={() => inputRef.current?.click()}
+                >
+                  Choose file
+                </Button>
+              </>
+            )}
+            {/* tabIndex={-1} and aria-hidden, or this input duplicates the button's name. */}
+            <input
+              ref={inputRef}
+              type="file"
+              accept=".csv,text/csv"
+              tabIndex={-1}
+              aria-hidden="true"
+              className="sr-only"
+              onChange={(e) => choose(e.target.files?.[0] ?? null)}
+            />
+          </div>
+
+          <details className="mt-4">
+            <summary className="ra-control inline-flex cursor-pointer items-center text-[13px] text-muted-foreground hover:text-foreground">
+              What the columns mean
+            </summary>
+            <dl className="mt-2 space-y-1.5 text-[13px]">
+              {COLUMNS.map(([name, meaning]) => (
+                <div key={name} className="flex flex-wrap gap-x-2">
+                  <dt className="font-mono text-xs text-foreground">{name}</dt>
+                  <dd className="text-muted-foreground">{meaning}</dd>
+                </div>
+              ))}
+            </dl>
+          </details>
+        </SectionCard>
+
+        <SectionCard
+          title="2. Preview"
+          id="preview"
+          description="Checks every row against the same rules a listing typed by hand has to meet, and against what is already in the directory."
+        >
+          <Button
+            variant={file && !summary ? "primary" : "secondary"}
+            disabled={!file}
+            loading={busy && !committed}
+            onClick={() => send(false)}
+          >
+            Check the file
+          </Button>
+          {!file && <p className="mt-2 text-xs text-muted-foreground">Choose a file first.</p>}
+        </SectionCard>
+      </div>
 
       {summary && (
         <>
-          <div className="grid gap-3 sm:grid-cols-4">
-            <StatCard label="Rows" value={summary.total} />
-            <StatCard
+          <StatGroup columns={4}>
+            <Stat label="Rows" value={summary.total} />
+            <Stat
               label={summary.dryRun ? "Ready" : "Created"}
               value={summary.dryRun ? (summary.valid ?? 0) : (summary.created ?? 0)}
               tone="success"
             />
-            <StatCard
+            <Stat
               label="Already listed"
               value={summary.skipped}
               tone={summary.skipped ? "warning" : "neutral"}
               hint="Skipped as duplicates"
             />
-            <StatCard
+            <Stat
               label="Problems"
               value={summary.failed}
               tone={summary.failed ? "destructive" : "neutral"}
+              hint={summary.failed ? "Fix the cells named below and check again" : undefined}
             />
-          </div>
+          </StatGroup>
 
           {summary.dryRun && (
-            <section aria-labelledby="commit" className="ra-panel p-4">
-              <h2 id="commit" className="text-base font-semibold text-foreground">
-                3. Import
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {ready > 0
+            <SectionCard
+              title="3. Import"
+              id="commit"
+              description={
+                ready > 0
                   ? `${ready} listing${ready === 1 ? "" : "s"} will go live immediately, unclaimed and unverified. Rows with problems are left out.`
-                  : "Nothing in this file is ready to import yet."}
-              </p>
-              <button
-                type="button"
-                disabled={ready === 0 || busy}
+                  : "Nothing in this file is ready to import yet."
+              }
+            >
+              <Button
+                variant="primary"
+                disabled={ready === 0}
+                loading={busy}
                 onClick={() => send(true)}
-                className="ra-tap mt-3 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
               >
-                {busy ? "Importing…" : `Import ${ready} listing${ready === 1 ? "" : "s"}`}
-              </button>
-            </section>
+                {`Import ${ready} listing${ready === 1 ? "" : "s"}`}
+              </Button>
+            </SectionCard>
           )}
 
-          <section aria-labelledby="rows">
-            <h2 id="rows" className="mb-3 text-base font-semibold text-foreground">
-              Row by row
-            </h2>
-            {/* The line number is the only way back to the cell that is wrong. */}
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[560px] text-sm">
-                <thead>
-                  <tr className="border-b border-border text-left text-xs uppercase tracking-[0.06em] text-muted-foreground">
-                    <th scope="col" className="py-2 pe-3 font-medium">
-                      Line
-                    </th>
-                    <th scope="col" className="py-2 pe-3 font-medium">
-                      Name
-                    </th>
-                    <th scope="col" className="py-2 pe-3 font-medium">
-                      Result
-                    </th>
-                    <th scope="col" className="py-2 font-medium">
-                      Detail
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {summary.results.map((row) => (
-                    <tr key={`${row.line}-${row.name}`}>
-                      <td className="py-2 pe-3 font-mono tabular-nums text-muted-foreground">
-                        {row.line}
-                      </td>
-                      <td className="py-2 pe-3">
-                        {row.slug ? (
-                          <Link to={`/business/${row.slug}`} className="hover:underline">
-                            {row.name}
-                          </Link>
-                        ) : (
-                          row.name
-                        )}
-                      </td>
-                      <td className="py-2 pe-3">
-                        <RowStatus status={row.status} />
-                      </td>
-                      <td className="py-2 text-muted-foreground">{row.message}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <section aria-labelledby="rows" className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 id="rows" className="text-sm font-semibold text-foreground">
+                Row by row
+              </h2>
+              <SegmentedControl
+                label="Show rows"
+                size="sm"
+                value={show}
+                onChange={setShow}
+                options={[
+                  { value: "all", label: "All" },
+                  { value: "ok", label: summary.dryRun ? "Ready" : "Listed" },
+                  { value: "skipped", label: "Skipped" },
+                  { value: "failed", label: "Problems" },
+                ]}
+              />
             </div>
+            {/* The line number is the only way back to the cell that is wrong. */}
+            <DataTable
+              label="Import results"
+              rows={rows}
+              columns={columns}
+              rowKey={(r) => `${r.line}-${r.name}`}
+              density="compact"
+              stickyFirstColumn={false}
+              minWidth={560}
+              empty={<EmptyState inline title="No rows in this group" />}
+              mobileRow={(r) => (
+                <div className="ra-card p-3.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-medium text-foreground">
+                      <span className="me-2 font-mono text-xs text-muted-foreground">
+                        #{r.line}
+                      </span>
+                      {r.name}
+                    </p>
+                    <RowStatus status={r.status} />
+                  </div>
+                  <p className="mt-1 text-[13px] text-muted-foreground">{r.message}</p>
+                </div>
+              )}
+            />
           </section>
         </>
       )}
@@ -276,12 +364,12 @@ function RowStatus({ status }: { status: RowResult["status"] }) {
   const map = {
     created: { icon: CheckCircle2, label: "Listed", tone: "text-success" },
     valid: { icon: CheckCircle2, label: "Ready", tone: "text-success" },
-    skipped: { icon: MinusCircle, label: "Skipped", tone: "text-warning" },
+    skipped: { icon: MinusCircle, label: "Skipped", tone: "text-warning-text" },
     failed: { icon: XCircle, label: "Problem", tone: "text-destructive" },
   } as const;
   const { icon: Icon, label, tone } = map[status];
   return (
-    <span className={cn("inline-flex items-center gap-1.5 font-medium", tone)}>
+    <span className={cn("inline-flex items-center gap-1.5 text-[13px] font-medium", tone)}>
       <Icon className="h-4 w-4" aria-hidden="true" />
       {label}
     </span>

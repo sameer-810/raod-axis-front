@@ -1,10 +1,19 @@
 import { useState } from "react";
-import { RefreshCw, MessageSquare, AlertTriangle } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { RefreshCw, MessageSquare, AlertTriangle, Eye } from "lucide-react";
 import { toast } from "@/shared/lib/toast";
 import { getApiErrorMessage } from "@/shared/api/http";
-import { StatCard } from "@/shared/components/StatCard";
+import { Stat, StatGroup } from "@/shared/components/StatGroup";
 import { EmptyState } from "@/shared/components/EmptyState";
+import { PageHeader } from "@/shared/components/PageHeader";
+import { SegmentedControl } from "@/shared/components/SegmentedControl";
+import { DataTable, DensityToggle, type Column } from "@/shared/components/DataTable";
+import { Pagination } from "@/shared/components/Pagination";
+import { Drawer } from "@/shared/components/Drawer";
+import { Button } from "@/shared/components/Button";
+import { DescriptionList } from "@/shared/components/SectionCard";
+import { Timeline } from "@/shared/components/Timeline";
+import { RowMenu } from "@/shared/components/Menu";
+import { useDensity } from "@/shared/hooks/useDensity";
 import { formatAge, formatDateTime } from "@/shared/lib/format";
 import { DeliveryBadge } from "@/modules/booking/components/StatusBadge";
 import {
@@ -12,6 +21,7 @@ import {
   useRetryDelivery,
   useWhatsAppLogs,
 } from "@/modules/booking/hooks/useBookings";
+import type { WhatsAppLogEntry } from "@/modules/booking/types";
 
 const STATES = [
   { value: "", label: "All" },
@@ -24,46 +34,101 @@ const STATES = [
 ];
 
 /**
- * The delivery log — FR-WAP-03 and FR-WAP-06.
- *
- * The whole of the ">98% delivery" measure in PRD §6, and it has to be honest
- * about when it cannot answer: in deep-link mode nothing is sent by us, so those
- * rows say "not tracked" and are counted separately from success and failure.
+ * The delivery log — FR-WAP-03 and FR-WAP-06. The whole of the ">98% delivery"
+ * measure, and it has to be honest about when it cannot answer: deep-link rows
+ * say "not tracked" and are counted separately from success and failure.
  */
 export function AdminWhatsAppLogsPage() {
+  const [density, setDensity] = useDensity();
   const [state, setState] = useState("");
   const [page, setPage] = useState(1);
+  const [open, setOpen] = useState<WhatsAppLogEntry | null>(null);
   const { data, isLoading } = useWhatsAppLogs({ state, page });
   const { data: stats } = useDeliveryStats();
   const retry = useRetryDelivery();
-
   const items = data?.items ?? [];
 
-  async function resend(id: string) {
+  async function resend(log: WhatsAppLogEntry) {
     try {
-      await retry.mutateAsync(id);
-      toast.success("Message re-sent");
+      await retry.mutateAsync(log.id);
+      toast.success(`${log.reference ?? "Message"} re-sent`);
     } catch (err) {
       toast.error(getApiErrorMessage(err));
     }
   }
 
+  const rowActions = (log: WhatsAppLogEntry) => [
+    { label: "View attempt", icon: Eye, onSelect: () => setOpen(log) },
+    ...(log.delivery.state === "failed"
+      ? [{ label: "Re-send", icon: RefreshCw, onSelect: () => void resend(log) }]
+      : []),
+  ];
+
+  const columns: Column<WhatsAppLogEntry>[] = [
+    {
+      key: "reference",
+      header: "Reference",
+      cell: (log) => (
+        <span className="font-mono text-[13px] tabular-nums text-foreground">
+          {log.reference ?? "—"}
+        </span>
+      ),
+    },
+    {
+      key: "state",
+      header: "Delivery",
+      cell: (log) => (
+        <span className="inline-flex flex-wrap items-center gap-1.5">
+          <DeliveryBadge delivery={log.delivery} />
+          {log.usedFallback && <span className="text-xs text-warning-text">via fallback</span>}
+          {log.isRetry && <span className="text-xs text-muted-foreground">re-sent</span>}
+        </span>
+      ),
+    },
+    {
+      key: "business",
+      header: "Business",
+      cell: (log) => <span className="text-foreground">{log.business?.name ?? "—"}</span>,
+    },
+    {
+      key: "to",
+      header: "To",
+      hideBelow: "lg",
+      cell: (log) => (
+        <span className="text-muted-foreground">
+          {log.toLabel ?? "—"} <span className="ms-1 font-mono text-xs tabular-nums">{log.to}</span>
+        </span>
+      ),
+    },
+    {
+      key: "at",
+      header: "Sent",
+      align: "end",
+      cell: (log) => (
+        <span className="text-xs text-muted-foreground" title={formatDateTime(log.createdAt)}>
+          {formatAge(log.createdAt)}
+        </span>
+      ),
+    },
+  ];
+
+  const deliveryTone =
+    stats?.deliveryRate !== null && stats?.deliveryRate !== undefined && stats.deliveryRate < 98
+      ? "warning"
+      : "neutral";
+
   return (
     <div className="ra-page">
-      <div>
-        <h1 className="hidden text-xl font-semibold tracking-tight text-foreground md:block">
-          WhatsApp logs
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Every attempt to put a booking request on a business's phone.
-        </p>
-      </div>
+      <PageHeader
+        title="WhatsApp logs"
+        description="Every attempt to put a booking request on a business's phone, and what Meta said happened to it."
+        actions={<DensityToggle density={density} onChange={setDensity} />}
+      />
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <StatCard
+      <StatGroup columns={3}>
+        <Stat
           label="Delivery rate"
-          // Null, not 100%, when nothing is trackable — a rate computed from no
-          // data is not a rate.
+          // Null, not 100%, when nothing is trackable — a rate from no data is not a rate.
           value={
             stats?.deliveryRate === null || stats?.deliveryRate === undefined
               ? "—"
@@ -72,32 +137,22 @@ export function AdminWhatsAppLogsPage() {
           hint={
             stats?.tracked ? `of ${stats.tracked} trackable` : "Nothing trackable yet — see below"
           }
-          tone={
-            stats?.deliveryRate !== null &&
-            stats?.deliveryRate !== undefined &&
-            stats.deliveryRate < 98
-              ? "warning"
-              : "neutral"
-          }
+          tone={deliveryTone}
         />
-        <StatCard
+        <Stat
           label="Failed"
           value={stats?.byState?.failed ?? 0}
           hint="Can be re-sent"
           tone={stats?.byState?.failed ? "destructive" : "neutral"}
         />
-        <StatCard
+        <Stat
           label="Not tracked"
           value={stats?.untracked ?? 0}
           hint="Sent from the driver's own device"
         />
-      </div>
+      </StatGroup>
 
-      {/*
-        The most important sentence on the page when it applies. Without Cloud
-        API credentials the delivery figure above is not a low number — it is no
-        number, and an administrator has to know which they are looking at.
-      */}
+      {/* The most important sentence on the page when it applies. */}
       {(stats?.untracked ?? 0) > 0 && stats?.tracked === 0 && (
         <p className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
@@ -109,111 +164,180 @@ export function AdminWhatsAppLogsPage() {
         </p>
       )}
 
-      <div className="ra-chips" role="group" aria-label="Filter by delivery state">
-        {STATES.map((s) => (
-          <button
-            key={s.label}
-            type="button"
-            onClick={() => {
-              setState(s.value);
-              setPage(1);
-            }}
-            aria-pressed={state === s.value}
-            className="ra-chip"
-          >
-            {s.label}
-          </button>
-        ))}
+      <div className="-mx-4 overflow-x-auto px-4 pb-0.5 md:mx-0 md:px-0">
+        <SegmentedControl
+          label="Filter by delivery state"
+          options={STATES}
+          value={state}
+          onChange={(v) => {
+            setState(v);
+            setPage(1);
+          }}
+        />
       </div>
 
-      {isLoading ? (
-        <div className="ra-panel px-4 py-12 text-center text-sm text-muted-foreground">
-          Loading…
-        </div>
-      ) : items.length === 0 ? (
-        <EmptyState
-          icon={MessageSquare}
-          title="Nothing here"
-          description="Delivery attempts appear as booking requests are sent."
-        />
-      ) : (
-        <ul className="ra-panel divide-y divide-border">
-          {items.map((log) => (
-            <li key={log.id} className="px-4 py-3">
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="flex flex-wrap items-center gap-2 text-sm">
-                    <span className="font-mono tabular-nums text-foreground">
-                      {log.reference ?? "—"}
-                    </span>
-                    <DeliveryBadge delivery={log.delivery} />
-                    {log.usedFallback && (
-                      <span className="text-xs text-warning">via fallback number</span>
-                    )}
-                    {log.isRetry && <span className="text-xs text-muted-foreground">re-sent</span>}
-                  </p>
-                  <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                    {log.business?.name} · {log.toLabel ?? "—"}{" "}
-                    <span className="font-mono tabular-nums">{log.to}</span>
-                  </p>
-                  {log.error && <p className="mt-1 text-xs text-destructive">{log.error}</p>}
-                </div>
+      <DataTable
+        label="Delivery attempts"
+        rows={items}
+        columns={columns}
+        rowKey={(log) => log.id}
+        loading={isLoading}
+        density={density}
+        onRowClick={setOpen}
+        rowActions={rowActions}
+        rowActionsLabel={(log) => `Actions for ${log.reference ?? "attempt"}`}
+        rowTone={(log) => (log.delivery.state === "failed" ? "danger" : undefined)}
+        empty={
+          <EmptyState
+            inline
+            icon={MessageSquare}
+            title="Nothing here"
+            description={
+              state
+                ? "No attempts in this state."
+                : "Delivery attempts appear as booking requests are sent."
+            }
+          />
+        }
+        mobileRow={(log) => (
+          <div className="ra-card p-3.5">
+            <button
+              type="button"
+              onClick={() => setOpen(log)}
+              className="ra-tap ra-focus block w-full rounded text-start"
+            >
+              <p className="flex flex-wrap items-center gap-2 text-sm">
+                <span className="font-mono tabular-nums text-foreground">
+                  {log.reference ?? "—"}
+                </span>
+                <DeliveryBadge delivery={log.delivery} />
+              </p>
+              <p className="mt-1 truncate text-[13px] text-muted-foreground">
+                {log.business?.name} · {log.toLabel ?? "—"}{" "}
+                <span className="font-mono tabular-nums">{log.to}</span>
+              </p>
+              <p className="mt-1 font-mono text-xs tabular-nums text-muted-foreground">
+                {formatAge(log.createdAt)}
+              </p>
+            </button>
+            <div className="mt-3 flex items-center gap-2 border-t border-border pt-3">
+              {log.delivery.state === "failed" && (
+                <Button
+                  size="md"
+                  variant="secondary"
+                  icon={RefreshCw}
+                  loading={retry.isPending}
+                  onClick={() => void resend(log)}
+                >
+                  Re-send
+                </Button>
+              )}
+              <RowMenu
+                items={rowActions(log)}
+                label={`Actions for ${log.reference ?? "attempt"}`}
+                size="md"
+                variant="secondary"
+              />
+            </div>
+          </div>
+        )}
+        footer={
+          data && (
+            <Pagination
+              page={data.meta.page}
+              totalPages={data.meta.totalPages}
+              total={data.meta.total}
+              pageSize={30}
+              onChange={setPage}
+              labels={{ prev: "Newer", next: "Older" }}
+              noun="attempts"
+            />
+          )
+        }
+      />
 
-                <div className="flex shrink-0 items-center gap-2">
-                  <span
-                    className="font-mono text-xs tabular-nums text-muted-foreground"
-                    title={formatDateTime(log.createdAt)}
-                  >
-                    {formatAge(log.createdAt)}
-                  </span>
-                  {/* A new row rather than a mutation of this one — the first
-                      attempt did happen, and deleting the evidence would make
-                      the delivery rate look better than it was. */}
-                  {log.delivery.state === "failed" && (
-                    <button
-                      type="button"
-                      onClick={() => resend(log.id)}
-                      disabled={retry.isPending}
-                      aria-label={`Re-send ${log.reference}`}
-                      title="Re-send"
-                      className={cn(
-                        "ra-tap flex items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
-                        retry.isPending && "opacity-60",
-                      )}
-                    >
-                      <RefreshCw className="h-4 w-4" aria-hidden="true" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {data && data.meta.totalPages > 1 && (
-        <div className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2 text-sm">
-          <button
-            type="button"
-            disabled={!data.meta.hasPrevPage}
-            onClick={() => setPage((p) => p - 1)}
-            className="ra-tap rounded-lg px-3 font-medium text-muted-foreground disabled:opacity-40"
-          >
-            Newer
-          </button>
-          <span className="font-mono text-xs tabular-nums text-muted-foreground">
-            {data.meta.page} / {data.meta.totalPages}
-          </span>
-          <button
-            type="button"
-            disabled={!data.meta.hasNextPage}
-            onClick={() => setPage((p) => p + 1)}
-            className="ra-tap rounded-lg px-3 font-medium text-muted-foreground disabled:opacity-40"
-          >
-            Older
-          </button>
-        </div>
-      )}
+      <Drawer
+        open={Boolean(open)}
+        onClose={() => setOpen(null)}
+        title={open?.reference ?? "Delivery attempt"}
+        subtitle={open?.business?.name ?? undefined}
+        header={open && <DeliveryBadge delivery={open.delivery} />}
+        footer={
+          open?.delivery.state === "failed" ? (
+            <Button
+              variant="primary"
+              icon={RefreshCw}
+              loading={retry.isPending}
+              onClick={() => open && void resend(open)}
+            >
+              Re-send now
+            </Button>
+          ) : undefined
+        }
+      >
+        {open && (
+          <div className="space-y-5">
+            <DescriptionList
+              items={[
+                { label: "Sent to", value: `${open.toLabel ?? "—"} · ${open.to}`, mono: true },
+                {
+                  label: "Channel",
+                  value:
+                    open.channel === "cloud_api"
+                      ? "WhatsApp Cloud API"
+                      : "Deep link (driver's device)",
+                },
+                {
+                  label: "Attempt",
+                  value: `#${open.attempt}${open.isRetry ? " · re-send" : ""}`,
+                  mono: true,
+                },
+                { label: "Created", value: formatDateTime(open.createdAt), mono: true },
+              ]}
+            />
+            {open.usedFallback && (
+              <p className="rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-[13px] text-foreground">
+                Sent to the fallback number — the Primary was switched off at the time.
+              </p>
+            )}
+            {open.error && (
+              <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 font-mono text-xs text-destructive">
+                {open.error}
+              </p>
+            )}
+            <div>
+              <h3 className="mb-2 text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+                What Meta reported
+              </h3>
+              {open.history.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No status updates yet.</p>
+              ) : (
+                <Timeline
+                  groups={[
+                    {
+                      label: "History",
+                      entries: open.history.map((h, i) => ({
+                        id: `${h.at}-${i}`,
+                        title: <span className="capitalize">{h.state.replace("_", " ")}</span>,
+                        meta: formatDateTime(h.at),
+                        body: h.detail ? (
+                          <p className="text-xs text-muted-foreground">{h.detail}</p>
+                        ) : undefined,
+                        tone:
+                          h.state === "failed"
+                            ? "destructive"
+                            : h.state === "delivered" || h.state === "read"
+                              ? "success"
+                              : "neutral",
+                      })),
+                    },
+                  ]}
+                />
+              )}
+            </div>
+          </div>
+        )}
+      </Drawer>
     </div>
   );
 }
