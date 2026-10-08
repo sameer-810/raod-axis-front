@@ -161,8 +161,12 @@ export function BusinessProfilePage() {
           */}
             {business.claimStatus === "unclaimed" && (
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 px-4 py-3">
-                <div className="flex items-center gap-2 text-sm">
-                  <Store className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                  {/* FR-PRO-05 asks for the word, not only the invitation. The
+                      search card has always carried it; the page it leads to
+                      said "Is this your business?" and never said what the
+                      listing's status actually was. */}
+                  <Badge icon={Store}>Unclaimed</Badge>
                   <span className="text-muted-foreground">
                     Is this your business? Claim it to manage the listing.
                   </span>

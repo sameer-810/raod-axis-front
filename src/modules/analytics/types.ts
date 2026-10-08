@@ -43,10 +43,36 @@ export interface AnalyticsOverview {
     reviews: number;
     removedReviews: number;
     favourites: number;
+    /** All time. The window's own count is `performance.total`. */
     bookingRequests: number;
+    /** Since local midnight. */
+    bookingRequestsToday: number;
   };
   requestsByStatus: Record<string, number>;
   performance: Performance;
+  /**
+   * The onboarding and retention measures from PRD §6. Each rate is null when
+   * there is nothing to divide by, and the counts beside it say how much it is
+   * resting on.
+   */
+  measures: {
+    timeToClaim: { medianMinutes: number | null; sample: number };
+    claimApproval: { approved: number; rejected: number; rate: number | null };
+    claimedWithin30Days: { listed: number; claimed: number; rate: number | null };
+    bothNumbers: { claimed: number; both: number; rate: number | null };
+    repeatDrivers: { drivers: number; repeat: number; rate: number | null };
+  };
+  /**
+   * What the window's WhatsApp messages cost. `unitCost` is null until the
+   * per-message rate has been set from an invoice — it is never guessed.
+   */
+  cost: {
+    currency: string;
+    billableMessages: number;
+    unitCost: number | null;
+    total: number | null;
+    perRequest: number | null;
+  };
   delivery: {
     byState: Record<string, number>;
     tracked: number;
@@ -63,11 +89,22 @@ export interface AnalyticsOverview {
   series: { signups: SeriesPoint[]; requests: SeriesPoint[]; listings: SeriesPoint[] };
 }
 
+/** What a listing has on its plate right now. Not windowed. */
+export interface RequestLoad {
+  /** Arrived since local midnight. */
+  today: number;
+  /** Not finished yet: new, contacted or accepted. */
+  open: number;
+  /** The subset nobody has replied to. */
+  waiting: number;
+}
+
 export interface OwnerAnalytics {
   windowDays: number;
   since: string;
   performance: Performance;
-  businesses: LeaderRow[];
+  requests: RequestLoad;
+  businesses: Array<LeaderRow & { requests: RequestLoad }>;
   totals: { listings: number; views: number; reviews: number };
   series: { requests: SeriesPoint[] };
 }

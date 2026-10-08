@@ -12,6 +12,14 @@
  * are renamed to the tagged form after the last screenshot and swept, so an
  * interrupted run still leaves nothing behind that the sweeper cannot find.
  *
+ * The **people** carry plausible names and addresses too, since the Accounts
+ * screen is one of the screenshots. They are all at `example.com`, which is
+ * reserved for exactly this and can never be somebody's real mailbox — a made-up
+ * address at a real domain is one misconfigured mail server away from a stranger
+ * being emailed. With no run tag in the address the sweeper cannot find them,
+ * so this script erases each one itself, through the same "erase on request"
+ * the console offers, and erases any it finds left over when it starts.
+ *
  * Reviews go only on the fixture garage, never on the demo directory: the demo
  * listings carry seeded ratings with no review records behind them, and the
  * sweeper recomputes a rating from surviving reviews — so one review on a demo
@@ -65,6 +73,35 @@ for (const b of all.filter((x) => [RIDGEWAY, ...CLAIMABLE].includes(x.name))) {
   console.log("tagged stale fixture:", b.name);
 }
 
+/** The people this script creates. Reserved domain — see the note at the top. */
+const OWNER = { name: "Priya Shah", email: "priya.shah@example.com" };
+const DRIVERS = {
+  "tom.ellis": "Tom Ellis",
+  "amy.okafor": "Amy Okafor",
+  "raj.mehta": "Raj Mehta",
+};
+const addressOf = (slug) => `${slug}@example.com`;
+const PEOPLE_EMAILS = [OWNER.email, ...Object.keys(DRIVERS).map(addressOf)];
+
+/** Erase an account for good, the way the console's Accounts screen does. */
+async function erase(id) {
+  await adminCtx.delete(`${API}/auth/users/${id}`, {
+    data: { reason: "Presentation fixture, removed after the screenshots." },
+  });
+}
+
+// The same for people: anybody left over from a run that never finished.
+for (const email of PEOPLE_EMAILS) {
+  const found = await adminCtx.get(`${API}/auth/users?search=${encodeURIComponent(email)}`);
+  for (const user of (await found.json()).data ?? []) {
+    if (user.email !== email) continue;
+    await erase(user.id);
+    console.log("erased stale account:", email);
+  }
+}
+/** Account ids created below, erased again once the last screenshot is taken. */
+const accounts = [];
+
 // ── The owner's business ─────────────────────────────────────────────────────
 /** Everything created here, renamed to the sweepable form at the end. */
 const fixtures = [];
@@ -92,15 +129,16 @@ const created = await adminCtx.post(`${API}/businesses`, {
 });
 const business = (await created.json()).data;
 fixtures.push(business);
-const ownerEmail = `${RUN}.owner@e2e.test`;
-await adminCtx.post(`${API}/auth/users`, {
+const ownerEmail = OWNER.email;
+const ownerAccount = await adminCtx.post(`${API}/auth/users`, {
   data: {
-    name: "Priya Shah",
+    name: OWNER.name,
     email: ownerEmail,
     password: "OwnerSecret123",
     role: "business_owner",
   },
 });
+accounts.push((await ownerAccount.json()).data.id);
 await adminCtx.post(`${API}/businesses/${business.id}/transfer`, {
   // Written into the audit log, which is one of the screens captured below, so
   // it has to read like a real administrator's note.
@@ -117,9 +155,12 @@ await adminCtx.post(`${API}/businesses/${business.id}/whatsapp-numbers`, {
 // ── Drivers, requests, reviews and saved garages ────────────────────────────
 const bare = await pwRequest.newContext();
 
-/** A signed-in driver. Fresh identity per run, or the code limiter refuses. */
+/** Each driver's session, by slug. */
+const sessions = {};
+
+/** A signed-in driver. */
 async function driver(slug, name) {
-  const email = `${RUN}.${slug}@e2e.test`;
+  const email = addressOf(slug);
   const req = await bare.post(`${API}/auth/otp/request`, { data: { email, phone: phone() } });
   const body = (await req.json()).data;
   if (!body?.challengeId) throw new Error(`no challenge for ${slug}`);
@@ -131,14 +172,19 @@ async function driver(slug, name) {
       name,
     },
   });
-  const token = (await ver.json()).data.accessToken;
-  return pwRequest.newContext({ extraHTTPHeaders: { Authorization: `Bearer ${token}` } });
+  const session = (await ver.json()).data;
+  // Kept, so one of them can be shown their own account page further down.
+  sessions[slug] = session;
+  accounts.push(session.user.id);
+  return pwRequest.newContext({
+    extraHTTPHeaders: { Authorization: `Bearer ${session.accessToken}` },
+  });
 }
 
 const date = new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
 const PEOPLE = [
   [
-    "tom",
+    "tom.ellis",
     "Tom Ellis",
     "MOT",
     "09:30",
@@ -147,7 +193,7 @@ const PEOPLE = [
     "Booked me in the same morning and rang when it was ready. No fuss.",
   ],
   [
-    "amy",
+    "amy.okafor",
     "Amy Okafor",
     "Diagnostics",
     "11:00",
@@ -155,7 +201,7 @@ const PEOPLE = [
     4,
     "Found the fault in an hour and talked me through it properly.",
   ],
-  ["raj", "Raj Mehta", "Full service", "14:30", null, 5, null],
+  ["raj.mehta", "Raj Mehta", "Full service", "14:30", null, 5, null],
 ];
 
 /** Demo listings for the drivers to save — saving leaves no mark on the record. */
@@ -209,14 +255,15 @@ for (const [i, name] of CLAIMABLE.entries()) {
 
 /**
  * The applicant's email is on screen in the claims queue, so it has to read
- * like a garage owner's address rather than a test account. Safe to do: these
- * claims are swept by the listing they are filed against, not by their email.
+ * like a person's address rather than a test account — at the reserved domain,
+ * like everybody else here. Safe to do: these claims are swept by the listing
+ * they are filed against, not by their email.
  */
 for (const [i, b] of claimable.entries()) {
   const res = await bare.post(`${API}/claims/business/${b.id}`, {
     multipart: {
       contactName: ["Sarah Patel", "Dev Kapoor"][i],
-      contactEmail: ["sarah@hollinwoodautocentre.co.uk", "dev@bexleyroadtyres.co.uk"][i],
+      contactEmail: ["sarah.patel@example.com", "dev.kapoor@example.com"][i],
       contactPhone: `0770090040${i}`,
       contactRole: "Owner",
       message: "This is my garage — happy to send anything else you need.",
@@ -273,6 +320,11 @@ async function shoot(session, path, out, { w = 1440, h = 900, theme = "light", a
   console.log("ok", out);
 }
 
+await shoot(admin, "/admin", "admin-overview.png");
+await shoot(admin, "/admin/users", "admin-users.png");
+if (sessions["tom.ellis"]) {
+  await shoot(sessions["tom.ellis"], "/account", "account-phone.png", { w: 390, h: 844 });
+}
 await shoot(admin, "/admin/businesses", "admin-businesses.png");
 await shoot(admin, "/admin/businesses", "admin-businesses-dark.png", { theme: "dark" });
 await shoot(admin, "/admin/businesses", "admin-businesses-palette.png", {
@@ -338,6 +390,10 @@ await browser.close();
 for (const b of fixtures) {
   await adminCtx.patch(`${API}/businesses/${b.id}`, { data: { name: `${RUN} ${b.name}` } });
 }
+// The people next. Erased rather than left for the sweeper, which has no way to
+// recognise an account whose address carries no tag; once the listings above
+// have gone, nothing refers to them and the sweeper removes the empty rows.
+for (const id of accounts) await erase(id);
 await adminCtx.dispose();
 
 console.log("\nsweeping fixtures…");

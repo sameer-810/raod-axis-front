@@ -11,17 +11,7 @@ import { Pagination } from "@/shared/components/Pagination";
 import { Avatar } from "@/shared/components/Avatar";
 import { Skeleton } from "@/shared/components/Skeleton";
 import { formatAge, formatDateTime } from "@/shared/lib/format";
-
-interface AuditEntry {
-  id: string;
-  action: string;
-  actor: { id: string | null; name: string; email: string | null; role: string | null };
-  entity: { type: string; id: string | null; label: string | null };
-  changes: Record<string, { from: unknown; to: unknown }> | null;
-  reason: string | null;
-  requestId: string | null;
-  at: string;
-}
+import { actionLabel, type AuditEntry } from "../api/auditApi";
 
 /**
  * Actions whose consequences reach outside RoadAxis — who controls a listing, a
@@ -36,6 +26,8 @@ const CONSEQUENTIAL = new Set([
   "whatsapp_number.deactivated",
   "whatsapp_number.removed",
   "user.deactivated",
+  "user.erased",
+  "user.created",
 ]);
 
 const ENTITY_TYPES = [
@@ -53,6 +45,9 @@ const ACTIONS = [
   { value: "business.ownership_transferred", label: "Ownership transferred" },
   { value: "whatsapp_number.deactivated", label: "Number switched off" },
   { value: "user.deactivated", label: "Account deactivated" },
+  { value: "user.erased", label: "Account erased" },
+  { value: "user.created", label: "Staff account created" },
+  { value: "whatsapp_message.retried", label: "Message re-sent" },
 ];
 
 /** "Today", "Yesterday", then the date. */
@@ -278,7 +273,7 @@ export function AdminAuditPage() {
 }
 
 function ActionBadge({ action }: { action: string }) {
-  const label = action.replace(/[._]/g, " ");
+  const label = actionLabel(action);
   return CONSEQUENTIAL.has(action) ? <Badge tone="warning">{label}</Badge> : <Badge>{label}</Badge>;
 }
 

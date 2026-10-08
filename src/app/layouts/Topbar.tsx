@@ -24,7 +24,7 @@ export function Topbar() {
   const role = useAppSelector((s) => s.auth.user?.role);
 
   const { heading, item } = sectionOf(pathname);
-  const title = pathname === "/portal" ? "Overview" : (item?.label ?? "RoadAxis");
+  const title = item?.label ?? "RoadAxis";
   const workspace = role === "admin" ? "Admin console" : "Business portal";
 
   return (

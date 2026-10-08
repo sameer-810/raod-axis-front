@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
-import { MoreHorizontal, ExternalLink, LogOut, Moon, Sun } from "lucide-react";
+import { MoreHorizontal, ExternalLink, LogOut, Moon, Sun, UserCog } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { clearAuth } from "@/modules/auth/authSlice";
 import { useTheme } from "@/app/theme";
-import { filterSections, mobileTabs } from "./menu";
+import { filterSections, isWorkspaceRoot, mobileTabs } from "./menu";
 import { Sheet } from "@/shared/components/Sheet";
 import { Avatar } from "@/shared/components/Avatar";
 
@@ -34,7 +34,7 @@ export function MobileTabBar() {
             <li key={item.to} className="flex-1">
               <NavLink
                 to={item.to!}
-                end={item.to === "/portal"}
+                end={isWorkspaceRoot(item.to)}
                 className={({ isActive }) =>
                   cn(
                     "ra-tap flex w-full flex-col items-center justify-center gap-0.5 py-1.5 text-[11px] font-medium transition-colors",
@@ -105,6 +105,16 @@ export function MobileTabBar() {
 
           <div className="border-t border-border pt-3">
             <ul className="space-y-0.5">
+              <li>
+                <Link
+                  to="/account"
+                  onClick={() => setMoreOpen(false)}
+                  className="ra-tap flex items-center gap-3 rounded-lg px-2 text-sm font-medium text-foreground hover:bg-accent"
+                >
+                  <UserCog className="h-4 w-4" aria-hidden="true" />
+                  Account and password
+                </Link>
+              </li>
               <li>
                 <Link
                   to="/"

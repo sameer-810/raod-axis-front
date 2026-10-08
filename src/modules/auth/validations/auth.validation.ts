@@ -34,9 +34,20 @@ export const codeField = z
   .min(1, "Enter the code")
   .regex(/^\d+$/, "Codes are numbers only");
 
-export const verifyCodesSchema = z.object({
+/** Both codes — the WhatsApp service is connected and the number is being proved. */
+export const verifyBothCodesSchema = z.object({
   emailCode: codeField,
   phoneCode: codeField,
+  name: z.string().trim().max(80).optional(),
+});
+
+/**
+ * The emailed code alone. `phoneCode` stays in the shape so the form has one
+ * type in both modes; it is simply never asked for and never sent.
+ */
+export const verifyEmailCodeSchema = z.object({
+  emailCode: codeField,
+  phoneCode: z.string().optional(),
   name: z.string().trim().max(80).optional(),
 });
 
@@ -48,5 +59,5 @@ export const staffLoginSchema = z.object({
 });
 
 export type RequestCodesForm = z.infer<typeof requestCodesSchema>;
-export type VerifyCodesForm = z.infer<typeof verifyCodesSchema>;
+export type VerifyCodesForm = z.infer<typeof verifyEmailCodeSchema>;
 export type StaffLoginForm = z.infer<typeof staffLoginSchema>;

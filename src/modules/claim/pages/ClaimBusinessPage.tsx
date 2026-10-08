@@ -5,6 +5,8 @@ import { ArrowLeft, CheckCircle2, Clock, ShieldCheck } from "lucide-react";
 import { getApiErrorMessage, getApiFieldErrors } from "@/shared/api/http";
 import { PageLoader } from "@/shared/components/PageLoader";
 import { EmptyState } from "@/shared/components/EmptyState";
+import { LegalNote } from "@/shared/components/LegalNote";
+import { useSeo } from "@/shared/hooks/useSeo";
 import { useBusiness } from "@/modules/business/hooks/useBusinesses";
 import { claimApi } from "../api/claimApi";
 import { ApplicantFieldset } from "../components/ApplicantFields";
@@ -24,6 +26,13 @@ import type { ApplicantFields, Claim } from "../types";
 export function ClaimBusinessPage() {
   const { slug } = useParams<{ slug: string }>();
   const { data: business, isLoading } = useBusiness(slug);
+
+  useSeo({
+    title: business ? `Claim ${business.name}` : "Claim your business",
+    description: business
+      ? `Is ${business.name} your business? Claim the listing to manage it and receive booking requests on WhatsApp.`
+      : "Claim your garage's listing on RoadAxis to manage it and receive booking requests on WhatsApp.",
+  });
 
   // Feeds the "time to claim < 5 minutes" measure in PRD §6. There is no
   // server-side way to know when somebody started typing.
@@ -213,8 +222,10 @@ export function ClaimBusinessPage() {
 
           <p className="text-xs text-muted-foreground">
             Your documents are kept private and are only seen by the RoadAxis team reviewing this
-            application. They are never shown on your listing.
+            application. They are never shown on your listing, and are deleted a short time after we
+            decide.
           </p>
+          <LegalNote action="sending this application" />
         </form>
       </div>
     </div>

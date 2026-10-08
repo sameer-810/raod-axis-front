@@ -9,6 +9,7 @@ import {
   BarChart3,
   Star,
   Upload,
+  Users,
 } from "lucide-react";
 import type { Role } from "@/modules/auth/authSlice";
 
@@ -42,13 +43,26 @@ export type MenuSection = {
  */
 const SECTIONS: MenuSection[] = [
   {
+    /**
+     * Two overviews, one per workspace. An administrator used to be sent to the
+     * owner's — a page that could only tell them they manage no listing.
+     */
     items: [
       {
         label: "Overview",
         to: "/portal",
         icon: LayoutDashboard,
+        roles: ["business_owner"],
         shortcut: "g o",
         keywords: ["home", "dashboard"],
+      },
+      {
+        label: "Overview",
+        to: "/admin",
+        icon: LayoutDashboard,
+        roles: ["admin"],
+        shortcut: "g o",
+        keywords: ["home", "dashboard", "today"],
       },
     ],
   },
@@ -164,6 +178,14 @@ const SECTIONS: MenuSection[] = [
     heading: "Administration",
     items: [
       {
+        label: "Accounts",
+        to: "/admin/users",
+        icon: Users,
+        roles: ["admin"],
+        shortcut: "g s",
+        keywords: ["users", "people", "staff", "deactivate", "erase", "delete"],
+      },
+      {
         label: "Audit Log",
         shortLabel: "Audit",
         to: "/admin/audit",
@@ -188,6 +210,14 @@ export function filterSections(role: Role | undefined): MenuSection[] {
   );
 }
 
+/**
+ * The two workspace roots. Every other path under them starts with the same
+ * characters, so these match exactly or they would be "active" on every screen.
+ */
+export function isWorkspaceRoot(to: string | undefined): boolean {
+  return to === "/portal" || to === "/admin";
+}
+
 /** Flat list across sections — used by the command palette and the breadcrumb. */
 export const MENU: MenuItem[] = SECTIONS.flatMap((s) => s.items);
 export { SECTIONS };
@@ -199,7 +229,7 @@ export function sectionOf(pathname: string): { heading?: string; item?: MenuItem
   for (const s of SECTIONS) {
     for (const item of s.items) {
       if (!item.to) continue;
-      const match = item.to === "/portal" ? pathname === "/portal" : pathname.startsWith(item.to);
+      const match = isWorkspaceRoot(item.to) ? pathname === item.to : pathname.startsWith(item.to);
       if (match && item.to.length > best.length)
         best = { heading: s.heading, item, length: item.to.length };
     }
@@ -214,6 +244,7 @@ export function sectionOf(pathname: string): { heading?: string; item?: MenuItem
  */
 const MOBILE_TAB_ORDER = [
   "/portal",
+  "/admin",
   "/portal/requests",
   "/portal/listing",
   "/admin/claims",

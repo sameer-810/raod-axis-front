@@ -65,6 +65,24 @@ function persist(state: AuthState) {
   }
 }
 
+/**
+ * Forget the stored session without touching the store.
+ *
+ * For signing out of the public side, which then loads the home page afresh.
+ * Clearing through the store instead re-renders the page the person is on with
+ * no session — and if that page is behind `RequireAuth`, its redirect to the
+ * sign-in screen fires before any navigation of ours and wins. Somebody who
+ * pressed "Sign out" was sent to "Sign in", with a `returnTo` pointing at the
+ * page they had just left.
+ */
+export function forgetStoredSession() {
+  try {
+    window.localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Storage disabled: there is nothing stored to forget.
+  }
+}
+
 const initialState: AuthState = { ...readStored(), returnTo: null };
 
 const authSlice = createSlice({

@@ -1,8 +1,13 @@
 import { Link } from "react-router-dom";
 import { Compass } from "lucide-react";
 import { EmptyState } from "@/shared/components/EmptyState";
+import { useSeo } from "@/shared/hooks/useSeo";
 
 export function NotFoundPage() {
+  // A single-page app answers every address with 200, so this is the only way
+  // to tell a crawler that an address which does not exist should not be kept.
+  useSeo({ title: "Page not found", noIndex: true });
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-16">
       <EmptyState

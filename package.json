@@ -17,6 +17,7 @@
     "pdf:client": "node scripts/render-pdf.mjs ui-presentation.html RoadAxis-Interface.pdf",
     "pdf:audit": "node scripts/render-pdf.mjs ui-audit.html RoadAxis-UI-Audit.pdf",
     "pdf:whatsapp": "node scripts/render-pdf.mjs whatsapp-setup-guide.html RoadAxis-WhatsApp-Setup-Guide.pdf",
+    "pdf:handover": "node scripts/render-pdf.mjs handover-pack.html RoadAxis-Handover.pdf",
     "docs:client": "npm run shots:photos && npm run shots:public && npm run shots:console && npm run pdf:client",
     "validate": "npm run lint && npm run format",
     "preview": "vite preview"

@@ -98,6 +98,11 @@ export interface Business extends Trust {
   listedAt: string | null;
   claimedAt: string | null;
   isFavourite?: boolean;
+  /**
+   * The account that controls this listing. Only on the administrator's view of
+   * a listing; a driver has no business knowing who the owner signs in as.
+   */
+  ownerAccount?: { id: string; name: string; email: string; isActive: boolean } | null;
 }
 
 export type SortOption = "distance" | "rating" | "newest";

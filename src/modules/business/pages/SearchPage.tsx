@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Search,
   SlidersHorizontal,
@@ -50,7 +51,22 @@ export function SearchPage() {
   const { data: categories = [] } = useCategories();
   const { data: facets } = useFacets();
 
-  const [view, setView] = useState<"list" | "map">("list");
+  /**
+   * List or map, in the URL like every other piece of search state — FR-DIS-09.
+   * It was component state, so a link to the map opened the list, and Back from
+   * a garage's page dropped whoever was reading the map back into the list.
+   * Absent means list, so the default address stays clean.
+   */
+  const [params, setParams] = useSearchParams();
+  const view: "list" | "map" = params.get("view") === "map" ? "map" : "list";
+  const setView = (next: "list" | "map") => {
+    // From `window.location`, for the reason given in `useSearchFilters`: the
+    // hook's own snapshot can be a render behind a filter change.
+    const url = new URLSearchParams(window.location.search);
+    if (next === "map") url.set("view", "map");
+    else url.delete("view");
+    setParams(url);
+  };
   const [filterSheet, setFilterSheet] = useState(false);
   const [placeInput, setPlaceInput] = useState("");
   const [placeError, setPlaceError] = useState<string | null>(null);

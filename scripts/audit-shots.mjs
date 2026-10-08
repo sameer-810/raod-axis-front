@@ -79,6 +79,7 @@ await shoot(`/business/${featured.slug}/request`, "b-request.png");
 await shoot("/for-business", "ui-forbusiness.png");
 await shoot(`/business/${featured.slug}/claim`, "b-claim.png");
 await shoot("/register-business", "b-register.png");
+await shoot("/privacy", "ui-privacy.png");
 await shoot("/sign-in", "a-signin-laptop.png");
 await shoot("/sign-in", "a-signin-phone.png", { w: 390, h: 844 });
 await shoot("/staff/sign-in", "a-staff-laptop.png");

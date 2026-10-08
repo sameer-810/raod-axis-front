@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import { getApiErrorMessage } from "@/shared/api/http";
 import { Field } from "@/shared/components/Field";
+import { useSeo } from "@/shared/hooks/useSeo";
 import { AuthShell } from "../components/AuthShell";
 import { useAuth, useStaffLogin } from "../hooks/useAuth";
 import { staffLoginSchema, type StaffLoginForm } from "../validations/auth.validation";
@@ -22,6 +23,12 @@ export function StaffSignInPage() {
   const returnTo = params.get("returnTo");
   const { complete, isSignedIn } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+
+  useSeo({
+    title: "Business sign-in",
+    description:
+      "Sign in to manage your garage's RoadAxis listing, WhatsApp numbers and booking requests.",
+  });
   const [formError, setFormError] = useState<string | null>(null);
   const login = useStaffLogin();
 

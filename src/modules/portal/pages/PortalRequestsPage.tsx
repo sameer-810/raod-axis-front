@@ -156,38 +156,50 @@ export function PortalRequestsPage() {
                   </button>
 
                   {/* On every row, not one tap deeper — the difference between a
-                      two-hour reply and a two-day one. */}
-                  <div className="flex shrink-0 gap-2">
-                    <ButtonAnchor
-                      href={`tel:${request.driverPhone}`}
-                      variant="secondary"
-                      size="sm"
-                      icon={Phone}
-                      className="flex-1 md:flex-none"
-                    >
-                      Call
-                    </ButtonAnchor>
-                    <ButtonAnchor
-                      href={`https://wa.me/${request.driverPhone.replace(/^\+/, "")}?text=${encodeURIComponent(
-                        `Hello ${request.driverName}, about your RoadAxis request ${request.reference} —`,
-                      )}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      variant="secondary"
-                      size="sm"
-                      icon={MessageCircle}
-                      className="flex-1 md:flex-none"
-                    >
-                      WhatsApp
-                    </ButtonAnchor>
-                  </div>
+                      two-hour reply and a two-day one. Absent once the driver's
+                      details are gone: a Call button with no number behind it
+                      is a button that fails when pressed. */}
+                  {request.driverPhone ? (
+                    <div className="flex shrink-0 gap-2">
+                      <ButtonAnchor
+                        href={`tel:${request.driverPhone}`}
+                        variant="secondary"
+                        size="sm"
+                        icon={Phone}
+                        className="flex-1 md:flex-none"
+                      >
+                        Call
+                      </ButtonAnchor>
+                      <ButtonAnchor
+                        href={`https://wa.me/${request.driverPhone.replace(/^\+/, "")}?text=${encodeURIComponent(
+                          `Hello ${request.driverName}, about your RoadAxis request ${request.reference} —`,
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        variant="secondary"
+                        size="sm"
+                        icon={MessageCircle}
+                        className="flex-1 md:flex-none"
+                      >
+                        WhatsApp
+                      </ButtonAnchor>
+                    </div>
+                  ) : (
+                    <p className="shrink-0 text-xs text-muted-foreground">
+                      Contact details removed
+                    </p>
+                  )}
                 </div>
 
                 {open && (
                   <div className="space-y-4 border-t border-border px-4 py-4 md:ps-5">
                     <DescriptionList
                       items={[
-                        { label: "Phone", value: request.driverPhoneFormatted, mono: true },
+                        {
+                          label: "Phone",
+                          value: request.driverPhoneFormatted ?? "Removed",
+                          mono: Boolean(request.driverPhoneFormatted),
+                        },
                         {
                           label: "Sent to WhatsApp",
                           value: <DeliveryBadge delivery={request.delivery} />,

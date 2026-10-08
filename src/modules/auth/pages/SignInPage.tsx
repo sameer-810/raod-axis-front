@@ -5,12 +5,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Mail, MessageCircle } from "lucide-react";
 import { getApiErrorMessage } from "@/shared/api/http";
 import { Field } from "@/shared/components/Field";
+import { LegalNote } from "@/shared/components/LegalNote";
+import { useSeo } from "@/shared/hooks/useSeo";
 import { AuthShell } from "../components/AuthShell";
 import { CodeField } from "../components/CodeField";
 import { useAuth, useRequestCodes, useVerifyCodes } from "../hooks/useAuth";
 import {
   requestCodesSchema,
-  verifyCodesSchema,
+  verifyBothCodesSchema,
+  verifyEmailCodeSchema,
   type RequestCodesForm,
   type VerifyCodesForm,
 } from "../validations/auth.validation";
@@ -20,9 +23,11 @@ import type { CodeChallenge } from "../types";
  * Driver sign-in. Two steps, one screen each, with copy that explains itself at
  * every point — this is the only wall in the public product.
  *
- * Both channels are verified because the phone is what a garage messages back
- * when they answer; an unverified number means a real business contacts a
- * stranger. That costs one extra field, not one extra screen.
+ * How many codes is the server's decision, carried on the challenge. With the
+ * WhatsApp service connected there are two, because the phone is what a garage
+ * messages back and an unverified number means a real business contacts a
+ * stranger. Without it there is one, to the email. The page asks for whichever
+ * the challenge names and never mentions a message that was not sent.
  */
 export function SignInPage() {
   const [params] = useSearchParams();
@@ -36,12 +41,22 @@ export function SignInPage() {
   const request = useRequestCodes();
   const verify = useVerifyCodes();
 
+  useSeo({
+    title: "Sign in",
+    description:
+      "Sign in to RoadAxis with a one-time code to send booking requests and save the garages you trust.",
+  });
+
+  /** Two codes only when the challenge says so. Before one exists, assume one. */
+  const needsWhatsAppCode = Boolean(challenge?.channels?.whatsapp);
+
   const identityForm = useForm<RequestCodesForm>({
     resolver: zodResolver(requestCodesSchema),
     defaultValues: { email: "", phone: "" },
   });
   const codeForm = useForm<VerifyCodesForm>({
-    resolver: zodResolver(verifyCodesSchema),
+    // Chosen per render, so the rule always matches the fields on screen.
+    resolver: zodResolver(needsWhatsAppCode ? verifyBothCodesSchema : verifyEmailCodeSchema),
     defaultValues: { emailCode: "", phoneCode: "", name: "" },
   });
 
@@ -79,7 +94,7 @@ export function SignInPage() {
       const session = await verify.mutateAsync({
         challengeId: challenge.challengeId,
         emailCode: values.emailCode,
-        phoneCode: values.phoneCode,
+        phoneCode: needsWhatsAppCode ? values.phoneCode : undefined,
         name: values.name || undefined,
       });
       complete(session, returnTo);
@@ -99,7 +114,7 @@ export function SignInPage() {
         </>
       }
       points={[
-        "No password — two codes, one to your email and one to your WhatsApp.",
+        "No password — we send you a code each time.",
         "Garages reply to the number you sign in with, so it has to be yours.",
         "Save the garages you trust and see every request you've sent.",
       ]}
@@ -109,7 +124,7 @@ export function SignInPage() {
           <p className="ra-eyebrow text-muted-foreground">Driver sign-in</p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground">Sign in</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            We'll send a code to your email and a code to your WhatsApp. No password to remember.
+            We'll send you a sign-in code. No password to remember.
           </p>
 
           <form
@@ -148,8 +163,9 @@ export function SignInPage() {
               className="ra-btn-primary mt-2 w-full"
               disabled={request.isPending}
             >
-              {request.isPending ? "Sending codes…" : "Send me a code"}
+              {request.isPending ? "Sending…" : "Send me a code"}
             </button>
+            <LegalNote action="continuing" className="pt-2 text-center" />
           </form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
@@ -175,10 +191,12 @@ export function SignInPage() {
 
           <p className="ra-eyebrow text-muted-foreground">Step 2 of 2</p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground">
-            Enter your codes
+            {needsWhatsAppCode ? "Enter your codes" : "Enter your code"}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Two codes, one to each place, so we know both reach you. They expire in{" "}
+            {needsWhatsAppCode
+              ? "Two codes, one to each place, so we know both reach you. They expire in "
+              : "We've emailed you a code. It expires in "}
             <span className="font-mono tabular-nums">{challenge.expiresInMinutes}</span> minutes.
           </p>
 
@@ -193,19 +211,26 @@ export function SignInPage() {
               ok={challenge.delivery.email}
               target={identity?.email ?? "your email"}
             />
-            <DeliveryLine
-              icon={MessageCircle}
-              ok={challenge.delivery.whatsapp}
-              target={identity?.phone ?? "your WhatsApp"}
-            />
+            {needsWhatsAppCode && (
+              <DeliveryLine
+                icon={MessageCircle}
+                ok={challenge.delivery.whatsapp}
+                target={identity?.phone ?? "your WhatsApp"}
+              />
+            )}
           </ul>
 
           {import.meta.env.DEV && challenge.devCodes && (
             <div className="mt-4 rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm">
               <p className="font-medium text-warning-text">Development mode</p>
               <p className="mt-1 text-muted-foreground">
-                Email code <span className="font-mono">{challenge.devCodes.email}</span> · WhatsApp
-                code <span className="font-mono">{challenge.devCodes.phone}</span>
+                Email code <span className="font-mono">{challenge.devCodes.email}</span>
+                {challenge.devCodes.phone && (
+                  <>
+                    {" "}
+                    · WhatsApp code <span className="font-mono">{challenge.devCodes.phone}</span>
+                  </>
+                )}
               </p>
             </div>
           )}
@@ -223,18 +248,22 @@ export function SignInPage() {
             )}
             <CodeField
               label="Code from your email"
-              autoComplete="off"
+              // Only one field may claim one-time-code, or the platform's
+              // autofill has two candidates and picks arbitrarily. With two
+              // fields it belongs to the WhatsApp one, which is the message a
+              // phone offers to fill in.
+              autoComplete={needsWhatsAppCode ? "off" : "one-time-code"}
               error={codeForm.formState.errors.emailCode?.message}
               {...codeForm.register("emailCode")}
             />
-            <CodeField
-              label="Code from WhatsApp"
-              // Only one field may claim this, or the platform's autofill has
-              // two candidates and picks arbitrarily.
-              autoComplete="one-time-code"
-              error={codeForm.formState.errors.phoneCode?.message}
-              {...codeForm.register("phoneCode")}
-            />
+            {needsWhatsAppCode && (
+              <CodeField
+                label="Code from WhatsApp"
+                autoComplete="one-time-code"
+                error={codeForm.formState.errors.phoneCode?.message}
+                {...codeForm.register("phoneCode")}
+              />
+            )}
 
             {formError && <FormError>{formError}</FormError>}
 
@@ -252,7 +281,11 @@ export function SignInPage() {
               disabled={request.isPending}
               className="ra-tap w-full rounded-lg text-sm font-medium text-muted-foreground transition-colors hover:text-foreground disabled:opacity-70"
             >
-              {request.isPending ? "Sending…" : "Send new codes"}
+              {request.isPending
+                ? "Sending…"
+                : needsWhatsAppCode
+                  ? "Send new codes"
+                  : "Send a new code"}
             </button>
           </form>
         </>

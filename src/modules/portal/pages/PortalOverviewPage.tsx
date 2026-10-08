@@ -91,7 +91,13 @@ function BusinessDashboard({ business }: { business: OwnedBusiness }) {
   const { data: analytics } = useMyAnalytics(30);
 
   const recent = inbox?.items.slice(0, 5) ?? [];
-  const waiting = inbox?.items.filter((r) => r.status === "new").length ?? 0;
+  /**
+   * Counted by the server for this listing, not from the page of the inbox that
+   * happens to be loaded — on a busy garage that page is the newest twenty and
+   * says nothing about the request still open from last week.
+   */
+  const load = analytics?.businesses.find((b) => b.id === business.id)?.requests;
+  const waiting = load?.waiting ?? 0;
 
   const checklist = [
     {
@@ -202,12 +208,25 @@ function BusinessDashboard({ business }: { business: OwnedBusiness }) {
         <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
       </Link>
 
+      {/* FR-BIZ-06: today's requests and open requests, beside the channel
+          status above. The two numbers an owner checks between jobs. */}
       <StatGroup>
         <Stat
-          label="Waiting for a reply"
-          value={waiting}
+          label="Requests today"
+          value={load?.today ?? "—"}
+          hint={load?.today ? "Arrived since midnight" : "None so far today"}
+        />
+        <Stat
+          label="Open requests"
+          value={load?.open ?? "—"}
           tone={waiting > 0 ? "warning" : "neutral"}
-          hint={waiting > 0 ? "New requests you haven't answered" : "Nothing waiting on you"}
+          hint={
+            waiting > 0
+              ? `${waiting} ${waiting === 1 ? "has" : "have"} had no reply yet`
+              : load?.open
+                ? "All answered — not finished yet"
+                : "Nothing waiting on you"
+          }
         />
         <Stat
           label="Median first reply"
@@ -215,17 +234,12 @@ function BusinessDashboard({ business }: { business: OwnedBusiness }) {
           hint="Last 30 days — the number that wins repeat customers"
         />
         <Stat
-          label="Profile views"
-          value={business.viewCount ?? 0}
-          hint="Unique visitors, all time"
-        />
-        <Stat
           label="Rating"
           value={business.averageRating ?? "—"}
           hint={
             business.reviewCount
-              ? `${business.reviewCount} review${business.reviewCount === 1 ? "" : "s"}`
-              : "No reviews yet"
+              ? `${business.reviewCount} review${business.reviewCount === 1 ? "" : "s"} · ${business.viewCount ?? 0} profile views`
+              : `No reviews yet · ${business.viewCount ?? 0} profile views`
           }
         />
       </StatGroup>

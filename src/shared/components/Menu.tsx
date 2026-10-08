@@ -261,6 +261,10 @@ export function RowMenu({
   size?: ButtonSize;
   variant?: ButtonVariant;
 }) {
+  // A row with nothing it can do gets no button. A kebab that opens an empty
+  // menu is a control that announces itself and then does nothing.
+  if (items.length === 0) return null;
+
   return (
     <Menu
       items={items}

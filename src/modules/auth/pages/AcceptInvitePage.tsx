@@ -7,6 +7,7 @@ import { Field } from "@/shared/components/Field";
 import { Logo } from "@/shared/components/Logo";
 import { PageLoader } from "@/shared/components/PageLoader";
 import { EmptyState } from "@/shared/components/EmptyState";
+import { useSeo } from "@/shared/hooks/useSeo";
 import { useAuth } from "../hooks/useAuth";
 import type { Session } from "../types";
 
@@ -21,6 +22,13 @@ export function AcceptInvitePage() {
   const [params] = useSearchParams();
   const token = params.get("token") ?? "";
   const { complete } = useAuth();
+
+  useSeo({
+    title: "Set your password",
+    description: "Set a password to manage your garage's listing on RoadAxis.",
+    // The address carries a one-time credential. It must never be indexed.
+    noIndex: true,
+  });
 
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");

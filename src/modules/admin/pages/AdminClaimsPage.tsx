@@ -24,6 +24,7 @@ import { Skeleton } from "@/shared/components/Skeleton";
 import { formatAge, formatDateTime } from "@/shared/lib/format";
 import { adminClaimApi } from "@/modules/claim/api/claimApi";
 import type { AdminClaim, ClaimStatus } from "@/modules/claim/types";
+import { InviteLinkDialog } from "../components/InviteLinkDialog";
 
 const STATUSES = [
   { value: "", label: "Awaiting a decision" },
@@ -46,6 +47,12 @@ export function AdminClaimsPage() {
   const [status, setStatus] = useState<ClaimStatus | "">("");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
+  /**
+   * Held here, not in the detail panel: approving a claim takes it out of the
+   * queue, the panel moves on to the next one, and a dialog owned by the panel
+   * would vanish with it — taking the only copy of the link along.
+   */
+  const [invite, setInvite] = useState<{ link: string; recipient: string } | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "claims", status, search],
@@ -186,14 +193,36 @@ export function AdminClaimsPage() {
             })}
           </ul>
 
-          {current && <ClaimDetail key={current.id} claim={current} onDecided={invalidate} />}
+          {current && (
+            <ClaimDetail
+              key={current.id}
+              claim={current}
+              onDecided={invalidate}
+              onUnsentInvite={setInvite}
+            />
+          )}
         </div>
       )}
+
+      <InviteLinkDialog
+        link={invite?.link ?? null}
+        recipient={invite?.recipient}
+        onClose={() => setInvite(null)}
+      />
     </div>
   );
 }
 
-function ClaimDetail({ claim, onDecided }: { claim: AdminClaim; onDecided: () => void }) {
+function ClaimDetail({
+  claim,
+  onDecided,
+  onUnsentInvite,
+}: {
+  claim: AdminClaim;
+  onDecided: () => void;
+  /** The approval went through but its email did not. */
+  onUnsentInvite: (invite: { link: string; recipient: string }) => void;
+}) {
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState("");
   const [preview, setPreview] = useState<{ url: string; name: string; type: string } | null>(null);
@@ -208,8 +237,16 @@ function ClaimDetail({ claim, onDecided }: { claim: AdminClaim; onDecided: () =>
 
   const approve = useMutation({
     mutationFn: () => adminClaimApi.approve(claim.id),
-    onSuccess: ({ message }) => {
-      toast.success(message);
+    onSuccess: ({ message, claim: decided }) => {
+      const note = decided.notification;
+      if (note && !note.emailed && note.inviteUrl) {
+        // Verified, but the owner has not been told. Hand over the link.
+        onUnsentInvite({ link: note.inviteUrl, recipient: claim.contactEmail });
+      } else if (note && !note.emailed) {
+        toast.info(message);
+      } else {
+        toast.success(message);
+      }
       onDecided();
     },
     onError: (err) => toast.error(getApiErrorMessage(err)),
@@ -217,8 +254,10 @@ function ClaimDetail({ claim, onDecided }: { claim: AdminClaim; onDecided: () =>
 
   const reject = useMutation({
     mutationFn: () => adminClaimApi.reject(claim.id, reason),
-    onSuccess: ({ message }) => {
-      toast.success(message);
+    onSuccess: ({ message, claim: decided }) => {
+      // Never a green tick over an email that did not go.
+      if (decided.notification && !decided.notification.emailed) toast.info(message);
+      else toast.success(message);
       setRejecting(false);
       setReason("");
       onDecided();

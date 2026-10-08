@@ -19,6 +19,17 @@ const pct = (value: number | null | undefined) =>
   value === null || value === undefined ? "—" : `${value}%`;
 
 /**
+ * Money to a chosen precision. A WhatsApp message costs a fraction of a penny,
+ * and rounding the rate to two places prints a number nobody was charged.
+ */
+const money = (amount: number, currency: string, digits = 2) =>
+  new Intl.NumberFormat("en-GB", {
+    style: "currency",
+    currency,
+    maximumFractionDigits: digits,
+  }).format(amount);
+
+/**
  * The platform dashboard — FR-ADM-07. Two rules: a rate computed from nothing
  * renders "—", never 0% or 100%; and a business with no reviews shows no rating.
  */
@@ -39,6 +50,9 @@ export function AdminAnalyticsPage() {
   }
 
   const t = data?.totals;
+  const m = data?.measures;
+  const cost = data?.cost;
+  const deepLink = data?.delivery.mode === "deep_link";
   const v = (n: number | undefined) => (n === undefined ? "—" : n);
 
   return (
@@ -98,8 +112,8 @@ export function AdminAnalyticsPage() {
             <StatGroup>
               <Stat
                 label="Booking requests"
-                value={v(t?.bookingRequests)}
-                hint={`Last ${days} days`}
+                value={v(data?.performance.total)}
+                hint={t ? `Last ${days} days · ${t.bookingRequests} all time` : `Last ${days} days`}
               />
               <Stat
                 label="Acceptance rate"
@@ -124,15 +138,71 @@ export function AdminAnalyticsPage() {
             </StatGroup>
           </section>
 
+          {/* The measures the product was commissioned against. Each rate is a
+              dash until there is something to divide by, and the hint says how
+              many records it rests on — "100%" from one claim is not a result. */}
+          <section aria-labelledby="onboarding" className="space-y-3">
+            <h2 id="onboarding" className="text-sm font-semibold text-foreground">
+              Bringing garages on board
+            </h2>
+            <StatGroup>
+              <Stat
+                label="Time to claim"
+                value={formatDuration(m?.timeToClaim.medianMinutes)}
+                hint={
+                  m?.timeToClaim.sample
+                    ? `Median of ${m.timeToClaim.sample} · target under 5 minutes`
+                    : "From opening the form to sending it · target under 5 minutes"
+                }
+              />
+              <Stat
+                label="Claims approved"
+                value={pct(m?.claimApproval.rate)}
+                hint={
+                  m
+                    ? `${m.claimApproval.approved} approved · ${m.claimApproval.rejected} rejected · target 95%`
+                    : undefined
+                }
+              />
+              <Stat
+                label="Claimed in 30 days"
+                value={pct(m?.claimedWithin30Days.rate)}
+                hint={
+                  m?.claimedWithin30Days.listed
+                    ? `${m.claimedWithin30Days.claimed} of ${m.claimedWithin30Days.listed} seeded listings · target 80%`
+                    : "No seeded listing is 30 days old yet · target 80%"
+                }
+              />
+              <Stat
+                label="Using both numbers"
+                value={pct(m?.bothNumbers.rate)}
+                hint={
+                  m
+                    ? `${m.bothNumbers.both} of ${m.bothNumbers.claimed} claimed listings · target 40%`
+                    : undefined
+                }
+              />
+            </StatGroup>
+          </section>
+
           <section aria-labelledby="engagement" className="space-y-3">
             <h2 id="engagement" className="text-sm font-semibold text-foreground">
               Coming back
             </h2>
-            <StatGroup columns={3}>
+            <StatGroup>
+              <Stat
+                label="Repeat drivers"
+                value={v(m?.repeatDrivers.repeat)}
+                hint={
+                  m?.repeatDrivers.drivers
+                    ? `Of ${m.repeatDrivers.drivers} who have sent a request — the proof of demand`
+                    : "Drivers who have sent more than one request"
+                }
+              />
               <Stat
                 label="Saved garages"
                 value={v(t?.favourites)}
-                hint="The closest thing the MVP has to retention"
+                hint="A reason to come back next time"
               />
               <Stat
                 label="Reviews"
@@ -140,6 +210,48 @@ export function AdminAnalyticsPage() {
                 hint={t?.removedReviews ? `${t.removedReviews} removed by moderation` : undefined}
               />
               <Stat label="Categories in use" value={data?.categories.length ?? "—"} />
+            </StatGroup>
+          </section>
+
+          {/* PRD §8: every booking request sent through the Cloud API costs a
+              message, and the cost is meant to be visible rather than
+              discovered on an invoice. Nothing here is estimated. */}
+          <section aria-labelledby="cost" className="space-y-3">
+            <h2 id="cost" className="text-sm font-semibold text-foreground">
+              What the messages cost
+            </h2>
+            <StatGroup columns={3}>
+              <Stat
+                label="Billable messages"
+                value={v(cost?.billableMessages)}
+                hint={
+                  deepLink
+                    ? "Requests leave from the driver's own WhatsApp, so nothing is billed"
+                    : `Sent by RoadAxis in the last ${days} days`
+                }
+              />
+              <Stat
+                label="Message cost"
+                value={
+                  cost?.total === null || cost?.total === undefined
+                    ? "—"
+                    : money(cost.total, cost.currency)
+                }
+                hint={
+                  cost?.unitCost === null || cost?.unitCost === undefined
+                    ? "The per-message rate has not been set on the server yet"
+                    : `At ${money(cost.unitCost, cost.currency, 4)} a message`
+                }
+              />
+              <Stat
+                label="Cost per request"
+                value={
+                  cost?.perRequest === null || cost?.perRequest === undefined
+                    ? "—"
+                    : money(cost.perRequest, cost.currency, 4)
+                }
+                hint="Message cost divided by booking requests"
+              />
             </StatGroup>
           </section>
 
@@ -166,6 +278,7 @@ export function AdminAnalyticsPage() {
             </h2>
             <Leaderboard
               title="Most viewed"
+              hint={`Last ${days} days`}
               rows={data?.leaderboards.mostViewed ?? []}
               value={(b) => `${b.views}`}
               unit="views"

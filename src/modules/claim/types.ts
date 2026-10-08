@@ -27,6 +27,11 @@ export interface Claim {
 
 /** The review screen: the evidence, and nothing a driver may see. */
 export interface AdminClaim extends Claim {
+  /**
+   * On the response to a decision only: whether the applicant's email went, and
+   * — when it did not — the set-password link to pass on by hand.
+   */
+  notification?: { emailed: boolean; inviteUrl: string | null };
   contactPhone: string;
   contactRole: string | null;
   message: string | null;

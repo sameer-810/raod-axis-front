@@ -129,6 +129,23 @@ const PortalListingPage = lazy(() =>
 const AdminImportPage = lazy(() =>
   import("./modules/admin/pages/AdminImportPage").then((m) => ({ default: m.AdminImportPage })),
 );
+const AdminOverviewPage = lazy(() =>
+  import("./modules/admin/pages/AdminOverviewPage").then((m) => ({
+    default: m.AdminOverviewPage,
+  })),
+);
+const AdminUsersPage = lazy(() =>
+  import("./modules/admin/pages/AdminUsersPage").then((m) => ({ default: m.AdminUsersPage })),
+);
+const AccountPage = lazy(() =>
+  import("./modules/account/pages/AccountPage").then((m) => ({ default: m.AccountPage })),
+);
+const PrivacyPage = lazy(() =>
+  import("./modules/legal/pages/PrivacyPage").then((m) => ({ default: m.PrivacyPage })),
+);
+const TermsPage = lazy(() =>
+  import("./modules/legal/pages/TermsPage").then((m) => ({ default: m.TermsPage })),
+);
 
 export default function App() {
   return (
@@ -181,6 +198,22 @@ export default function App() {
             }
           />
 
+          {/* What we hold about the signed-in person, a copy of it, and the way
+              out. Any role: a driver's only sign-out is on this page. */}
+          <Route
+            path="account"
+            element={
+              <RequireAuth>
+                <AccountPage />
+              </RequireAuth>
+            }
+          />
+
+          {/* Linked from the footer on every page and from under every button
+              that takes somebody's details. */}
+          <Route path="privacy" element={<PrivacyPage />} />
+          <Route path="terms" element={<TermsPage />} />
+
           <Route path="*" element={<NotFoundPage />} />
         </Route>
 
@@ -211,7 +244,7 @@ export default function App() {
             </RequireAuth>
           }
         >
-          <Route index element={<AdminBusinessesPage />} />
+          <Route index element={<AdminOverviewPage />} />
           <Route path="businesses" element={<AdminBusinessesPage />} />
           {/* Before "businesses/:id", so "new" and "import" are never read as ids. */}
           <Route path="businesses/new" element={<AdminBusinessFormPage />} />
@@ -223,6 +256,7 @@ export default function App() {
           <Route path="analytics" element={<AdminAnalyticsPage />} />
           <Route path="whatsapp-logs" element={<AdminWhatsAppLogsPage />} />
           <Route path="audit" element={<AdminAuditPage />} />
+          <Route path="users" element={<AdminUsersPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

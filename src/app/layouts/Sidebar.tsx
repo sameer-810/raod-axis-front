@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   PanelLeftClose,
   PanelLeftOpen,
@@ -9,6 +9,7 @@ import {
   Moon,
   Sun,
   Keyboard,
+  UserCog,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
@@ -18,7 +19,7 @@ import { Logo } from "@/shared/components/Logo";
 import { Avatar } from "@/shared/components/Avatar";
 import { Kbd, MOD } from "@/shared/components/Kbd";
 import { Menu } from "@/shared/components/Menu";
-import { filterSections } from "./menu";
+import { filterSections, isWorkspaceRoot } from "./menu";
 import { useSidebar } from "./sidebarContext";
 import { usePalette } from "./CommandPalette";
 
@@ -36,6 +37,7 @@ export function Sidebar() {
   const { setOpen, setShortcutsOpen } = usePalette();
   const { theme, toggleTheme } = useTheme();
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const sections = filterSections(role);
 
   const workspace = role === "admin" ? "Admin console" : "Business portal";
@@ -131,7 +133,7 @@ export function Sidebar() {
                 <li key={item.to}>
                   <NavLink
                     to={item.to!}
-                    end={item.to === "/portal"}
+                    end={isWorkspaceRoot(item.to)}
                     title={collapsed ? item.label : undefined}
                     className={cn("ra-nav-item", collapsed && "justify-center px-0")}
                   >
@@ -154,6 +156,13 @@ export function Sidebar() {
           align="start"
           items={[
             { type: "label", label: user?.email ?? "" },
+            // Where a password is changed. It was nowhere: an account could be
+            // signed in to and out of, and nothing else.
+            {
+              label: "Account and password",
+              icon: UserCog,
+              onSelect: () => navigate("/account"),
+            },
             {
               label: "View the public site",
               icon: ExternalLink,

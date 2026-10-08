@@ -105,8 +105,4 @@ export const adminClaimApi = {
     });
     return { claim: res.data.data, message: res.data.message };
   },
-
-  async transfer(businessId: string, payload: { email: string; name?: string; reason: string }) {
-    await http.post(`/businesses/${businessId}/transfer`, payload);
-  },
 };

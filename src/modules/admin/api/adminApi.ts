@@ -78,6 +78,106 @@ export const adminBusinessApi = {
   },
 };
 
+// ── Accounts ───────────────────────────────────────────────────────────────
+
+export type AccountRole = "driver" | "business_owner" | "admin";
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  phoneFormatted: string | null;
+  role: AccountRole;
+  emailVerified: boolean;
+  phoneVerified: boolean;
+  businessIds: string[];
+  isActive: boolean;
+  lastLoginAt: string | null;
+  createdAt: string;
+  deactivatedReason: string | null;
+}
+
+export interface AdminUserQuery {
+  search?: string;
+  role?: AccountRole;
+  /** Undefined shows everybody; the two booleans are the two halves. */
+  isActive?: boolean;
+  page?: number;
+}
+
+/**
+ * What the administrator is told about the email that should have gone out.
+ * `inviteUrl` is present only when a set-password link exists and its email
+ * failed — the one case where somebody has to pass it on by hand.
+ */
+export interface Notification {
+  emailed: boolean;
+  inviteUrl: string | null;
+}
+
+export const adminUserApi = {
+  async list(query: AdminUserQuery) {
+    const params: Record<string, string> = { limit: "20" };
+    if (query.search?.trim()) params.search = query.search.trim();
+    if (query.role) params.role = query.role;
+    if (typeof query.isActive === "boolean") params.isActive = String(query.isActive);
+    if (query.page && query.page > 1) params.page = String(query.page);
+    const res = await http.get<{ data: AdminUser[]; meta: SearchMeta }>("/auth/users", { params });
+    return { items: res.data.data, meta: res.data.meta };
+  },
+
+  /** Staff only. Drivers come into existence the first time they sign in. */
+  async create(payload: {
+    name: string;
+    email: string;
+    password: string;
+    role: "admin" | "business_owner";
+  }) {
+    const res = await http.post<{ data: AdminUser }>("/auth/users", payload);
+    return res.data.data;
+  },
+
+  /** Switch an account off, or back on. Nothing is deleted. FR-ADM-06. */
+  async setActive(id: string, isActive: boolean, reason?: string) {
+    const res = await http.patch<{ data: AdminUser }>(`/auth/users/${id}/active`, {
+      isActive,
+      ...(reason ? { reason } : {}),
+    });
+    return res.data.data;
+  },
+
+  /**
+   * Send a member of staff a link to set a new password — the answer to "I've
+   * forgotten mine". The link comes back only when its email did not go.
+   */
+  async sendPasswordLink(id: string) {
+    const res = await http.post<{ data: { notification: Notification }; message: string }>(
+      `/auth/users/${id}/password-link`,
+    );
+    return { notification: res.data.data.notification, message: res.data.message };
+  },
+
+  /** Erase the person for good, on their request. Cannot be undone. */
+  async erase(id: string, reason: string) {
+    const res = await http.delete<{
+      data: { erased: boolean; listingsReleased: Array<{ id: string; name: string }> };
+    }>(`/auth/users/${id}`, { data: { reason } });
+    return res.data.data;
+  },
+};
+
+export const adminOwnershipApi = {
+  /** Move a listing to a different owner. FR-ONB-10. */
+  async transfer(businessId: string, payload: { email: string; name?: string; reason: string }) {
+    const res = await http.post<{ data: Business & { notification?: Notification } }>(
+      `/businesses/${businessId}/transfer`,
+      payload,
+    );
+    return res.data.data;
+  },
+};
+
 export const adminCategoryApi = {
   async listAll() {
     const res = await http.get<{ data: Category[] }>("/categories/all");

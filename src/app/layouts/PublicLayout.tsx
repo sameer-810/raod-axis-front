@@ -62,13 +62,43 @@ export function PublicLayout() {
             </button>
 
             {user ? (
-              <Link
-                to={user.role === "driver" ? "/my-garages" : "/portal"}
-                className="ra-tap hidden items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent md:flex md:min-h-0 md:py-2"
-              >
-                <User className="h-4 w-4" aria-hidden="true" />
-                {user.role === "driver" ? "My garages" : "Portal"}
-              </Link>
+              <>
+                <Link
+                  to={
+                    user.role === "driver"
+                      ? "/my-garages"
+                      : user.role === "admin"
+                        ? "/admin"
+                        : "/portal"
+                  }
+                  className="ra-tap hidden items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent md:flex md:min-h-0 md:py-2"
+                >
+                  {user.role === "driver" ? (
+                    <Heart className="h-4 w-4" aria-hidden="true" />
+                  ) : (
+                    <LayoutGrid className="h-4 w-4" aria-hidden="true" />
+                  )}
+                  {user.role === "driver"
+                    ? "My garages"
+                    : user.role === "admin"
+                      ? "Console"
+                      : "Portal"}
+                </Link>
+                {/*
+                  The account page is where a driver signs out, downloads their
+                  data and deletes their account. On a phone the tab bar has no
+                  room for a fourth tab, so it is this icon; with a pointer it
+                  is a word, because an unlabelled person-shaped icon is a guess.
+                */}
+                <Link
+                  to="/account"
+                  aria-label="Your account"
+                  className="ra-tap flex min-w-[44px] items-center justify-center gap-1.5 rounded-lg text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground md:min-h-0 md:min-w-0 md:px-3 md:py-2 md:text-foreground"
+                >
+                  <User className="h-4 w-4" aria-hidden="true" />
+                  <span className="hidden md:inline">Account</span>
+                </Link>
+              </>
             ) : (
               <Link
                 to="/sign-in"
@@ -81,31 +111,44 @@ export function PublicLayout() {
         </div>
       </header>
 
-      <main className="flex-1 pb-20 md:pb-0">
+      <main className="flex-1">
         <Suspense fallback={<PageLoader />}>
           <Outlet />
         </Suspense>
       </main>
 
-      <footer className="hidden border-t border-border py-8 md:block">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 text-sm text-muted-foreground">
+      {/*
+        On every width. It used to be `hidden md:block`, which left the Privacy
+        and Terms links unreachable on a phone — where most drivers are, and
+        where they are asked for an email address and a phone number. The bottom
+        padding below `md` is the tab bar's height, so the last link is never
+        underneath it.
+      */}
+      <footer className="border-t border-border pb-24 pt-5 md:py-8">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 text-sm text-muted-foreground">
           <p>© {new Date().getFullYear()} RoadAxis</p>
-          <nav className="flex flex-wrap gap-x-5 gap-y-2" aria-label="Footer">
-            <Link to="/for-business" className="hover:text-foreground">
-              List your business
-            </Link>
-            <Link to="/privacy" className="hover:text-foreground">
-              Privacy
-            </Link>
-            <Link to="/terms" className="hover:text-foreground">
-              Terms
-            </Link>
+          <nav className="-mx-2 flex flex-wrap gap-x-1 md:mx-0 md:gap-x-5" aria-label="Footer">
+            <FooterLink to="/for-business">List your business</FooterLink>
+            <FooterLink to="/privacy">Privacy</FooterLink>
+            <FooterLink to="/terms">Terms</FooterLink>
           </nav>
         </div>
       </footer>
 
       <PublicTabBar signedIn={Boolean(user)} />
     </div>
+  );
+}
+
+/** A footer link that is a full touch target on a phone and plain text with a pointer. */
+function FooterLink({ to, children }: { to: string; children: React.ReactNode }) {
+  return (
+    <Link
+      to={to}
+      className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded px-2 transition-colors hover:text-foreground md:min-h-0 md:min-w-0 md:px-0"
+    >
+      {children}
+    </Link>
   );
 }
 

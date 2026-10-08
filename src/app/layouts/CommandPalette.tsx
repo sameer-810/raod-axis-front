@@ -21,6 +21,7 @@ import {
   Store,
   CornerDownLeft,
   Keyboard,
+  UserCog,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
@@ -165,6 +166,14 @@ export function CommandPalette() {
         shortcut: ["?"],
         keywords: ["help", "hotkeys"],
         run: () => setShortcutsOpen(true),
+      },
+      {
+        id: "act:account",
+        group: "Actions",
+        label: "Account and password",
+        icon: UserCog,
+        keywords: ["profile", "change password", "my data", "delete"],
+        run: () => navigate("/account"),
       },
       {
         id: "act:out",

@@ -4,6 +4,8 @@ import { useMutation } from "@tanstack/react-query";
 import { CheckCircle2, MapPin, Search } from "lucide-react";
 import { getApiErrorMessage, getApiFieldErrors } from "@/shared/api/http";
 import { Field } from "@/shared/components/Field";
+import { LegalNote } from "@/shared/components/LegalNote";
+import { useSeo } from "@/shared/hooks/useSeo";
 import { geocodeUk } from "@/shared/lib/geocode";
 import { useCategories } from "@/modules/business/hooks/useBusinesses";
 import { businessApi } from "@/modules/business/api/businessApi";
@@ -26,6 +28,12 @@ import type { ApplicantFields, Claim } from "../types";
 export function RegisterBusinessPage() {
   const { data: categories = [] } = useCategories();
   const startedAt = useRef(new Date().toISOString());
+
+  useSeo({
+    title: "Add your garage",
+    description:
+      "Not listed on RoadAxis yet? Add your garage, tyre centre or mobile service and take booking requests on WhatsApp.",
+  });
 
   const [applicant, setApplicant] = useState<ApplicantFields>({
     contactName: "",
@@ -360,6 +368,7 @@ export function RegisterBusinessPage() {
           >
             {submit.isPending ? "Sending…" : "Send application"}
           </button>
+          <LegalNote action="sending this application" />
         </form>
       </div>
     </div>

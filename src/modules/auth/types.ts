@@ -11,6 +11,11 @@ export interface CodeChallenge {
   isNew: boolean;
   expiresInMinutes: number;
   /**
+   * Which codes this sign-in is waiting on. The server decides: two when the
+   * WhatsApp service is connected, the emailed one alone when it is not.
+   */
+  channels: { email: boolean; whatsapp: boolean };
+  /**
    * Which channels the codes actually reached. The interface names only the ones
    * that worked — telling someone to wait for a message that was never sent is
    * worse than saying nothing.
@@ -21,7 +26,7 @@ export interface CodeChallenge {
    * regardless of configuration, so a build that shows it there is impossible
    * rather than merely discouraged.
    */
-  devCodes?: { email: string; phone: string };
+  devCodes?: { email: string; phone?: string };
 }
 
 export interface RequestCodesPayload {
@@ -32,6 +37,7 @@ export interface RequestCodesPayload {
 export interface VerifyCodesPayload {
   challengeId: string;
   emailCode: string;
-  phoneCode: string;
+  /** Absent when the challenge asked for the emailed code only. */
+  phoneCode?: string;
   name?: string;
 }

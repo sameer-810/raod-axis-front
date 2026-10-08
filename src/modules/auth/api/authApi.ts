@@ -21,6 +21,15 @@ export const authApi = {
     return res.data.data;
   },
 
+  /**
+   * Staff only: change your own password. The server ends every other session
+   * on the account and hands back a new one for this browser.
+   */
+  async changePassword(payload: { currentPassword: string; newPassword: string }) {
+    const res = await http.post<{ data: Session; message: string }>("/auth/password", payload);
+    return { session: res.data.data, message: res.data.message };
+  },
+
   async me() {
     const res = await http.get<{ data: AuthUser }>("/auth/me");
     return res.data.data;

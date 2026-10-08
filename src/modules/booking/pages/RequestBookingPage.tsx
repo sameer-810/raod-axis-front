@@ -5,6 +5,8 @@ import { getApiErrorMessage, getApiFieldErrors } from "@/shared/api/http";
 import { Field } from "@/shared/components/Field";
 import { PageLoader } from "@/shared/components/PageLoader";
 import { EmptyState } from "@/shared/components/EmptyState";
+import { LegalNote } from "@/shared/components/LegalNote";
+import { useSeo } from "@/shared/hooks/useSeo";
 import { formatDateFriendly } from "@/shared/lib/format";
 import { useAppSelector } from "@/app/hooks";
 import { useBusiness } from "@/modules/business/hooks/useBusinesses";
@@ -33,6 +35,15 @@ export function RequestBookingPage() {
   const navigate = useNavigate();
   const user = useAppSelector((s) => s.auth.user);
   const { data: business, isLoading } = useBusiness(slug);
+
+  useSeo({
+    title: business ? `Request a booking at ${business.name}` : "Request a booking",
+    description: business
+      ? `Ask ${business.name} for a date and time. They reply to you on WhatsApp — nothing is booked until they do.`
+      : "Ask a garage for a date and time. They reply to you on WhatsApp.",
+    // A form, not a destination: the business profile is the page to index.
+    noIndex: true,
+  });
 
   const [form, setForm] = useState({
     serviceName: "",
@@ -314,6 +325,7 @@ export function RequestBookingPage() {
                 to reach you back.
               </p>
             )}
+            <LegalNote action="sending this request" className="mt-2" />
           </div>
         </form>
       </div>

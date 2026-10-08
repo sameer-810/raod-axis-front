@@ -1,3 +1,10 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    { "source": "/robots.txt", "destination": "https://raod-axis-back-1.onrender.com/robots.txt" },
+    {
+      "source": "/sitemap.xml",
+      "destination": "https://raod-axis-back-1.onrender.com/sitemap.xml"
+    },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }

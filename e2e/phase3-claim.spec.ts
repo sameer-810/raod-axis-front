@@ -312,7 +312,14 @@ test.describe("Phase 3 · The review queue", () => {
       .fill("The document you sent isn't in the business's name. Please send a business licence.");
     await page.getByRole("button", { name: /reject and notify/i }).click();
 
-    await expect(page.getByText(/applicant has been told why/i)).toBeVisible();
+    /**
+     * This machine has no mail server, so the applicant has NOT been told —
+     * and the console has to say that. It used to say "the applicant has been
+     * told why" regardless, which this test duly asserted: a green tick over an
+     * email that never left the building.
+     */
+    await expect(page.getByText(/applicant has not been told/i)).toBeVisible();
+    await expect(page.getByText(/applicant has been told why/i)).toHaveCount(0);
   });
 
   test("an ownership document opens in the reviewer's browser", async ({ page }) => {

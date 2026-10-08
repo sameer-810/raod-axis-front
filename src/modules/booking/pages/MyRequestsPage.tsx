@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { CalendarClock, Search } from "lucide-react";
 import { PageLoader } from "@/shared/components/PageLoader";
 import { EmptyState } from "@/shared/components/EmptyState";
+import { useSeo } from "@/shared/hooks/useSeo";
 import { formatAge, formatDateFriendly } from "@/shared/lib/format";
 import { useMyBookingRequests } from "../hooks/useBookings";
 import { BookingStatusBadge } from "../components/StatusBadge";
@@ -14,6 +15,13 @@ import { BookingStatusBadge } from "../components/StatusBadge";
 export function MyRequestsPage() {
   const { data, isLoading } = useMyBookingRequests();
   const items = data?.items ?? [];
+
+  useSeo({
+    title: "My requests",
+    description: "Every booking request you have sent on RoadAxis, and where each one stands.",
+    // Somebody's own requests are not a page for a search engine.
+    noIndex: true,
+  });
 
   if (isLoading) return <PageLoader />;
 

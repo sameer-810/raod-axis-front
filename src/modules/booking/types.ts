@@ -27,8 +27,10 @@ export interface BookingRequest {
   business: { id: string; name: string | null; slug: string | null } | null;
   driverName: string;
   /** In full, deliberately — a masked number the garage cannot ring is useless. */
-  driverPhone: string;
-  driverPhoneFormatted: string;
+  /** Null once the driver's details have been erased, or have passed their retention period. */
+  driverPhone: string | null;
+  driverPhoneFormatted: string | null;
+  personalDataRemoved: boolean;
   serviceName: string;
   preferredDate: string;
   preferredTime: string;

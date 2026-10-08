@@ -360,6 +360,37 @@ shows, not "image".
 
 ---
 
+## The interface does not say things that are not true
+
+A rule that was being broken in four places when Phase 10 found it, each of them a
+success message over something that had not succeeded.
+
+- **Never report a message that was not sent.** Approving a claim said "the owner has been
+  emailed" with no mail server configured. It now says the email did not go and shows the
+  link, because the administrator who just granted the access is the one person who can
+  carry it by hand.
+- **Ask for what will arrive, and nothing else.** With WhatsApp not connected, sign-in is
+  one emailed code — and the page says "Enter your code", singular, with one field and no
+  line about a WhatsApp message. A field for a code nobody can receive is a locked door
+  drawn to look like an open one.
+- **A control that cannot act is not drawn.** A row with no actions has no menu button. A
+  request whose driver has been erased has no Call button, where it used to have one that
+  dialled nothing.
+- **A rate with nothing behind it is a dash.** Unchanged from Phase 6, and extended to the
+  measures added since: every one says how many records it rests on, and a cost is never
+  quoted from a price nobody set.
+
+Two smaller decisions made in the same phase:
+
+- **The legal line sits under the button, not behind a checkbox.** It says what pressing
+  the button means at the moment of pressing it. A tick-box nobody can decline is theatre
+  that costs a tap on a phone at the roadside.
+- **An administrator arrives on an overview, not a table.** It answers "what needs me
+  today" — four figures, what is actually waiting, what just happened — and lists nothing
+  that is at zero. A row reading "0 claims" teaches people to stop reading the list.
+
+---
+
 ## Verification
 
 Design rules that cannot be tested are aspirations. These are asserted in

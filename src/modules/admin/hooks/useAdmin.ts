@@ -2,12 +2,62 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   adminBusinessApi,
   adminCategoryApi,
+  adminOwnershipApi,
+  adminUserApi,
   type AdminBusinessQuery,
+  type AdminUserQuery,
   type BusinessPayload,
 } from "../api/adminApi";
 
 const BUSINESS_KEY = ["admin", "businesses"] as const;
 const CATEGORY_KEY = ["admin", "categories"] as const;
+const USER_KEY = ["admin", "users"] as const;
+
+// ── Accounts ───────────────────────────────────────────────────────────────
+
+export function useAdminUsers(query: AdminUserQuery) {
+  return useQuery({
+    queryKey: [...USER_KEY, query],
+    queryFn: () => adminUserApi.list(query),
+    placeholderData: (prev) => prev,
+  });
+}
+
+/** Every account write changes the list, and may change who owns a listing. */
+function useInvalidateUsers() {
+  const qc = useQueryClient();
+  return () => {
+    void qc.invalidateQueries({ queryKey: USER_KEY });
+    void qc.invalidateQueries({ queryKey: BUSINESS_KEY });
+    void qc.invalidateQueries({ queryKey: ["admin", "audit"] });
+  };
+}
+
+export function useCreateStaffUser() {
+  const invalidate = useInvalidateUsers();
+  return useMutation({ mutationFn: adminUserApi.create, onSuccess: invalidate });
+}
+
+export function useSetUserActive() {
+  const invalidate = useInvalidateUsers();
+  return useMutation({
+    mutationFn: ({ id, isActive, reason }: { id: string; isActive: boolean; reason?: string }) =>
+      adminUserApi.setActive(id, isActive, reason),
+    onSuccess: invalidate,
+  });
+}
+
+export function useSendPasswordLink() {
+  return useMutation({ mutationFn: (id: string) => adminUserApi.sendPasswordLink(id) });
+}
+
+export function useEraseUser() {
+  const invalidate = useInvalidateUsers();
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => adminUserApi.erase(id, reason),
+    onSuccess: invalidate,
+  });
+}
 
 export function useAdminBusinesses(query: AdminBusinessQuery) {
   return useQuery({
@@ -66,6 +116,22 @@ export function useSetBusinessStatus() {
       status: "draft" | "live" | "suspended";
       reason?: string;
     }) => adminBusinessApi.setStatus(id, status, reason),
+    onSuccess: invalidate,
+  });
+}
+
+export function useTransferOwnership() {
+  const invalidate = useInvalidateBusinesses();
+  return useMutation({
+    mutationFn: ({
+      businessId,
+      ...payload
+    }: {
+      businessId: string;
+      email: string;
+      name?: string;
+      reason: string;
+    }) => adminOwnershipApi.transfer(businessId, payload),
     onSuccess: invalidate,
   });
 }
