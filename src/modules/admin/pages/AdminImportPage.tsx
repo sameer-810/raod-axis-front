@@ -45,7 +45,7 @@ interface ImportSummary {
  */
 function downloadTemplate() {
   const header =
-    "name,description,categories,custom_services,line1,line2,city,postcode,latitude,longitude,phone,email,website\n";
+    "name,description,categories,custom_services,line1,line2,city,region,postcode,country,latitude,longitude,phone,email,website\n";
   const url = URL.createObjectURL(new Blob([header], { type: "text/csv" }));
   const link = document.createElement("a");
   link.href = url;
@@ -58,7 +58,14 @@ const COLUMNS = [
   ["name", "Required. The business's trading name."],
   ["categories", "Comma-separated category slugs, e.g. tyres,mot."],
   ["line1, city, postcode", "The address. A UK postcode is enough to place it."],
-  ["latitude, longitude", "Optional — looked up from the postcode when absent."],
+  [
+    "country, region",
+    "For another country: AE and the emirate. With no country column, every row belongs to the country you are browsing.",
+  ],
+  [
+    "latitude, longitude",
+    "Optional — looked up from the postcode when absent. A UAE row without them is placed in the middle of its area, and the preview says so.",
+  ],
   ["phone, email, website", "Optional contact details."],
   ["description, custom_services", "Optional."],
 ];

@@ -6,6 +6,8 @@ export interface AdminBusinessQuery {
   status?: "draft" | "live" | "suspended";
   claimStatus?: "unclaimed" | "pending" | "claimed";
   city?: string;
+  /** One country's listings. Left out, the console sees every country at once. */
+  country?: string;
   page?: number;
 }
 
@@ -43,6 +45,7 @@ export const adminBusinessApi = {
     if (query.status) params.status = query.status;
     if (query.claimStatus) params.claimStatus = query.claimStatus;
     if (query.city?.trim()) params.city = query.city.trim();
+    if (query.country) params.country = query.country;
     if (query.page && query.page > 1) params.page = String(query.page);
 
     const res = await http.get<{ data: BusinessCard[]; meta: SearchMeta }>("/businesses/admin", {

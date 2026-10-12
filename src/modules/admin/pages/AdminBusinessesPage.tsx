@@ -16,6 +16,7 @@ import { ConfirmDialog } from "@/shared/components/Dialog";
 import { Fab } from "@/shared/components/Fab";
 import { useDensity } from "@/shared/hooks/useDensity";
 import { formatDate } from "@/shared/lib/format";
+import { useMarket } from "@/app/market";
 import { useAdminBusinesses, useSetBusinessStatus } from "../hooks/useAdmin";
 import type { BusinessCard } from "@/modules/business/types";
 
@@ -46,6 +47,13 @@ export function AdminBusinessesPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<Visibility>("");
   const [claimStatus, setClaimStatus] = useState<Ownership>("");
+  /**
+   * Which country's listings. Empty is every country — the console's default,
+   * and deliberately not the country in the header: an administrator looking
+   * for a listing should find it wherever it is.
+   */
+  const [country, setCountry] = useState("");
+  const { markets, hasChoice } = useMarket();
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [suspending, setSuspending] = useState<BusinessCard[] | null>(null);
@@ -54,6 +62,7 @@ export function AdminBusinessesPage() {
     search,
     status: status || undefined,
     claimStatus: claimStatus || undefined,
+    country: country || undefined,
     page,
   });
   const setBusinessStatus = useSetBusinessStatus();
@@ -146,6 +155,16 @@ export function AdminBusinessesPage() {
           {b.address.postcode && (
             <span className="ms-1.5 font-mono text-xs tabular-nums">{b.address.postcode}</span>
           )}
+          {/* Where there is no postcode, the emirate does its job on this line. */}
+          {!b.address.postcode && b.address.region && b.address.region !== b.address.city && (
+            <span className="ms-1.5 text-xs">{b.address.region}</span>
+          )}
+          {/* Named only where there is more than one country to be in. */}
+          {hasChoice && b.country && (
+            <span className="ms-1.5 rounded border border-border px-1 font-mono text-[11px] text-muted-foreground">
+              {b.country}
+            </span>
+          )}
         </span>
       ),
     },
@@ -185,6 +204,14 @@ export function AdminBusinessesPage() {
       label: `Ownership: ${OWNERSHIP.find((v) => v.value === claimStatus)?.label}`,
       onRemove: () => {
         setClaimStatus("");
+        resetPage();
+      },
+    },
+    country && {
+      key: "country",
+      label: `Country: ${markets.find((m) => m.code === country)?.name ?? country}`,
+      onRemove: () => {
+        setCountry("");
         resetPage();
       },
     },
@@ -232,6 +259,7 @@ export function AdminBusinessesPage() {
             ? () => {
                 setStatus("");
                 setClaimStatus("");
+                setCountry("");
                 resetPage();
               }
             : undefined
@@ -258,6 +286,21 @@ export function AdminBusinessesPage() {
           }}
           options={OWNERSHIP}
         />
+        {hasChoice && (
+          <FilterSelect
+            id="country"
+            label="Country"
+            value={country}
+            onChange={(v) => {
+              setCountry(v);
+              resetPage();
+            }}
+            options={[
+              { value: "", label: "All countries" },
+              ...markets.map((m) => ({ value: m.code, label: m.name })),
+            ]}
+          />
+        )}
       </FilterBar>
 
       <DataTable

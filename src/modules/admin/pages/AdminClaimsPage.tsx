@@ -282,7 +282,7 @@ function ClaimDetail({
   const address = [
     claim.business?.address?.line1,
     claim.business?.address?.city,
-    claim.business?.address?.postcode,
+    claim.business?.address?.postcode ?? claim.business?.address?.region,
   ]
     .filter(Boolean)
     .join(", ");

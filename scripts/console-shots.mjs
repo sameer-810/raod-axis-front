@@ -342,6 +342,12 @@ if (sessions["tom.ellis"]) {
   await shoot(sessions["tom.ellis"], "/account", "account-phone.png", { w: 390, h: 844 });
 }
 await shoot(admin, "/admin/businesses", "admin-businesses.png");
+await shoot(admin, "/admin/businesses", "admin-businesses-uae.png", {
+  after: async (p) => {
+    await p.getByLabel("Country", { exact: true }).selectOption("AE");
+    await p.waitForTimeout(900);
+  },
+});
 await shoot(admin, "/admin/businesses", "admin-businesses-dark.png", { theme: "dark" });
 await shoot(admin, "/admin/businesses", "admin-businesses-palette.png", {
   after: async (p) => {
@@ -445,10 +451,12 @@ if (sessions["raj.mehta"]) {
     },
   });
 }
-// The second step of driver sign-in, as a driver sees it on a server with email
-// connected. The local server has none and hands the code back instead, so the
-// reply is corrected on both counts before the page reads it. Nobody is signed
-// in: the code is never used.
+// The second step of driver sign-in, as a driver sees it at launch: email
+// connected, the WhatsApp service not yet, one code. The local server has no
+// email and hands the code back instead, and may be set to ask for the second
+// code as well — so the reply is corrected on all three counts before the page
+// reads it. The guide describes the launch configuration and must not change
+// with the machine it was built on. Nobody is signed in: the code is never used.
 await guide(null, "/sign-in", "signin-code.png", {
   before: async (p) => {
     await p.route("**/auth/otp/request", async (route) => {
@@ -456,7 +464,8 @@ await guide(null, "/sign-in", "signin-code.png", {
       const json = await response.json();
       if (json.data) {
         delete json.data.devCodes;
-        json.data.delivery = { ...json.data.delivery, email: true };
+        json.data.delivery = { email: true, whatsapp: false };
+        json.data.channels = { ...json.data.channels, email: true, whatsapp: false };
       }
       await route.fulfill({ response, json });
     });

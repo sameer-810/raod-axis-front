@@ -38,7 +38,12 @@ export interface AdminClaim extends Claim {
   documents: ClaimDocument[];
   business:
     | (Claim["business"] & {
-        address?: { line1?: string; city?: string; postcode?: string } | null;
+        address?: {
+          line1?: string;
+          city?: string;
+          region?: string | null;
+          postcode?: string | null;
+        } | null;
         status?: string | null;
         claimStatus?: string | null;
         isVerified?: boolean;

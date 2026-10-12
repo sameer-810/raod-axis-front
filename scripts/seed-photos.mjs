@@ -16,7 +16,11 @@
  * recovery service, a valeting bay for the valeters. A generic engine bay on
  * all eight reads as a template.
  *
- * Only the eight demo listings. The owner's fixture in `console-shots.mjs`
+ * The UAE's demo garages use the same photographs as the UK's, matched to the
+ * same trades. The two directories are never on one screen, and eight more
+ * stock pictures of tyres would add nothing but eight more things to licence.
+ *
+ * Only the demo listings. The owner's fixture in `console-shots.mjs`
  * deliberately keeps an empty gallery, because "your listing is 80% complete,
  * and the missing thing is a photo" is the whole point of the panel on the
  * portal dashboard.
@@ -103,6 +107,72 @@ const SETS = [
       "photo-1694678505383-676d78ea3b96", // washing by hand
     ],
   },
+
+  // ── United Arab Emirates ────────────────────────────────────────────────
+  {
+    match: /al quoz tyre/i,
+    photos: [
+      "photo-1675034743372-672c3c3f8377", // wall of tyres
+      "photo-1703103042709-9a2324b90038", // tyre in a garage
+      "photo-1593699199342-59b40e08f0ac", // wheel
+    ],
+  },
+  {
+    match: /deira auto electrical/i,
+    photos: [
+      "photo-1643700973089-baa86a1ab9ee", // working under the bonnet
+      "photo-1486262715619-67b85e0b08d3", // engine
+      "photo-1570129476815-ba368ac77013", // tools
+    ],
+  },
+  {
+    match: /ras al khor/i,
+    photos: [
+      "photo-1632733711679-529326f6db12", // working on an engine
+      "photo-1530046614490-89e6f776b83b", // tool chest
+      "photo-1487754180451-c456f719a1fc", // refilling oil in the engine bay
+    ],
+  },
+  {
+    match: /al barsha/i,
+    photos: [
+      "photo-1727893119356-1702fe921cf9", // bright repair workshop
+      "photo-1637640125496-31852f042a60", // spanners in a box
+      "photo-1606577924006-27d39b132ae2", // engine bay
+    ],
+  },
+  {
+    match: /marina mobile/i,
+    photos: [
+      "photo-1694678505383-676d78ea3b96", // washing by hand
+      "photo-1608506375591-b90e1f955e4b", // foam on a car in a bay
+      "photo-1565689876697-e467b6c54da2", // wheel being washed
+    ],
+  },
+  {
+    match: /emirates road recovery/i,
+    photos: [
+      "photo-1730514784243-f0e7f09c9f50", // recovery truck towing
+      "photo-1686966933735-305bd8fe0a77", // car loaded onto a flatbed
+      "photo-1738101996177-13110d20a973", // driver beside the truck
+    ],
+  },
+  {
+    match: /sharjah industrial/i,
+    photos: [
+      "photo-1645445522156-9ac06bc7a767", // tyre being worked on
+      "photo-1686412537635-8d8d0d5d1bd5", // two fitters on a wheel
+      "photo-1599474151460-d3439fa608a7", // carrying a tyre
+    ],
+  },
+  {
+    match: /mussafah/i,
+    photos: [
+      "photo-1615906655593-ad0386982a0f", // mechanic at the engine
+      "photo-1764015805414-df7de89d405b", // impact wrench on a wheel
+      "photo-1530046614490-89e6f776b83b", // tool chest
+    ],
+  },
 ];
 
 const admin = await (async () => {
@@ -119,7 +189,13 @@ const ctx = await pwRequest.newContext({
   extraHTTPHeaders: { Authorization: `Bearer ${admin.accessToken}` },
 });
 
-const listings = (await (await fetch(`${API}/businesses?limit=50`)).json()).data;
+// The public search answers for one country at a time, so each is asked.
+const markets = (await (await fetch(`${API}/markets`)).json()).data.markets;
+const listings = [];
+for (const market of markets) {
+  const page = await fetch(`${API}/businesses?limit=50`, { headers: { "X-Market": market.code } });
+  listings.push(...(await page.json()).data);
+}
 
 for (const set of SETS) {
   const card = listings.find((b) => set.match.test(b.name));

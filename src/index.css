@@ -821,8 +821,24 @@ table,
 .ra-table td {
   @apply border-b border-border/70 px-3 align-middle;
 }
-.ra-table tbody tr:last-child td {
+.ra-table tbody tr:last-child td,
+.ra-table tbody tr:last-child th {
   @apply border-b-0;
+}
+/**
+ * A row's own heading — the country in a table of countries. It is a header to
+ * a screen reader and a name to everybody else, so it reads like the cells
+ * beside it rather than like the column titles above it.
+ */
+.ra-table tbody th {
+  @apply h-12 border-border/70 bg-transparent text-[13px] font-medium normal-case tracking-normal text-foreground;
+}
+/** A column of figures, heading included, set against the right-hand edge. */
+.ra-table .ra-num {
+  @apply text-end font-mono tabular-nums;
+}
+.ra-table thead .ra-num {
+  @apply font-sans;
 }
 .ra-table[data-density="compact"] td {
   @apply h-10 py-0;

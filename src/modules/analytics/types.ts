@@ -25,9 +25,25 @@ export interface Performance {
   medianResponseMinutes: number | null;
 }
 
+/** The directory in one country — one row of the "By country" table. */
+export interface CountryRow {
+  country: string;
+  name: string;
+  businesses: number;
+  liveBusinesses: number;
+  claimedBusinesses: number;
+  /** Null when there is nothing live to divide by. Never 0% from nothing. */
+  claimRate: number | null;
+  pendingClaims: number;
+  /** In the reporting window, like the headline figure. */
+  bookingRequests: number;
+}
+
 export interface AnalyticsOverview {
   windowDays: number;
   since: string;
+  /** One row per country served, including one with nothing in it yet. */
+  countries?: CountryRow[];
   totals: {
     businesses: number;
     liveBusinesses: number;

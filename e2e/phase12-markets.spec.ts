@@ -416,6 +416,43 @@ test.describe("Phase 12 · An owner adding a garage", () => {
     ).toBeVisible();
   });
 
+  test("an owner standing in the workshop can use the phone in their hand", async ({
+    page,
+    context,
+  }) => {
+    await browse(page, "AE");
+    await context.grantPermissions(["geolocation"]);
+    await context.setGeolocation({ latitude: 25.13072, longitude: 55.22541 });
+    await page.goto("/register-business");
+    await settle(page);
+
+    await page.getByRole("button", { name: "Use my current location" }).click();
+    await expect(page.getByText(/Placed where you are now/)).toBeVisible();
+    await expect(page.locator(".ra-picker .leaflet-marker-icon")).toHaveCount(1, {
+      timeout: 20_000,
+    });
+
+    // The numbers themselves are there for anyone who cannot use a map.
+    await page.getByText("Map coordinates").click();
+    await expect(page.getByLabel("Latitude")).toHaveValue("25.13072");
+    await expect(page.getByLabel("Longitude")).toHaveValue("55.22541");
+  });
+
+  test("a phone that is plainly somewhere else is not taken at its word", async ({
+    page,
+    context,
+  }) => {
+    await browse(page, "AE");
+    await context.grantPermissions(["geolocation"]);
+    await context.setGeolocation({ latitude: 53.4808, longitude: -2.2426 });
+    await page.goto("/register-business");
+    await settle(page);
+
+    await page.getByRole("button", { name: "Use my current location" }).click();
+    await expect(page.getByText(/doesn't seem to be in the UAE/)).toBeVisible();
+    await expect(page.locator(".ra-picker .leaflet-marker-icon")).toHaveCount(0);
+  });
+
   test("a named area places the pin, the map moves it, and the garage is registered", async ({
     page,
   }) => {

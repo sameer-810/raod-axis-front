@@ -247,6 +247,37 @@ Rules:
   request, because that is what it is, and a driver who turns up expecting a held slot
   is a failure of copywriting.
 
+## Two countries, one interface
+
+Added 12 October 2026, when the United Arab Emirates joined the United Kingdom
+(DECISIONS.md D-036 to D-038). The rule underneath all of it: **the country is shown,
+never assumed in silence.**
+
+- **The switch is small and always in the same place.** A globe and "UK" or "UAE" in the
+  public header, its accessible name `Country: United Kingdom`. No flags — a flag is a
+  picture of a state, not of a language or a customer, and at 16 px it is a smudge. No
+  splash screen asking where the visitor is before the site has shown them anything.
+  On a deployment serving one country the control is not drawn.
+- **A phone field shows the country code it will be read with**, as a fixed prefix inside
+  the field, and its hint says how to give a number from somewhere else. A rule the server
+  applies invisibly is one a person trips over without being told. A listing's number
+  shows the listing's country, whichever side of the site the page is on.
+- **The address form changes shape with the country, not just its labels.** The UK has a
+  postcode with a lookup. The UAE has an emirate, an area and a map; the map is in the
+  form because it is the address. The map's zoom buttons are 44 px like everything else.
+- **A pin the site placed says that it did.** "Placed in the middle of Deira, Dubai. Move
+  the pin to the exact spot." A position nobody chose, presented as a fact, is the same
+  small lie as a rate with nothing behind it.
+- **A price is in the money of the garage that set it.** Never converted. The currency
+  travels with the listing.
+- **In the console, the country is a filter and a column, not a mode.** An administrator
+  sees every country at once; narrowing to one shows a chip that says so and can be
+  removed. A row's location is its postcode or its emirate, with the country code beside
+  it once there is more than one country to tell apart.
+- **Figures by country are a table.** Rows are countries, each named in a row header;
+  numbers are mono, tabular and right-aligned, heading included, so a column of them can
+  be read down. The rows add up to the cards above them and a test holds them to it.
+
 ## Layout — portal and console
 
 The console is a different product from the public side and gets its own scale. A driver

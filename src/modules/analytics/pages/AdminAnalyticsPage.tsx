@@ -105,6 +105,57 @@ export function AdminAnalyticsPage() {
             </StatGroup>
           </section>
 
+          {/* The same directory, one row per country. Only where there is more
+              than one: a table with a single row is the totals above it again. */}
+          {(data?.countries?.length ?? 0) > 1 && (
+            <section aria-labelledby="by-country" className="space-y-3">
+              <h2 id="by-country" className="text-sm font-semibold text-foreground">
+                By country
+              </h2>
+              <div className="ra-panel overflow-x-auto">
+                <table className="ra-table" data-density="comfortable">
+                  <thead>
+                    <tr>
+                      <th scope="col">Country</th>
+                      <th scope="col" className="ra-num">
+                        Live listings
+                      </th>
+                      <th scope="col" className="ra-num">
+                        Claimed
+                      </th>
+                      <th scope="col" className="ra-num">
+                        Claims waiting
+                      </th>
+                      <th scope="col" className="ra-num">
+                        Requests, last {days} days
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data!.countries!.map((c) => (
+                      <tr key={c.country}>
+                        <th scope="row">{c.name}</th>
+                        <td className="ra-num">{c.liveBusinesses}</td>
+                        <td className="ra-num">
+                          {/* A dash, never 0% from nothing — the page's own rule. */}
+                          {c.claimRate === null
+                            ? "—"
+                            : `${c.claimedBusinesses} · ${pct(c.claimRate)}`}
+                        </td>
+                        <td className="ra-num">{c.pendingClaims}</td>
+                        <td className="ra-num">{c.bookingRequests}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Drivers are not split: a driver signs in once and can ask a garage in either
+                country.
+              </p>
+            </section>
+          )}
+
           <section aria-labelledby="loop" className="space-y-3">
             <h2 id="loop" className="text-sm font-semibold text-foreground">
               Discover → Contact → Book
