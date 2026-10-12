@@ -22,7 +22,15 @@ export interface RegisterBusinessFields extends ApplicantFields {
   description?: string;
   categoryIds?: string[];
   customServices?: string[];
-  address: { line1: string; line2?: string; city: string; postcode: string };
+  /** A postcode in the UK, an emirate (`region`) in the UAE — never both. */
+  address: {
+    line1: string;
+    line2?: string;
+    city: string;
+    region?: string;
+    postcode?: string;
+    country?: string;
+  };
   latitude: number;
   longitude: number;
   phone?: string;

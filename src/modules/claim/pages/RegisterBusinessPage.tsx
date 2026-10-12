@@ -1,13 +1,15 @@
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
-import { CheckCircle2, MapPin, Search } from "lucide-react";
+import { CheckCircle2, Search } from "lucide-react";
 import { getApiErrorMessage, getApiFieldErrors } from "@/shared/api/http";
 import { Field } from "@/shared/components/Field";
+import { PhoneField } from "@/shared/components/PhoneField";
 import { LegalNote } from "@/shared/components/LegalNote";
 import { useSeo } from "@/shared/hooks/useSeo";
-import { geocodeUk } from "@/shared/lib/geocode";
+import { useMarket } from "@/app/market";
 import { useCategories } from "@/modules/business/hooks/useBusinesses";
+import { AddressFields } from "@/modules/business/components/AddressFields";
 import { businessApi } from "@/modules/business/api/businessApi";
 import { claimApi, type RegisterBusinessFields } from "../api/claimApi";
 import { ApplicantFieldset } from "../components/ApplicantFields";
@@ -48,18 +50,24 @@ export function RegisterBusinessPage() {
     line1: "",
     line2: "",
     city: "",
+    region: "",
     postcode: "",
+    // Empty until chosen: the form starts in the country being browsed.
+    country: "",
     phone: "",
     website: "",
     latitude: "",
     longitude: "",
   });
+  /** The country the business is in, which decides what its address consists of. */
+  const { market: browsing, marketFor } = useMarket();
+  const market = marketFor(business.country || browsing.code);
+  const byPostcode = market.address.postcode === "required";
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [customServices, setCustomServices] = useState("");
   const [documents, setDocuments] = useState<File[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
-  const [geoNote, setGeoNote] = useState<string | null>(null);
   const [existing, setExisting] = useState<
     Array<{ name: string; slug: string; city: string | null }>
   >([]);
@@ -69,27 +77,6 @@ export function RegisterBusinessPage() {
     (key: keyof typeof business) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setBusiness((b) => ({ ...b, [key]: e.target.value }));
-
-  /**
-   * Postcode → coordinates. Required, because a listing without them is excluded
-   * from every distance search — the only view that matters. Derived rather than
-   * typed, since nobody knows their own latitude.
-   */
-  async function resolvePostcode() {
-    if (!business.postcode.trim()) return;
-    const hit = await geocodeUk(business.postcode);
-    if (!hit) {
-      setGeoNote("We couldn't place that postcode. Check it and try again.");
-      return;
-    }
-    setGeoNote(`Found: ${hit.label}`);
-    setBusiness((b) => ({
-      ...b,
-      latitude: String(hit.latitude),
-      longitude: String(hit.longitude),
-    }));
-    void checkExisting(hit.latitude, hit.longitude);
-  }
 
   /**
    * Is this already listed? Advisory and never blocking — a genuine second branch
@@ -128,9 +115,16 @@ export function RegisterBusinessPage() {
     }
     const latitude = Number(business.latitude);
     const longitude = Number(business.longitude);
-    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    if (
+      business.latitude === "" ||
+      business.longitude === "" ||
+      !Number.isFinite(latitude) ||
+      !Number.isFinite(longitude)
+    ) {
       setFormError(
-        "We need to place your business on the map. Enter the postcode and tab out of the field.",
+        byPostcode
+          ? "We need to place your business on the map. Enter the postcode and tab out of the field."
+          : "We need to place your business on the map. Choose your area, use your current location, or tap the map.",
       );
       return;
     }
@@ -151,7 +145,10 @@ export function RegisterBusinessPage() {
             line1: business.line1.trim(),
             line2: business.line2.trim() || undefined,
             city: business.city.trim(),
-            postcode: business.postcode.trim(),
+            ...(byPostcode
+              ? { postcode: business.postcode.trim() }
+              : { region: business.region || undefined }),
+            country: market.code,
           },
           latitude,
           longitude,
@@ -291,40 +288,28 @@ export function RegisterBusinessPage() {
 
           <section className="ra-tile space-y-1">
             <h2 className="mb-2 text-sm font-semibold text-foreground">Where you are</h2>
-            <Field
-              label="Street address"
-              value={business.line1}
-              onChange={set("line1")}
-              error={errors["address.line1"]}
+            <AddressFields
+              voice="you"
+              value={{
+                line1: business.line1,
+                line2: business.line2,
+                city: business.city,
+                region: business.region,
+                postcode: business.postcode,
+                country: market.code,
+                latitude: business.latitude,
+                longitude: business.longitude,
+              }}
+              onChange={(patch) => setBusiness((b) => ({ ...b, ...patch }))}
+              errors={errors}
+              onLocated={(lat, lng) => void checkExisting(lat, lng)}
             />
-            <Field label="Address line 2" value={business.line2} onChange={set("line2")} />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field
-                label="Town or city"
-                value={business.city}
-                onChange={set("city")}
-                error={errors["address.city"]}
-              />
-              <Field
-                label="Postcode"
-                value={business.postcode}
-                onChange={set("postcode")}
-                onBlur={resolvePostcode}
-                error={errors["address.postcode"]}
-                hint="Tab out to place you on the map."
-              />
-            </div>
-            {geoNote && (
-              <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
-                {geoNote}
-              </p>
-            )}
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 pt-2 sm:grid-cols-2">
               {/* The premises, not the person — see ApplicantFieldset. */}
-              <Field
+              <PhoneField
                 label="Business phone"
-                type="tel"
+                country={market.code}
+                autoComplete="off"
                 value={business.phone}
                 onChange={set("phone")}
                 error={errors.phone}

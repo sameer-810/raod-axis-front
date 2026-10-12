@@ -36,7 +36,7 @@ export function AdminBusinessFormPage() {
               title="WhatsApp numbers"
               description="Changes here are recorded in the audit log and are visible to the owner."
             >
-              <WhatsAppNumbers businessId={id} asAdmin />
+              <WhatsAppNumbers businessId={id} asAdmin country={existing.address.country} />
             </SectionCard>
             <OwnershipCard business={existing} />
           </>

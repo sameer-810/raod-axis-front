@@ -25,7 +25,13 @@
  * sweeper recomputes a rating from surviving reviews — so one review on a demo
  * listing would wipe its rating the moment it was cleaned up.
  *
+ * The same fixtures also feed the **user guide**, which needs a handful of
+ * screens the presentation does not: a step half-way through sign-in, the
+ * confirmation after a request, a dialog that is open. They are taken last, so
+ * nothing they create shows up in the screens above them.
+ *
  *   node scripts/console-shots.mjs        → ../docs/console/*.png
+ *                                           ../docs/guide/*.png
  */
 import fs from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -41,6 +47,7 @@ const PNG = Buffer.from(
   "base64",
 );
 fs.mkdirSync(OUT, { recursive: true });
+fs.mkdirSync(`${OUT}/../guide`, { recursive: true });
 
 async function login(email, password) {
   const ctx = await pwRequest.newContext();
@@ -300,18 +307,27 @@ const owner = await login(ownerEmail, "OwnerSecret123");
 // ── Shoot ───────────────────────────────────────────────────────────────────
 const browser = await chromium.launch();
 
-async function shoot(session, path, out, { w = 1440, h = 900, theme = "light", after } = {}) {
+/** `session` may be null: a visitor who has not signed in. */
+async function shoot(
+  session,
+  path,
+  out,
+  { w = 1440, h = 900, theme = "light", before, after } = {},
+) {
   const page = await browser.newPage({ viewport: { width: w, height: h } });
+  if (before) await before(page);
   await page.goto(WEB + "/");
   await page.evaluate((t) => localStorage.setItem("roadaxis_theme", t), theme);
-  await page.evaluate(
-    (s) =>
-      localStorage.setItem(
-        "roadaxis_auth",
-        JSON.stringify({ accessToken: s.accessToken, user: s.user }),
-      ),
-    session,
-  );
+  if (session) {
+    await page.evaluate(
+      (s) =>
+        localStorage.setItem(
+          "roadaxis_auth",
+          JSON.stringify({ accessToken: s.accessToken, user: s.user }),
+        ),
+      session,
+    );
+  }
   await page.goto(WEB + path, { waitUntil: "networkidle" });
   if (after) await after(page);
   await page.waitForTimeout(900);
@@ -380,6 +396,92 @@ await shoot(owner, "/portal/whatsapp", "portal-whatsapp.png");
 await shoot(owner, "/portal/performance", "portal-performance.png");
 await shoot(owner, "/portal/listing", "portal-listing.png");
 await shoot(owner, "/portal/listing", "portal-listing-phone.png", { w: 390, h: 844 });
+
+// ── The user guide ──────────────────────────────────────────────────────────
+/** A step that fails is reported and skipped, so one changed label costs one picture. */
+async function guide(session, path, out, options) {
+  try {
+    await shoot(session, path, `../guide/${out}`, options);
+  } catch (e) {
+    console.log(`guide shot ${out} skipped:`, e.message.split("\n")[0]);
+  }
+}
+
+await guide(admin, "/admin/claims", "admin-claim-reject.png", {
+  after: async (p) => {
+    await p.getByRole("button", { name: "Reject", exact: true }).click();
+    await p.waitForTimeout(350);
+  },
+});
+await guide(admin, "/admin/users", "admin-user-menu.png", {
+  after: async (p) => {
+    await p.getByRole("button", { name: /actions for tom ellis/i }).click();
+    await p.waitForTimeout(350);
+  },
+});
+await guide(admin, "/account", "staff-account.png", {
+  after: async (p) => {
+    await p.getByText("Change password").first().scrollIntoViewIfNeeded();
+  },
+});
+if (sessions["tom.ellis"]) {
+  await guide(sessions["tom.ellis"], "/my-requests", "driver-requests.png");
+  await guide(sessions["tom.ellis"], "/my-garages", "driver-garages.png");
+}
+if (sessions["raj.mehta"]) {
+  await guide(sessions["raj.mehta"], `/business/${business.slug}`, "review-form.png", {
+    after: async (p) => {
+      await p.getByText("Rate this business").scrollIntoViewIfNeeded();
+      await p.mouse.wheel(0, 260);
+    },
+  });
+  await guide(sessions["raj.mehta"], `/business/${business.slug}/request`, "request-sent.png", {
+    after: async (p) => {
+      await p.getByLabel("What do you need?").selectOption({ label: "Diagnostics" });
+      await p.getByLabel("Preferred date").fill(date);
+      await p.getByLabel("Preferred time").fill("10:00");
+      await p.getByRole("button", { name: "Send request" }).click();
+      await p.getByText("Request sent").first().waitFor();
+    },
+  });
+}
+// The second step of driver sign-in, as a driver sees it on a server with email
+// connected. The local server has none and hands the code back instead, so the
+// reply is corrected on both counts before the page reads it. Nobody is signed
+// in: the code is never used.
+await guide(null, "/sign-in", "signin-code.png", {
+  before: async (p) => {
+    await p.route("**/auth/otp/request", async (route) => {
+      const response = await route.fetch();
+      const json = await response.json();
+      if (json.data) {
+        delete json.data.devCodes;
+        json.data.delivery = { ...json.data.delivery, email: true };
+      }
+      await route.fulfill({ response, json });
+    });
+  },
+  after: async (p) => {
+    await p.getByLabel("Email address").fill("sam.okafor@example.com");
+    await p.getByLabel("WhatsApp number").fill("07700 900123");
+    await p.getByRole("button", { name: "Send me a code" }).click();
+    await p.getByLabel("Code from your email").waitFor();
+  },
+});
+// The page an owner lands on from their invitation. With no email service the
+// console is handed the link instead of the owner, which is how it gets here.
+try {
+  const sent = await adminCtx.post(`${API}/auth/users/${accounts[0]}/password-link`);
+  const link = (await sent.json()).data?.notification?.inviteUrl;
+  if (link) {
+    const { pathname, search } = new URL(link);
+    await guide(null, pathname + search, "accept-invite.png");
+  } else {
+    console.log("guide shot accept-invite.png skipped: the link was emailed");
+  }
+} catch (e) {
+  console.log("guide shot accept-invite.png skipped:", e.message);
+}
 
 await browser.close();
 

@@ -3,13 +3,20 @@
  * @description Turning a typed place into coordinates — the other half of
  * FR-DIS-05, so someone who refuses location access can still search.
  *
- * **postcodes.io** rather than a commercial geocoder: free, no key, no rate limit
- * worth worrying about at this scale, and UK-only, which is exactly the market
- * (D-001). A paid geocoder is the right answer when multi-country arrives.
+ * How a place is found depends on the country, because countries do not agree
+ * on what a place is:
  *
- * It handles both a full postcode and a place name, which between them cover
- * nearly everything a driver types.
+ *  - **The UK** has postcodes, and **postcodes.io** resolves them: free, no key,
+ *    no rate limit worth worrying about at this scale. It handles both a full
+ *    postcode and a place name, which between them cover nearly everything a
+ *    driver types.
+ *  - **The UAE** has no postcodes. The server sends a list of its cities and
+ *    districts with each one's centre, and a typed name is matched against it
+ *    here — no request, no key, and nothing to be down.
+ *
+ * A paid geocoder is the right answer when either list stops being enough.
  */
+import type { Market } from "@/modules/market/types";
 
 export interface GeocodeResult {
   latitude: number;
@@ -76,4 +83,59 @@ export async function geocodeUk(query: string): Promise<GeocodeResult | null> {
   } catch {
     return null;
   }
+}
+
+const fold = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+/**
+ * A place by name, from the country's own list.
+ *
+ * Exact first, then "Al Quoz, Dubai" written out in full, then a name that
+ * starts with what was typed, then one that merely contains it — so "quoz"
+ * finds Al Quoz and "marina" finds Dubai Marina, but neither wins over a place
+ * actually called that.
+ */
+export function findPlace(market: Market, query: string): GeocodeResult | null {
+  const wanted = fold(query);
+  if (!wanted) return null;
+  const named = market.places.map((p) => ({
+    p,
+    name: fold(p.name),
+    full: fold(`${p.name} ${p.region}`),
+  }));
+  const hit =
+    named.find((x) => x.name === wanted) ??
+    named.find((x) => x.full === wanted) ??
+    named.find((x) => x.name.startsWith(wanted)) ??
+    named.find((x) => x.full.includes(wanted));
+  if (!hit) return null;
+  return {
+    latitude: hit.p.latitude,
+    longitude: hit.p.longitude,
+    label: hit.p.name === hit.p.region ? hit.p.name : `${hit.p.name}, ${hit.p.region}`,
+  };
+}
+
+/**
+ * Turn what a visitor typed into somewhere to search around, by the rules of
+ * the country they are browsing.
+ *
+ * @returns coordinates, or null when the place could not be found. Never throws.
+ */
+export async function geocodePlace(query: string, market: Market): Promise<GeocodeResult | null> {
+  if (market.address.postcode === "required") return geocodeUk(query);
+  return findPlace(market, query);
+}
+
+/**
+ * Is this position plainly inside the country? A box, not a border: it exists
+ * so that a location remembered in Manchester is never used to search Dubai.
+ */
+export function isInside(market: Market, latitude: number, longitude: number): boolean {
+  const b = market.bounds;
+  return latitude >= b.south && latitude <= b.north && longitude >= b.west && longitude <= b.east;
 }

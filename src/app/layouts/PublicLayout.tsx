@@ -6,6 +6,7 @@ import { useTheme } from "@/app/theme";
 import { useAppSelector } from "@/app/hooks";
 import { Logo } from "@/shared/components/Logo";
 import { PageLoader } from "@/shared/components/PageLoader";
+import { CountrySwitch } from "./CountrySwitch";
 
 /**
  * The consumer shell.
@@ -48,6 +49,7 @@ export function PublicLayout() {
           </nav>
 
           <div className="ms-auto flex items-center gap-1 md:ms-0">
+            <CountrySwitch />
             <button
               type="button"
               onClick={toggleTheme}

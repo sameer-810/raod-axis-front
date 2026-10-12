@@ -44,7 +44,10 @@ export interface BusinessCard extends Trust {
   slug: string;
   name: string;
   categories: Category[];
-  address: { city: string | null; postcode: string | null };
+  address: { city: string | null; region?: string | null; postcode: string | null };
+  /** The country the listing is in, and the currency its prices are in. */
+  country?: string;
+  currency?: string;
   primaryPhotoUrl: string | null;
   /** Null whenever the search had no location to measure from. Never 0. */
   distanceMetres: number | null;
@@ -73,9 +76,14 @@ export interface Business extends Trust {
     line1: string | null;
     line2: string | null;
     city: string | null;
+    /** The emirate, in the UAE. Unused in the UK. */
+    region?: string | null;
     postcode: string | null;
     country: string;
   };
+  /** The country the listing is in, and the currency its prices are in. */
+  country?: string;
+  currency?: string;
   coordinates: Coordinates | null;
   /** Built server-side, so the lat/lng ordering is decided in exactly one place. */
   directionsUrl: string | null;

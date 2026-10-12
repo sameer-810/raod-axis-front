@@ -26,7 +26,7 @@ export function TermsPage() {
   return (
     <LegalDocument
       title="Terms of Use"
-      updated="7 October 2026"
+      updated="12 October 2026"
       other={{ to: "/privacy", label: "Privacy Policy" }}
       summary={
         <p>
@@ -168,8 +168,11 @@ export function TermsPage() {
                 they last did, and continuing to use RoadAxis after a change means you accept it.
               </p>
               <p>
-                These terms are governed by the law of England and Wales. Questions about them can
-                be sent to{" "}
+                These terms are governed by the law of England and Wales.
+                {(policy.jurisdictions?.length ?? 0) > 1
+                  ? " Whichever country you use RoadAxis in, nothing in them takes away a protection that country's law gives you and does not allow to be signed away."
+                  : ""}{" "}
+                Questions about them can be sent to{" "}
                 <a href={`mailto:${policy.contactEmail}`} className={link}>
                   {policy.contactEmail}
                 </a>

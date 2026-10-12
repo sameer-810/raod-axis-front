@@ -188,7 +188,8 @@ export function CommandPalette() {
       id: `biz:${b.id}`,
       group: "Businesses",
       label: b.name,
-      hint: [b.address.city, b.address.postcode].filter(Boolean).join(" · "),
+      // A postcode where the country has them, the emirate where it does not.
+      hint: [b.address.city, b.address.postcode ?? b.address.region].filter(Boolean).join(" · "),
       icon: Store,
       run: () => navigate(`/admin/businesses/${b.id}`),
     }));

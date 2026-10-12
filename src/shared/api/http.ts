@@ -1,6 +1,7 @@
 import axios from "axios";
 import { store } from "@/app/store";
 import { clearAuth } from "@/modules/auth/authSlice";
+import { marketStore } from "@/shared/lib/marketStore";
 
 export const http = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5005/api",
@@ -12,6 +13,17 @@ http.interceptors.request.use((config) => {
   if (token) {
     config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;
+  }
+  /**
+   * Which country this request is for. The server searches one country's
+   * directory at a time and reads a phone number typed without a country code
+   * as belonging to this one. Left off until a country has been settled, and
+   * the server then answers for its default.
+   */
+  const market = marketStore.get();
+  if (market) {
+    config.headers = config.headers ?? {};
+    config.headers["X-Market"] = market;
   }
   return config;
 });

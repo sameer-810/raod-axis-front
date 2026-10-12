@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Mail, MessageCircle } from "lucide-react";
 import { getApiErrorMessage } from "@/shared/api/http";
 import { Field } from "@/shared/components/Field";
+import { PhoneField } from "@/shared/components/PhoneField";
 import { LegalNote } from "@/shared/components/LegalNote";
 import { useSeo } from "@/shared/hooks/useSeo";
 import { AuthShell } from "../components/AuthShell";
@@ -140,11 +141,8 @@ export function SignInPage() {
               error={identityForm.formState.errors.email?.message}
               {...identityForm.register("email")}
             />
-            <Field
+            <PhoneField
               label="WhatsApp number"
-              type="tel"
-              autoComplete="tel"
-              placeholder="07700 900123"
               hint="Businesses reply to you on this number, so it has to be right."
               error={identityForm.formState.errors.phone?.message}
               {...identityForm.register("phone")}

@@ -207,7 +207,7 @@ function SignInPrompt({ signedIn, businessName }: { signedIn: boolean; businessN
   return (
     <div className="ra-tile mt-4 flex flex-wrap items-center justify-between gap-3">
       <p className="text-sm text-muted-foreground">
-        Sign in to rate {businessName}. It takes a code sent to your phone.
+        Sign in to rate {businessName}. It takes a one-time code and no password.
       </p>
       <Link
         // The return journey travels in the URL, the same way every other

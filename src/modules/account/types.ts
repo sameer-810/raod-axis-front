@@ -6,6 +6,18 @@ export interface PrivacyPolicy {
   address: string | null;
   icoRegistration: string | null;
   contactEmail: string;
+  /**
+   * The law that protects the reader, for each country served. Which one
+   * applies depends on where they are, so the page is told all of them.
+   */
+  jurisdictions?: Array<{
+    country: string;
+    name: string;
+    law: string;
+    lawShort: string;
+    regulator: string;
+    regulatorUrl: string | null;
+  }>;
   signIn: "email" | "email+whatsapp";
   retention: {
     signInCodeMinutes: number;

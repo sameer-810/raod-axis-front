@@ -5,6 +5,7 @@ import { toast } from "@/shared/lib/toast";
 import { getApiErrorMessage } from "@/shared/api/http";
 import { Badge } from "@/shared/components/Badge";
 import { Field } from "@/shared/components/Field";
+import { PhoneField } from "@/shared/components/PhoneField";
 import { Button } from "@/shared/components/Button";
 import { Switch } from "@/shared/components/Switch";
 import { RowMenu } from "@/shared/components/Menu";
@@ -32,9 +33,16 @@ const MAX_NUMBERS = 2;
 export function WhatsAppNumbers({
   businessId,
   asAdmin = false,
+  country,
 }: {
   businessId: string;
   asAdmin?: boolean;
+  /**
+   * The country the business is in. A number typed without a country code is
+   * read as belonging here — on the server too, whatever side of the site the
+   * person adding it is on.
+   */
+  country?: string | null;
 }) {
   const { data: numbers = [], isLoading } = useWhatsAppNumbers(businessId);
   const add = useAddNumber(businessId);
@@ -251,12 +259,12 @@ export function WhatsAppNumbers({
               hint="Customers see this, so it should tell them which number to use."
               data-autofocus
             />
-            <Field
+            <PhoneField
               label="WhatsApp number"
-              type="tel"
+              country={country}
+              autoComplete="off"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="07700 900123"
               error={formError ?? undefined}
             />
             <div className="flex gap-2 pt-1">

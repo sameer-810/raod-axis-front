@@ -12,7 +12,8 @@ import {
   MapPin,
 } from "lucide-react";
 import { useGeolocation } from "@/shared/hooks/useGeolocation";
-import { geocodeUk } from "@/shared/lib/geocode";
+import { geocodePlace, isInside } from "@/shared/lib/geocode";
+import { useMarket } from "@/app/market";
 import { useSeo } from "@/shared/hooks/useSeo";
 import { CategoryIcon } from "@/shared/components/CategoryIcon";
 import { useCategories, useFacets } from "@/modules/business/hooks/useBusinesses";
@@ -47,11 +48,23 @@ export function HomePage() {
   const [place, setPlace] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const { market } = useMarket();
+  // What a driver types to say where they are: a postcode where there are
+  // postcodes, a city or district where there are not.
+  const placeLabel =
+    market.address.postcode === "required" ? "Town or postcode" : market.address.cityLabel;
+  /** The device's own position, but only when it is in the country being browsed. */
+  const here =
+    geo.status === "granted" &&
+    geo.latitude &&
+    geo.longitude &&
+    isInside(market, geo.latitude, geo.longitude)
+      ? { latitude: geo.latitude, longitude: geo.longitude }
+      : null;
 
   useSeo({
     title: "Find trusted automotive services near you",
-    description:
-      "RoadAxis lists garages, tyre centres, mobile fitters and recovery services across the UK. See who is open now, how far away they are, and request a booking on WhatsApp.",
+    description: `RoadAxis lists garages, tyre centres, mobile fitters and recovery services across ${market.shortName}. See who is open now, how far away they are, and request a booking on WhatsApp.`,
   });
 
   const countFor = (slug: string) => facets?.find((f) => f.slug === slug)?.count;
@@ -65,7 +78,7 @@ export function HomePage() {
     if (query.trim()) params.set("q", query.trim());
 
     if (place.trim()) {
-      const hit = await geocodeUk(place);
+      const hit = await geocodePlace(place, market);
       if (!hit) {
         // Losing the radius is a smaller failure than losing the search, so the
         // journey continues without it rather than stopping here.
@@ -74,9 +87,9 @@ export function HomePage() {
         params.set("lat", String(hit.latitude));
         params.set("lng", String(hit.longitude));
       }
-    } else if (geo.status === "granted" && geo.latitude && geo.longitude) {
-      params.set("lat", String(geo.latitude));
-      params.set("lng", String(geo.longitude));
+    } else if (here) {
+      params.set("lat", String(here.latitude));
+      params.set("lng", String(here.longitude));
     }
 
     setBusy(false);
@@ -84,8 +97,16 @@ export function HomePage() {
   }
 
   function nearMe() {
-    if (geo.status === "granted" && geo.latitude && geo.longitude) {
-      navigate(`/search?lat=${geo.latitude}&lng=${geo.longitude}`);
+    if (here) {
+      navigate(`/search?lat=${here.latitude}&lng=${here.longitude}`);
+      return;
+    }
+    if (geo.status === "granted") {
+      // The device answered, and it is somewhere else. Searching Dubai from a
+      // position in Manchester returns nothing and explains nothing.
+      setError(
+        `Your device doesn't seem to be in ${market.shortName}. Type a ${placeLabel.toLowerCase()} instead.`,
+      );
       return;
     }
     // Asked for on a tap, never on page load. A permission prompt before someone
@@ -118,7 +139,7 @@ export function HomePage() {
           <div className="max-w-2xl">
             <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur-sm">
               <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
-              Independent garages across the UK
+              Independent garages across {market.shortName}
             </p>
             <h1 className="text-[34px] font-bold leading-[1.02] text-white md:text-[3.6rem]">
               Find a garage
@@ -160,10 +181,18 @@ export function HomePage() {
                 <input
                   value={place}
                   onChange={(e) => setPlace(e.target.value)}
-                  placeholder="Town or postcode"
+                  placeholder={placeLabel}
                   aria-label="Where?"
+                  list={market.places.length ? "home-places" : undefined}
                   className="ra-input h-12 w-full border-transparent bg-transparent ps-10 pe-3"
                 />
+                {market.places.length > 0 && (
+                  <datalist id="home-places">
+                    {market.places.map((p) => (
+                      <option key={`${p.region}-${p.name}`} value={p.name} />
+                    ))}
+                  </datalist>
+                )}
               </div>
 
               <button
@@ -193,7 +222,9 @@ export function HomePage() {
               {geo.status === "prompting" ? "Finding you…" : "Use my current location"}
             </button>
             {geo.status === "denied" && (
-              <p className="text-sm text-white/70">No problem — type a town or postcode above.</p>
+              <p className="text-sm text-white/70">
+                No problem — type a {placeLabel.toLowerCase()} above.
+              </p>
             )}
           </div>
 

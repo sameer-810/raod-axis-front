@@ -1,18 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { AlertTriangle, MapPin, ImagePlus, X, Plus, Trash2, Check } from "lucide-react";
+import { AlertTriangle, ImagePlus, X, Plus, Trash2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/shared/lib/toast";
 import { getApiErrorMessage, getApiFieldErrors } from "@/shared/api/http";
 import { Field } from "@/shared/components/Field";
+import { PhoneField } from "@/shared/components/PhoneField";
 import { Button, ButtonLink } from "@/shared/components/Button";
 import { PageHeader } from "@/shared/components/PageHeader";
 import { SectionCard } from "@/shared/components/SectionCard";
-import { geocodeUk } from "@/shared/lib/geocode";
+import { currencySymbol } from "@/shared/lib/format";
+import { useMarket } from "@/app/market";
 import { useCategories } from "@/modules/business/hooks/useBusinesses";
 import { adminBusinessApi } from "@/modules/admin/api/adminApi";
 import { useCreateBusiness, useUpdateBusiness } from "@/modules/admin/hooks/useAdmin";
 import { mediaApi, type Media } from "../api/mediaApi";
+import { AddressFields } from "./AddressFields";
 import type { Business } from "../types";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -90,13 +93,26 @@ export function BusinessForm({
     line1: "",
     line2: "",
     city: "",
+    region: "",
     postcode: "",
+    // Empty until chosen: a new listing starts in the country being browsed.
+    country: "",
     phone: "",
     email: "",
     website: "",
     latitude: "",
     longitude: "",
   });
+  /**
+   * The country this listing is in. An existing listing's is fixed; a new one
+   * starts in the country the administrator is browsing and can be changed.
+   * Everything below that differs by country — the address fields, the
+   * currency mark on a price, how the phone number is read — follows it.
+   */
+  const { market: browsing, marketFor } = useMarket();
+  const market = marketFor(form.country || browsing.code);
+  const byPostcode = market.address.postcode === "required";
+  const money = currencySymbol(market.currency);
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [customServices, setCustomServices] = useState("");
   const [services, setServices] = useState<
@@ -106,7 +122,6 @@ export function BusinessForm({
   const [hours, setHours] = useState(defaultHours());
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
-  const [geoNote, setGeoNote] = useState<string | null>(null);
   const [uploading, setUploading] = useState(0);
   const [duplicates, setDuplicates] = useState<
     Array<{ id: string; name: string; city: string | null }>
@@ -122,7 +137,9 @@ export function BusinessForm({
       line1: initial.address.line1 ?? "",
       line2: initial.address.line2 ?? "",
       city: initial.address.city ?? "",
+      region: initial.address.region ?? "",
       postcode: initial.address.postcode ?? "",
+      country: initial.address.country ?? "",
       phone: initial.phone ?? "",
       email: initial.email ?? "",
       website: initial.website ?? "",
@@ -177,24 +194,6 @@ export function BusinessForm({
     (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setForm((f) => ({ ...f, [key]: e.target.value }));
 
-  /** Postcode → coordinates, on blur. Nobody knows their own latitude. */
-  async function resolvePostcode() {
-    if (!form.postcode.trim()) return;
-    const hit = await geocodeUk(form.postcode);
-    if (!hit) {
-      setGeoNote("Couldn't place that postcode. Check it, or enter coordinates below.");
-      return;
-    }
-    setGeoNote(`Located: ${hit.label}`);
-    setForm((f) => ({
-      ...f,
-      latitude: String(hit.latitude),
-      longitude: String(hit.longitude),
-      city: f.city || hit.label.split(",")[1]?.trim() || f.city,
-    }));
-    void checkDuplicates(hit.latitude, hit.longitude);
-  }
-
   /** Advisory, admin, create only. */
   async function checkDuplicates(lat: number, lng: number) {
     if (owner || isEdit || !form.name.trim()) return;
@@ -243,7 +242,9 @@ export function BusinessForm({
       !Number.isFinite(longitude)
     ) {
       setFormError(
-        "This listing needs a location — without one it can't appear in any distance search. Enter the postcode and tab out of the field.",
+        byPostcode
+          ? "This listing needs a location — without one it can't appear in any distance search. Enter the postcode and tab out of the field."
+          : "This listing needs a location — without one it can't appear in any distance search. Choose the area, or tap the map where the business is.",
       );
       return;
     }
@@ -268,7 +269,10 @@ export function BusinessForm({
         line1: form.line1.trim(),
         line2: form.line2.trim() || undefined,
         city: form.city.trim(),
-        postcode: form.postcode.trim(),
+        // Each country's own half of an address, and never the other's.
+        ...(byPostcode ? { postcode: form.postcode.trim() } : { region: form.region || undefined }),
+        // Always said, so the server never has to infer it from the page.
+        country: market.code,
       },
       latitude,
       longitude,
@@ -537,7 +541,7 @@ export function BusinessForm({
                         className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
                         aria-hidden="true"
                       >
-                        £
+                        {money}
                       </span>
                       <input
                         value={s.priceFrom}
@@ -549,7 +553,11 @@ export function BusinessForm({
                         inputMode="decimal"
                         aria-label={`Service ${i + 1} price from`}
                         placeholder="from"
-                        className="ra-input h-11 w-full pe-2 ps-7 font-mono"
+                        className={cn(
+                          "ra-input h-11 w-full pe-2 font-mono",
+                          // "£" is one character wide; "AED" is three.
+                          money.length > 1 ? "ps-12" : "ps-7",
+                        )}
                       />
                     </div>
                     <Button
@@ -580,54 +588,25 @@ export function BusinessForm({
 
           {/* ── Where ────────────────────────────────────────────────────── */}
           <SectionCard id="where" title="Where" bodyClassName="space-y-1 p-4">
-            <Field
-              label="Street address"
-              value={form.line1}
-              onChange={set("line1")}
-              error={errors["address.line1"]}
+            <AddressFields
+              voice="it"
+              value={{
+                line1: form.line1,
+                line2: form.line2,
+                city: form.city,
+                region: form.region,
+                postcode: form.postcode,
+                country: market.code,
+                latitude: form.latitude,
+                longitude: form.longitude,
+              }}
+              onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
+              errors={errors}
+              // A garage does not move between countries. Its currency, its
+              // clock and how its phone number is read would all move with it.
+              countryLocked={isEdit}
+              onLocated={(lat, lng) => void checkDuplicates(lat, lng)}
             />
-            <Field label="Address line 2" value={form.line2} onChange={set("line2")} />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field
-                label="Town or city"
-                value={form.city}
-                onChange={set("city")}
-                error={errors["address.city"]}
-              />
-              <Field
-                label="Postcode"
-                value={form.postcode}
-                onChange={set("postcode")}
-                onBlur={resolvePostcode}
-                error={errors["address.postcode"]}
-                hint="Tab out to place it on the map."
-              />
-            </div>
-            {geoNote && (
-              <p className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
-                <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
-                {geoNote}
-              </p>
-            )}
-            <details className="pt-1">
-              <summary className="ra-control inline-flex cursor-pointer items-center text-[13px] text-muted-foreground hover:text-foreground">
-                Map coordinates
-              </summary>
-              <div className="mt-2 grid gap-3 sm:grid-cols-2">
-                <Field
-                  label="Latitude"
-                  value={form.latitude}
-                  onChange={set("latitude")}
-                  className="font-mono"
-                />
-                <Field
-                  label="Longitude"
-                  value={form.longitude}
-                  onChange={set("longitude")}
-                  className="font-mono"
-                />
-              </div>
-            </details>
             {duplicates.length > 0 && (
               <div className="rounded-lg border border-warning/30 bg-warning/10 p-3">
                 <p className="flex items-center gap-1.5 text-sm font-medium text-warning-text">
@@ -652,12 +631,12 @@ export function BusinessForm({
           {/* ── Contact ──────────────────────────────────────────────────── */}
           <SectionCard id="contact" title="Contact" bodyClassName="space-y-1 p-4">
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field
+              <PhoneField
                 label="Phone"
+                country={market.code}
                 value={form.phone}
                 onChange={set("phone")}
                 error={errors.phone}
-                placeholder="0161 200 0101"
                 hint="Shown on your page with a Call button."
               />
               <Field

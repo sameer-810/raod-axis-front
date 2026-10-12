@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   Search,
@@ -12,7 +12,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useGeolocation } from "@/shared/hooks/useGeolocation";
-import { geocodeUk } from "@/shared/lib/geocode";
+import { geocodePlace, isInside } from "@/shared/lib/geocode";
+import { useMarket } from "@/app/market";
 import { formatDistance } from "@/shared/lib/format";
 import { useSeo } from "@/shared/hooks/useSeo";
 import { Sheet } from "@/shared/components/Sheet";
@@ -72,6 +73,13 @@ export function SearchPage() {
   const [placeError, setPlaceError] = useState<string | null>(null);
   const [placeLabel, setPlaceLabel] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
+  const { market, defaultCode, ready } = useMarket();
+  // What a driver types to say where they are: a postcode where there are
+  // postcodes, a city or district where there are not.
+  const placeName =
+    market.address.postcode === "required" ? "Town or postcode" : market.address.cityLabel;
+  /** Set when the driver asked for their own position, so a wrong country can be explained. */
+  const askedForLocation = useRef(false);
 
   const hasLocation = typeof filters.lat === "number" && typeof filters.lng === "number";
   const { data, isLoading, isFetching, error } = useBusinessSearch(filters);
@@ -80,22 +88,47 @@ export function SearchPage() {
 
   useSeo({
     title: filters.search ? `${filters.search} — search` : "Find a garage near you",
-    description:
-      "Search garages, tyre centres, mobile fitters and recovery services across the UK. See who is open now, how far away they are, and request a booking.",
+    description: `Search garages, tyre centres, mobile fitters and recovery services across ${market.shortName}. See who is open now, how far away they are, and request a booking.`,
   });
 
-  // A remembered or freshly granted position flows into the URL, so the
-  // resulting search is still a link someone can share.
+  /**
+   * The country, in the address — so a link to a search of the UAE opens a
+   * search of the UAE. Only when it is not the default, so every address that
+   * existed before there was a second country is still the address it was.
+   */
   useEffect(() => {
-    if (geo.status === "granted" && geo.latitude && geo.longitude && !hasLocation) {
+    if (!ready) return;
+    const url = new URLSearchParams(window.location.search);
+    const wanted = market.code === defaultCode ? null : market.code;
+    if ((url.get("country") ?? null) === wanted) return;
+    if (wanted) url.set("country", wanted);
+    else url.delete("country");
+    setParams(url, { replace: true });
+    // `setParams` is a new function on every navigation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, market.code, defaultCode]);
+
+  // A remembered or freshly granted position flows into the URL, so the
+  // resulting search is still a link someone can share. Only when the device
+  // is in the country being searched: a position remembered in Manchester is
+  // not somewhere to look for garages in Dubai.
+  useEffect(() => {
+    if (geo.status !== "granted" || !geo.latitude || !geo.longitude || hasLocation) return;
+    if (isInside(market, geo.latitude, geo.longitude)) {
       update({ lat: geo.latitude, lng: geo.longitude }, { replace: true });
       setPlaceLabel("your location");
+    } else if (askedForLocation.current) {
+      setPlaceError(
+        `Your device doesn't seem to be in ${market.shortName}. Type a ${placeName.toLowerCase()} instead.`,
+      );
     }
-  }, [geo.status, geo.latitude, geo.longitude, hasLocation, update]);
+    askedForLocation.current = false;
+  }, [geo.status, geo.latitude, geo.longitude, hasLocation, update, market, placeName]);
 
   async function useMyLocation() {
     setPlaceError(null);
     setLocating(true);
+    askedForLocation.current = true;
     geo.request();
     setLocating(false);
   }
@@ -104,10 +137,14 @@ export function SearchPage() {
     e.preventDefault();
     if (!placeInput.trim()) return;
     setPlaceError(null);
-    const hit = await geocodeUk(placeInput);
+    const hit = await geocodePlace(placeInput, market);
     if (!hit) {
       // Losing the radius filter is a far smaller failure than losing the site.
-      setPlaceError("We couldn't find that place. Try a postcode, or search by name below.");
+      setPlaceError(
+        market.address.postcode === "required"
+          ? "We couldn't find that place. Try a postcode, or search by name below."
+          : "We couldn't find that place. Try a city or district, or search by name below.",
+      );
       return;
     }
     setPlaceLabel(hit.label);
@@ -163,10 +200,18 @@ export function SearchPage() {
                 <input
                   value={placeInput}
                   onChange={(e) => setPlaceInput(e.target.value)}
-                  placeholder="Town or postcode"
-                  aria-label="Town or postcode"
+                  placeholder={placeName}
+                  aria-label={placeName}
+                  list={market.places.length ? "search-places" : undefined}
                   className="ra-input h-11 min-w-0 flex-1 px-3 sm:w-44"
                 />
+                {market.places.length > 0 && (
+                  <datalist id="search-places">
+                    {market.places.map((p) => (
+                      <option key={`${p.region}-${p.name}`} value={p.name} />
+                    ))}
+                  </datalist>
+                )}
                 <button
                   type="button"
                   onClick={useMyLocation}
@@ -234,7 +279,7 @@ export function SearchPage() {
               // Not an error. One of the two normal paths — and saying so keeps
               // the person moving instead of hunting through browser settings.
               <p className="text-sm text-muted-foreground">
-                No problem — type a town or postcode instead.
+                No problem — type a {placeName.toLowerCase()} instead.
               </p>
             )}
           </div>
@@ -294,7 +339,7 @@ export function SearchPage() {
                     ? `No businesses within ${formatDistance(filters.radius)}${
                         activeCount ? " matching your filters" : ""
                       }. Try a wider distance${activeCount ? " or clear a filter" : ""}.`
-                    : "Try a different search term, or add a town or postcode to see what's nearby."
+                    : `Try a different search term, or add a ${placeName.toLowerCase()} to see what's nearby.`
                 }
                 action={
                   <>

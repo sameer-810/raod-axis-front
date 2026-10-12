@@ -142,7 +142,13 @@ export function localBusinessJsonLd(business: {
   name: string;
   slug: string;
   description?: string;
-  address: { line1: string | null; city: string | null; postcode: string | null; country: string };
+  address: {
+    line1: string | null;
+    city: string | null;
+    region?: string | null;
+    postcode: string | null;
+    country: string;
+  };
   coordinates: { latitude: number; longitude: number } | null;
   phone: string | null;
   website: string | null;
@@ -166,6 +172,7 @@ export function localBusinessJsonLd(business: {
       "@type": "PostalAddress",
       streetAddress: business.address.line1 ?? undefined,
       addressLocality: business.address.city ?? undefined,
+      addressRegion: business.address.region ?? undefined,
       postalCode: business.address.postcode ?? undefined,
       addressCountry: business.address.country || "GB",
     },

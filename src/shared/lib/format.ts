@@ -102,14 +102,38 @@ export function formatDuration(minutes: number | null | undefined): string {
   return m ? `${h}h ${m}m` : `${h}h`;
 }
 
-/** Pounds. Stage 2 needs this; the MVP uses it only for indicative pricing. */
-export function formatCurrency(amount: number | null | undefined): string {
+/**
+ * Money, in the currency it was priced in.
+ *
+ * The currency is the listing's, never the page's: a service priced by a garage
+ * in Dubai is in dirhams whichever country the reader is browsing. Left out, it
+ * is the build's own default, which is what every caller used before there was
+ * a second country.
+ */
+export function formatCurrency(amount: number | null | undefined, currency?: string): string {
   if (amount === null || amount === undefined || !Number.isFinite(amount)) return "—";
   return new Intl.NumberFormat(LOCALE, {
     style: "currency",
-    currency: import.meta.env.VITE_CURRENCY || "GBP",
+    currency: currency || import.meta.env.VITE_CURRENCY || "GBP",
     maximumFractionDigits: 2,
   }).format(amount);
+}
+
+/** The mark that goes in front of a price field: "£", "AED". */
+export function currencySymbol(currency: string): string {
+  try {
+    return (
+      new Intl.NumberFormat(LOCALE, {
+        style: "currency",
+        currency,
+        currencyDisplay: "narrowSymbol",
+      })
+        .formatToParts(0)
+        .find((part) => part.type === "currency")?.value ?? currency
+    );
+  } catch {
+    return currency;
+  }
 }
 
 /**

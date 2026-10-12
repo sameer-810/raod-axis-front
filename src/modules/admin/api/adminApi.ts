@@ -16,7 +16,15 @@ export interface BusinessPayload {
   categoryIds?: string[];
   customServices?: string[];
   services?: Array<{ name: string; description?: string; priceFrom?: number }>;
-  address: { line1: string; line2?: string; city: string; postcode: string; country?: string };
+  /** A postcode in the UK, an emirate (`region`) in the UAE — never both. */
+  address: {
+    line1: string;
+    line2?: string;
+    city: string;
+    region?: string;
+    postcode?: string;
+    country?: string;
+  };
   latitude: number;
   longitude: number;
   googlePlaceId?: string;

@@ -1,4 +1,5 @@
 import { Field } from "@/shared/components/Field";
+import { PhoneField } from "@/shared/components/PhoneField";
 import type { ApplicantFields as Fields } from "../types";
 
 /**
@@ -47,10 +48,8 @@ export function ApplicantFieldset({
           error={errors.contactEmail}
           hint="Where we send our decision."
         />
-        <Field
+        <PhoneField
           label="Your phone"
-          type="tel"
-          autoComplete="tel"
           value={values.contactPhone}
           onChange={(e) => onChange({ contactPhone: e.target.value })}
           error={errors.contactPhone}

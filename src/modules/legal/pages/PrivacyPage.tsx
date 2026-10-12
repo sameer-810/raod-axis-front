@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useSeo } from "@/shared/hooks/useSeo";
 import { DEFAULT_POLICY, usePrivacyPolicy } from "@/modules/account/hooks/useAccount";
+import { useMarket } from "@/app/market";
 import { LegalDocument, LegalList } from "../components/LegalDocument";
 
 /** "24 months" reads as "2 years"; "18 months" stays as it is. */
@@ -28,6 +29,14 @@ export function PrivacyPage() {
   const policy = data ?? DEFAULT_POLICY;
   const r = policy.retention;
   const bothCodes = policy.signIn === "email+whatsapp";
+  /**
+   * Which country's law, and which regulator, the reader is told about: the
+   * one for the country they are browsing. Every country served is named in
+   * "Who we are"; the complaint route is the reader's own.
+   */
+  const { market } = useMarket();
+  const laws = policy.jurisdictions ?? [];
+  const mine = laws.find((j) => j.country === market.code) ?? laws[0];
 
   useSeo({
     title: "Privacy Policy",
@@ -44,7 +53,7 @@ export function PrivacyPage() {
   return (
     <LegalDocument
       title="Privacy Policy"
-      updated="7 October 2026"
+      updated="12 October 2026"
       other={{ to: "/terms", label: "Terms of Use" }}
       summary={
         <p>
@@ -72,6 +81,16 @@ export function PrivacyPage() {
                 ) : null}
                 .
               </p>
+              {laws.length > 1 && (
+                <p>
+                  RoadAxis is offered in {laws.map((j) => `the ${j.name}`).join(" and ")}.{" "}
+                  {laws
+                    .map((j) => `In the ${j.name} your information is protected by ${j.law}.`)
+                    .join(" ")}{" "}
+                  The same rules apply to everybody: what this page describes is what happens to
+                  your information in either country.
+                </p>
+              )}
               <p>For anything about your data, write to {contact}.</p>
             </>
           ),
@@ -261,16 +280,38 @@ export function PrivacyPage() {
               />
               <p>
                 You can also ask us for any of these by email, and we will answer within one month.
-                If you are unhappy with how we have handled your information you can complain to the
-                Information Commissioner&rsquo;s Office at{" "}
-                <a
-                  href="https://ico.org.uk"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={link}
-                >
-                  ico.org.uk
-                </a>
+                If you are unhappy with how we have handled your information you can complain to{" "}
+                {mine ? (
+                  <>
+                    {mine.regulator}
+                    {mine.regulatorUrl ? (
+                      <>
+                        {" "}
+                        at{" "}
+                        <a
+                          href={mine.regulatorUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={link}
+                        >
+                          {mine.regulatorUrl.replace(/^https?:\/\//, "")}
+                        </a>
+                      </>
+                    ) : null}
+                  </>
+                ) : (
+                  <>
+                    the Information Commissioner&rsquo;s Office at{" "}
+                    <a
+                      href="https://ico.org.uk"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={link}
+                    >
+                      ico.org.uk
+                    </a>
+                  </>
+                )}
                 .
               </p>
             </>

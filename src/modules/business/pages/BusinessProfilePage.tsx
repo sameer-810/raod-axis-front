@@ -17,6 +17,7 @@ import { EmptyState } from "@/shared/components/EmptyState";
 import { PageLoader } from "@/shared/components/PageLoader";
 import { formatCurrency } from "@/shared/lib/format";
 import { useSeo, localBusinessJsonLd } from "@/shared/hooks/useSeo";
+import { useMarket } from "@/app/market";
 import { SaveButton } from "@/modules/favourite/components/SaveButton";
 import { ReviewSection } from "@/modules/review/components/ReviewSection";
 import { PhotoGallery } from "../components/PhotoGallery";
@@ -33,6 +34,7 @@ import { useBusiness } from "../hooks/useBusinesses";
  */
 export function BusinessProfilePage() {
   const { slug } = useParams<{ slug: string }>();
+  const { marketFor } = useMarket();
   const { data: business, isLoading, error } = useBusiness(slug);
 
   /**
@@ -42,9 +44,11 @@ export function BusinessProfilePage() {
    * the early returns, so the rules of hooks hold while data is still loading.
    */
   useSeo({
-    title: business ? `${business.name}, ${business.address.city ?? "UK"}` : "Business",
+    title: business
+      ? `${business.name}, ${business.address.city ?? marketFor(business.country).name}`
+      : "Business",
     description: business
-      ? `${business.name} — ${business.categories.map((c) => c.name).join(", ") || "vehicle services"} in ${business.address.city ?? "the UK"}. ${
+      ? `${business.name} — ${business.categories.map((c) => c.name).join(", ") || "vehicle services"} in ${business.address.city ?? marketFor(business.country).shortName}. ${
           business.services.length
             ? `${business.services
                 .slice(0, 4)
@@ -84,6 +88,8 @@ export function BusinessProfilePage() {
     business.address.line1,
     business.address.line2,
     business.address.city,
+    // The emirate, where an address has one and it is not just the city again.
+    business.address.region !== business.address.city ? business.address.region : null,
     business.address.postcode,
   ]
     .filter(Boolean)
@@ -220,7 +226,7 @@ export function BusinessProfilePage() {
                           <p className="shrink-0 text-sm text-muted-foreground">
                             from{" "}
                             <span className="font-mono tabular-nums text-foreground">
-                              {formatCurrency(s.priceFrom)}
+                              {formatCurrency(s.priceFrom, business.currency)}
                             </span>
                           </p>
                         )}

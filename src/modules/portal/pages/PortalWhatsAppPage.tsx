@@ -49,7 +49,7 @@ export function PortalWhatsAppPage() {
                 {business.name}
               </h2>
             )}
-            <WhatsAppNumbers businessId={business.id} />
+            <WhatsAppNumbers businessId={business.id} country={business.address.country} />
           </section>
         ))}
       </div>

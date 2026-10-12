@@ -2,6 +2,7 @@ import { useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { businessApi, categoryApi } from "../api/businessApi";
+import { useMarket } from "@/app/market";
 import type { SearchFilters, SortOption } from "../types";
 
 const DEFAULT_RADIUS = 5000;
@@ -16,17 +17,22 @@ export function useCategories() {
   });
 }
 
+/** Category counts for the country being browsed — keyed on it, so a switch refetches. */
 export function useFacets() {
+  const { market } = useMarket();
   return useQuery({
-    queryKey: ["business-facets"],
+    queryKey: ["business-facets", market.code],
     queryFn: businessApi.facets,
     staleTime: 300_000,
   });
 }
 
 export function useBusinessSearch(filters: Partial<SearchFilters>, enabled = true) {
+  // The server searches the country named in the request's `X-Market` header;
+  // the key carries it so one country's results are never shown as another's.
+  const { market } = useMarket();
   return useQuery({
-    queryKey: ["businesses", filters],
+    queryKey: ["businesses", market.code, filters],
     queryFn: () => businessApi.search(filters),
     enabled,
     // Keeps the previous page on screen while the next loads, instead of
