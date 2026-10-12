@@ -21,16 +21,6 @@ export interface AddressDraft {
   longitude: string;
 }
 
-export const EMPTY_ADDRESS: Omit<AddressDraft, "country"> = {
-  line1: "",
-  line2: "",
-  city: "",
-  region: "",
-  postcode: "",
-  latitude: "",
-  longitude: "",
-};
-
 const selectClass =
   "h-11 w-full rounded-lg border border-input bg-card px-3 text-sm transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring";
 

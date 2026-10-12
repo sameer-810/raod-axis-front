@@ -21,7 +21,6 @@ function Follow({ position, fallback }: { position: Position | null; fallback: P
   useEffect(() => {
     map.setView([target.latitude, target.longitude], zoom);
     // Keyed on the numbers; the objects are new on every render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target.latitude, target.longitude, zoom, map]);
   return null;
 }
