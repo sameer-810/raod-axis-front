@@ -379,6 +379,13 @@ test.describe("Phase 10 · A person's own data", () => {
     await settle(page);
     await expect(page.getByText(/removed by another administrator/i)).toBeVisible();
     await expect(page.getByRole("button", { name: "Delete my account" })).toHaveCount(0);
+    // And is sent back to their own side of the product, not to a portal they
+    // do not have.
+    await expect(page.getByRole("link", { name: /Open the console/ })).toHaveAttribute(
+      "href",
+      "/admin",
+    );
+    await expect(page.getByRole("link", { name: /Open the portal/ })).toHaveCount(0);
   });
 
   test("the account page passes the phone rules", async ({ page }) => {

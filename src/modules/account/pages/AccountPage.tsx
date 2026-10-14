@@ -131,7 +131,15 @@ export function AccountPage() {
                 { to: "/my-requests", label: "My requests", hint: "Every request you've sent" },
                 { to: "/my-garages", label: "My garages", hint: "The places you've saved" },
               ]
-            : [{ to: "/portal", label: "Open the portal", hint: "Your listing and requests" }]
+            : isAdmin
+              ? [
+                  {
+                    to: "/admin",
+                    label: "Open the console",
+                    hint: "Listings, claims and the numbers",
+                  },
+                ]
+              : [{ to: "/portal", label: "Open the portal", hint: "Your listing and requests" }]
           ).map((item) => (
             <li key={item.to}>
               <Link

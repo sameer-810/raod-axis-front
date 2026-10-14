@@ -587,7 +587,9 @@ test.describe("Phase 12 · The console, for a UAE listing", () => {
     // Saved in place. The panel's form once sat inside the listing's own form,
     // and the browser answered its button by submitting the page: a reload and
     // nothing kept — the first thing the client reported from the live site.
-    await expect(page.locator("#whatsapp").getByText("Workshop")).toBeVisible();
+    await expect(
+      page.locator("#whatsapp").getByRole("button", { name: "Actions for Workshop" }),
+    ).toBeVisible();
     expect(page.url()).not.toContain("?");
 
     const admin = await as(fixture.admin!);
