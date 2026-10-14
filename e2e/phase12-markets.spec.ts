@@ -571,6 +571,32 @@ test.describe("Phase 12 · The console, for a UAE listing", () => {
       "050 123 4567",
     );
   });
+
+  test("a number added from the edit page is saved, as the garage's own", async ({ page }) => {
+    await signIn(page, fixture.admin!);
+    await page.goto(`/admin/businesses/${fixture.uae.id}`);
+    await settle(page);
+
+    // Typed the way a Dubai owner says it.
+    const local = `050${Date.now().toString().slice(-7)}`;
+    await page.getByRole("button", { name: "Add a number" }).click();
+    await page.getByLabel("What is this number for?").fill("Workshop");
+    await page.locator("#whatsapp").getByRole("textbox", { name: "WhatsApp number" }).fill(local);
+    await page.getByRole("button", { name: "Add number" }).click();
+
+    // Saved in place. The panel's form once sat inside the listing's own form,
+    // and the browser answered its button by submitting the page: a reload and
+    // nothing kept — the first thing the client reported from the live site.
+    await expect(page.locator("#whatsapp").getByText("Workshop")).toBeVisible();
+    expect(page.url()).not.toContain("?");
+
+    const admin = await as(fixture.admin!);
+    const list = await admin.get(`${API}/businesses/${fixture.uae.id}/whatsapp-numbers`);
+    expect((await list.json()).data.map((n: { phone: string }) => n.phone)).toContain(
+      `+971${local.slice(1)}`,
+    );
+    await admin.dispose();
+  });
 });
 
 // ════════════════════════════════════════════════════════════════════════════
