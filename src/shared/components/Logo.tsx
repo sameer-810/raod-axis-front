@@ -1,11 +1,23 @@
 import { cn } from "@/lib/utils";
+import {
+  MARK_X_TRANSFORM,
+  WORDMARK_LETTERS,
+  WORDMARK_RED,
+  WORDMARK_VIEWBOX,
+  WORDMARK_X,
+} from "./logoPaths";
 
 /**
- * The mark. Two counter-rotating chevrons on an axis — movement along a route,
- * which is what the name says.
+ * The client's logo (15 October 2026): the wordmark ROADAXIS in a heavy
+ * italic, with the X in red. It was supplied as white on a dark ground, and
+ * that is the only colour the mark has — so the letters are drawn in
+ * `currentColor` and take the ink of whatever they sit on: white on the rail
+ * and the auth panel, the foreground colour on the public header in either
+ * theme. The red is the logo's own and does not change with the theme.
  *
- * Drawn rather than imported so it inherits `currentColor` and works on the
- * dark rail, the light header and a favicon without three files that drift.
+ * There is no separate symbol in the client's artwork. Where only a small
+ * square fits — the favicon, the phone topbar — the X stands on its own on
+ * the ink square, which is the one part of the wordmark that reads at 16 px.
  */
 export function Logo({
   className,
@@ -15,35 +27,33 @@ export function Logo({
   className?: string;
   showWordmark?: boolean;
   /**
-   * The rail is dark in **both** themes. `--primary-text` is the orange darkened
-   * until it clears 4.5:1 against a light ground — which measured 3.35:1 on a dark
-   * one. Not a dark-mode switch: the theme variables cannot express "this surface
-   * is dark regardless of the theme", so the caller that knows says so.
+   * The rail is dark in **both** themes, and the theme variables cannot say
+   * "this surface is dark regardless of the theme" — so the caller that knows
+   * says so, and the letters are white rather than the foreground colour.
    */
   onDark?: boolean;
 }) {
+  if (!showWordmark) {
+    return (
+      <span className={cn("inline-flex items-center", className)}>
+        <svg viewBox="0 0 32 32" className="h-7 w-7 shrink-0" role="img" aria-label="RoadAxis">
+          <rect width="32" height="32" rx="7" className="fill-[#0E1621]" />
+          <path fill={WORDMARK_RED} transform={MARK_X_TRANSFORM} d={WORDMARK_X} />
+        </svg>
+      </span>
+    );
+  }
   return (
-    <span className={cn("inline-flex items-center gap-2", className)}>
+    <span className={cn("inline-flex items-center", className)}>
       <svg
-        viewBox="0 0 32 32"
-        className="h-7 w-7 shrink-0"
+        viewBox={WORDMARK_VIEWBOX}
+        className={cn("h-[18px] w-auto shrink-0", onDark ? "text-white" : "text-foreground")}
         role="img"
         aria-label="RoadAxis"
-        fill="none"
       >
-        <rect width="32" height="32" rx="7" className="fill-foreground" />
-        <path
-          d="M8 22V10h7.2a3.9 3.9 0 0 1 1.5 7.5L20 22h-3.6l-2.9-4.3H11V22H8Zm3-6.9h3.9a1.6 1.6 0 0 0 0-3.2H11v3.2Z"
-          className="fill-primary"
-        />
-        <path d="M22 10h2.2v12H22z" className="fill-primary opacity-60" />
+        <path fill="currentColor" d={WORDMARK_LETTERS} />
+        <path fill={WORDMARK_RED} d={WORDMARK_X} />
       </svg>
-      {showWordmark && (
-        <span className="text-[17px] font-semibold tracking-tight">
-          Road
-          <span className={onDark ? "text-sidebar-primary" : "text-primary-text"}>Axis</span>
-        </span>
-      )}
     </span>
   );
 }

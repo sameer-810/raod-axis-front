@@ -70,7 +70,7 @@ export function Sidebar() {
           <>
             <div className="min-w-0 flex-1">
               <Logo onDark className="text-sidebar-foreground" />
-              <p className="mt-0.5 ps-8 font-mono text-[10.5px] uppercase tracking-[0.12em] text-sidebar-foreground/45">
+              <p className="mt-1 font-mono text-[10.5px] uppercase tracking-[0.12em] text-sidebar-foreground/45">
                 {workspace}
               </p>
             </div>

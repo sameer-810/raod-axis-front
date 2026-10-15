@@ -84,6 +84,24 @@ every fill in the document. This is the client's existing identity, not a propos
 Graphite and orange is a genuine automotive-trade palette — workshop, high-vis, tooling
 — and it is nothing like the blue every SaaS template defaults to. It is kept.
 
+### The logo
+
+Supplied by the client on 15 October 2026: the wordmark **ROADAXIS** in a heavy italic,
+white with a red X (`#FA0101`), on a dark ground. It replaced a placeholder mark drawn
+during the build. The two JPEGs are kept in `public/brand/source/`, and everything the
+product shows is traced from the dark-ground one:
+
+- `public/brand/roadaxis-wordmark-on-light.svg` and `-on-dark.svg` — the wordmark with
+  ink or white letters; the red never changes. `Logo.tsx` draws the same paths inline with
+  `currentColor`, so one component serves the light header, the dark rail and both themes.
+- `public/brand/roadaxis-mark.svg` (also `favicon.svg`) — the X alone on the ink square,
+  for the favicon and the phone topbar, where a 9:1 wordmark cannot fit. The client's
+  artwork has no separate symbol; the X is the one part of it that reads at 16 px.
+
+The logo's red is not the interface's accent. Orange stays the colour that means "you can
+act here" (below); the red appears only inside the logo. The two sit side by side in the
+header and were checked there in both themes.
+
 ### The orange rule, which is not optional
 
 `#FF7A00` measures **2.61:1** against white and **6.86:1** against `#0E1621`.
