@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useSeo } from "@/shared/hooks/useSeo";
 import { DEFAULT_POLICY, usePrivacyPolicy } from "@/modules/account/hooks/useAccount";
 import { useMarket } from "@/app/market";
+import { useAuthProviders } from "@/modules/auth/hooks/useAuth";
 import { LegalDocument, LegalList } from "../components/LegalDocument";
 
 /** "24 months" reads as "2 years"; "18 months" stays as it is. */
@@ -29,6 +30,8 @@ export function PrivacyPage() {
   const policy = data ?? DEFAULT_POLICY;
   const r = policy.retention;
   const bothCodes = policy.signIn === "email+whatsapp";
+  // Said only where it is offered: a policy describes this deployment.
+  const { data: providers } = useAuthProviders();
   /**
    * Which country's law, and which regulator, the reader is told about: the
    * one for the country they are browsing. Every country served is named in
@@ -114,6 +117,14 @@ export function PrivacyPage() {
                 {bothCodes ? " and the number to send a second code that proves it is yours" : ""},
                 and the number so the garage you contact can reply to you.
               </p>
+              {providers?.google && (
+                <p>
+                  <strong>If you continue with Google.</strong> Google tells us your name and email
+                  address, and that the address is yours. That is all we ask Google for: we never
+                  see your Google password or anything else in your Google account, and we keep
+                  nothing from Google that we would not have kept had you typed it in yourself.
+                </p>
+              )}
               <p>
                 <strong>If you send a booking request.</strong> The service you asked for, the date
                 and time you would like, and any note you add. This goes to the one business you

@@ -26,8 +26,28 @@ export interface CodeChallenge {
    * regardless of configuration, so a build that shows it there is impossible
    * rather than merely discouraged.
    */
-  devCodes?: { email: string; phone?: string };
+  devCodes?: { email?: string; phone?: string };
 }
+
+/** Which sign-in providers this deployment offers. */
+export interface AuthProviders {
+  google: { clientId: string } | null;
+}
+
+export interface GoogleSignInPayload {
+  accessToken: string;
+  phone?: string;
+  name?: string;
+}
+
+/**
+ * What "Continue with Google" comes back with: signed in, or the one thing
+ * still missing — the WhatsApp number, or the code that proves it.
+ */
+export type GoogleSignInResult =
+  | ({ status: "signed_in" } & Session)
+  | { status: "phone_required"; isNew: boolean; email: string; name: string }
+  | { status: "code_required"; challenge: CodeChallenge };
 
 export interface RequestCodesPayload {
   email: string;
@@ -36,7 +56,8 @@ export interface RequestCodesPayload {
 
 export interface VerifyCodesPayload {
   challengeId: string;
-  emailCode: string;
+  /** Absent when Google proved the address and only the WhatsApp code is asked for. */
+  emailCode?: string;
   /** Absent when the challenge asked for the emailed code only. */
   phoneCode?: string;
   name?: string;

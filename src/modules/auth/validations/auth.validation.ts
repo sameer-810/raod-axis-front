@@ -51,6 +51,23 @@ export const verifyEmailCodeSchema = z.object({
   name: z.string().trim().max(80).optional(),
 });
 
+/** The WhatsApp code alone — Google proved the email address. */
+export const verifyWhatsAppCodeSchema = z.object({
+  // Kept in the shape so the form has one type in every mode; never asked for.
+  emailCode: z.string(),
+  phoneCode: codeField,
+  name: z.string().trim().max(80).optional(),
+});
+
+/**
+ * After "Continue with Google", what Google does not know: the WhatsApp number,
+ * and a name when Google had none or the driver wants another.
+ */
+export const googleDetailsSchema = z.object({
+  name: z.string().trim().min(2, "Enter your name").max(80),
+  phone: phoneField,
+});
+
 export const staffLoginSchema = z.object({
   email: emailField,
   // No length rule at sign-in. Asserting one tells an attacker the policy, and
@@ -61,3 +78,4 @@ export const staffLoginSchema = z.object({
 export type RequestCodesForm = z.infer<typeof requestCodesSchema>;
 export type VerifyCodesForm = z.infer<typeof verifyEmailCodeSchema>;
 export type StaffLoginForm = z.infer<typeof staffLoginSchema>;
+export type GoogleDetailsForm = z.infer<typeof googleDetailsSchema>;

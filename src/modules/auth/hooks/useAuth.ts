@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { queryClient } from "@/app/queryClient";
@@ -55,6 +55,20 @@ export function useRequestCodes() {
 
 export function useVerifyCodes() {
   return useMutation({ mutationFn: authApi.verifyCodes });
+}
+
+export function useGoogleSignIn() {
+  return useMutation({ mutationFn: authApi.google });
+}
+
+/** Configuration, not data: asked once per visit. */
+export function useAuthProviders() {
+  return useQuery({
+    queryKey: ["auth-providers"],
+    queryFn: authApi.providers,
+    staleTime: Infinity,
+    retry: false,
+  });
 }
 
 export function useStaffLogin() {

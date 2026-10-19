@@ -1,6 +1,14 @@
 import { http } from "@/shared/api/http";
 import type { AuthUser } from "../authSlice";
-import type { CodeChallenge, RequestCodesPayload, Session, VerifyCodesPayload } from "../types";
+import type {
+  AuthProviders,
+  CodeChallenge,
+  GoogleSignInPayload,
+  GoogleSignInResult,
+  RequestCodesPayload,
+  Session,
+  VerifyCodesPayload,
+} from "../types";
 
 export const authApi = {
   /** Staff: email and password. */
@@ -18,6 +26,18 @@ export const authApi = {
   /** Driver, step two: submit both codes. */
   async verifyCodes(payload: VerifyCodesPayload) {
     const res = await http.post<{ data: Session }>("/auth/otp/verify", payload);
+    return res.data.data;
+  },
+
+  /** Which sign-in buttons to draw. */
+  async providers() {
+    const res = await http.get<{ data: AuthProviders }>("/auth/providers");
+    return res.data.data;
+  },
+
+  /** Driver: continue with a Google access token, and a number if asked for one. */
+  async google(payload: GoogleSignInPayload) {
+    const res = await http.post<{ data: GoogleSignInResult }>("/auth/google", payload);
     return res.data.data;
   },
 
