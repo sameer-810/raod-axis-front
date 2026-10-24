@@ -3,41 +3,36 @@ import { useNavigate, Link } from "react-router-dom";
 import {
   Search,
   LocateFixed,
-  MessageCircle,
-  Navigation,
-  Store,
-  ArrowRight,
   ShieldCheck,
   Clock,
+  Map as MapIcon,
   MapPin,
+  ArrowRight,
+  ChevronRight,
+  Store,
+  LayoutGrid,
 } from "lucide-react";
 import { useGeolocation } from "@/shared/hooks/useGeolocation";
 import { geocodePlace, isInside } from "@/shared/lib/geocode";
 import { useMarket } from "@/app/market";
 import { useSeo } from "@/shared/hooks/useSeo";
-import { CategoryIcon } from "@/shared/components/CategoryIcon";
-import { useCategories, useFacets } from "@/modules/business/hooks/useBusinesses";
+import { ServiceTile } from "@/shared/components/ServiceTile";
+import { BusinessCard } from "@/modules/business/components/BusinessCard";
+import {
+  useBusinessSearch,
+  useCategories,
+  useFacets,
+} from "@/modules/business/hooks/useBusinesses";
 
 /**
- * The workshop photograph behind the hero. Unsplash — licensed for commercial use
- * with no attribution required — hot-linked from their CDN.
+ * The home page, laid out as the client's reference lays it out: search, the
+ * services as photographs, one banner, the quick filters, and the garages
+ * themselves — so the first screen is already the directory, not a pitch.
  *
- * It is a picture of *a* mechanic, never of a listed business. That distinction is
- * the whole reason there is no stock photography on the business cards: a generic
- * workshop shown on "Deansgate Tyre & Exhaust" reads as a photo of their premises,
- * which would be a small lie told about a real company.
- */
-const HERO =
-  "https://images.unsplash.com/photo-1615906655593-ad0386982a0f?ixlib=rb-4.1.0&q=72&fm=jpg&crop=entropy&cs=srgb";
-
-/**
- * The home page, which is still the search page.
- *
- * The hero **contains** the search rather than sitting above it. The rule that
- * matters — nothing stands between a driver with a flat tyre and the list of tyre
- * shops — is about the search staying in the first screenful, not about the page
- * being plain. Search first, then the services people actually came for, then the
- * pitch to garage owners.
+ * Two things are kept from before because they are what make it work rather
+ * than what make it look right: the search has a "where" as well as a "what"
+ * (a UK postcode is how a British driver says where they are), and location is
+ * asked for on a tap, never on arrival.
  */
 export function HomePage() {
   const navigate = useNavigate();
@@ -49,8 +44,6 @@ export function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const { market } = useMarket();
-  // What a driver types to say where they are: a postcode where there are
-  // postcodes, a city or district where there are not.
   const placeLabel =
     market.address.postcode === "required" ? "Town or postcode" : market.address.cityLabel;
   /** The device's own position, but only when it is in the country being browsed. */
@@ -61,6 +54,13 @@ export function HomePage() {
     isInside(market, geo.latitude, geo.longitude)
       ? { latitude: geo.latitude, longitude: geo.longitude }
       : null;
+
+  // Nearest first when we know where the driver is; the best-rated otherwise,
+  // and the heading says which — "near you" is a claim only a position earns.
+  const { data: garages } = useBusinessSearch(
+    here ? { lat: here.latitude, lng: here.longitude, page: 1 } : { sort: "rating", page: 1 },
+  );
+  const list = garages?.items.slice(0, 6) ?? [];
 
   useSeo({
     title: "Find trusted automotive services near you",
@@ -80,8 +80,6 @@ export function HomePage() {
     if (place.trim()) {
       const hit = await geocodePlace(place, market);
       if (!hit) {
-        // Losing the radius is a smaller failure than losing the search, so the
-        // journey continues without it rather than stopping here.
         setError("We couldn't find that place — showing results by name instead.");
       } else {
         params.set("lat", String(hit.latitude));
@@ -102,304 +100,237 @@ export function HomePage() {
       return;
     }
     if (geo.status === "granted") {
-      // The device answered, and it is somewhere else. Searching Dubai from a
-      // position in Manchester returns nothing and explains nothing.
       setError(
         `Your device doesn't seem to be in ${market.shortName}. Type a ${placeLabel.toLowerCase()} instead.`,
       );
       return;
     }
-    // Asked for on a tap, never on page load. A permission prompt before someone
-    // knows what the site is buys a permanent denial.
+    // Asked for on a tap, never on page load.
     geo.request();
   }
 
+  const searchLink = here ? `/search?lat=${here.latitude}&lng=${here.longitude}` : "/search";
+
   return (
-    <div>
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="ra-hero">
-        {/*
-          The photograph is decoration, so it is `aria-hidden` and carries no
-          alt text — describing it to a screen reader would announce a stock
-          photo before the search box. The ink underneath is what actually
-          guarantees the text contrast: if the image never loads, the hero is a
-          clean dark panel rather than white-on-white.
-        */}
+    <div className="ra-shell pb-10 pt-5 md:pb-14 md:pt-8">
+      {/* ── Heading and search ─────────────────────────────────────────── */}
+      <section aria-labelledby="home-title">
+        <h1
+          id="home-title"
+          className="text-[28px] font-extrabold leading-[1.05] text-foreground md:text-[44px]"
+        >
+          Find a garage you can trust.
+        </h1>
+        <p className="mt-1.5 text-[15px] text-muted-foreground md:text-lg">
+          Independent garages across {market.shortName}
+        </p>
+
+        <form
+          onSubmit={submit}
+          className="mt-4 overflow-hidden rounded-2xl border border-border bg-card md:mt-6 md:flex md:items-center md:p-1.5"
+        >
+          <div className="relative min-w-0 md:flex-1">
+            <Search
+              className="pointer-events-none absolute start-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              type="search"
+              placeholder="Search service or garage"
+              aria-label="What do you need?"
+              className="h-14 w-full bg-transparent pe-3 ps-12 text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
+            />
+          </div>
+          <div className="h-px bg-border md:mx-1 md:h-8 md:w-px" aria-hidden="true" />
+          <div className="flex items-center gap-2 pe-2 md:w-[22rem] md:pe-0">
+            <div className="relative min-w-0 flex-1">
+              <MapPin
+                className="pointer-events-none absolute start-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary-text"
+                aria-hidden="true"
+              />
+              <input
+                value={place}
+                onChange={(e) => setPlace(e.target.value)}
+                placeholder={placeLabel}
+                aria-label="Where?"
+                list={market.places.length ? "home-places" : undefined}
+                className="h-14 w-full bg-transparent pe-2 ps-12 text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
+              />
+              {market.places.length > 0 && (
+                <datalist id="home-places">
+                  {market.places.map((p) => (
+                    <option key={`${p.region}-${p.name}`} value={p.name} />
+                  ))}
+                </datalist>
+              )}
+            </div>
+            <button type="submit" disabled={busy} className="ra-btn-primary h-11 shrink-0 px-5">
+              {busy ? "Searching…" : "Search"}
+            </button>
+          </div>
+        </form>
+
+        {error && (
+          <p role="alert" className="mt-2 text-sm text-destructive">
+            {error}
+          </p>
+        )}
+
+        {/* The quick filters, each a real search a tap away. */}
+        <div className="ra-chips mt-4 md:mx-0 md:flex-wrap md:px-0">
+          <button type="button" onClick={nearMe} className="ra-chip ra-chip-primary">
+            <LocateFixed className="h-4 w-4" aria-hidden="true" />
+            {geo.status === "prompting" ? "Finding you…" : "Near me"}
+          </button>
+          <Link to="/search?verified=true" className="ra-chip">
+            <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+            Verified
+          </Link>
+          <Link to="/search?openNow=true" className="ra-chip">
+            <Clock className="h-4 w-4" aria-hidden="true" />
+            Open now
+          </Link>
+          <Link
+            to={`${searchLink}${searchLink.includes("?") ? "&" : "?"}view=map`}
+            className="ra-chip"
+          >
+            <MapIcon className="h-4 w-4" aria-hidden="true" />
+            Map
+          </Link>
+        </div>
+        {geo.status === "denied" && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            No problem — type a {placeLabel.toLowerCase()} above.
+          </p>
+        )}
+      </section>
+
+      {/* ── Services ───────────────────────────────────────────────────── */}
+      {categories.length > 0 && (
+        <section aria-labelledby="browse" className="mt-8 md:mt-10">
+          <div className="mb-3 flex items-end justify-between gap-2">
+            <h2 id="browse" className="text-[22px] font-bold text-foreground md:text-[26px]">
+              What do you need doing?
+            </h2>
+            <Link
+              to="/categories"
+              className="ra-tap inline-flex items-center gap-0.5 text-[15px] font-semibold text-primary-text hover:underline"
+            >
+              All services
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 lg:grid-cols-6">
+            {categories.map((c) => (
+              <ServiceTile
+                key={c.slug}
+                slug={c.slug}
+                name={c.name}
+                icon={c.icon}
+                count={countFor(c.slug)}
+                to={`/search?category=${c.slug}`}
+              />
+            ))}
+            <Link
+              to="/categories"
+              className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-secondary p-3 text-[14px] font-semibold text-foreground transition-colors hover:border-foreground/25"
+            >
+              <LayoutGrid className="h-7 w-7 text-primary-text" aria-hidden="true" />
+              View all
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {/* ── Banner ─────────────────────────────────────────────────────── */}
+      <section
+        aria-labelledby="promo"
+        className="relative isolate mt-8 overflow-hidden rounded-2xl bg-[#0B0B0D] md:mt-10"
+      >
         <img
-          src={`${HERO}&w=1600`}
-          srcSet={`${HERO}&w=800 800w, ${HERO}&w=1600 1600w, ${HERO}&w=2200 2200w`}
-          sizes="100vw"
+          src="/images/promo-car.webp"
+          srcSet="/images/promo-car.webp 900w, /images/promo-car-wide.webp 1600w"
+          sizes="(min-width: 768px) 80rem, 100vw"
           alt=""
           aria-hidden="true"
-          fetchPriority="high"
-          className="ra-hero-image"
+          loading="lazy"
+          className="absolute inset-0 -z-10 h-full w-full object-cover object-right opacity-90"
         />
-
-        <div className="ra-shell relative py-12 md:py-20">
-          <div className="max-w-2xl">
-            <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur-sm">
-              <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
-              Independent garages across {market.shortName}
-            </p>
-            <h1 className="text-[34px] font-bold leading-[1.02] text-white md:text-[3.6rem]">
-              Find a garage
-              <br />
-              you can trust.
-            </h1>
-            <p className="mt-4 max-w-lg text-[15px] leading-relaxed text-white/80 md:text-lg">
-              Tyres, brakes, servicing, recovery — with opening hours, directions and a way to reach
-              them in one tap.
-            </p>
-          </div>
-
-          {/* The search card. Lifted off the photograph, because this is the one
-              thing on the page that has to be found instantly. */}
-          <form onSubmit={submit} className="ra-hero-card mt-7 md:mt-9">
-            <div className="flex flex-col gap-2 md:flex-row md:items-center">
-              <div className="relative min-w-0 flex-1">
-                <Search
-                  className="pointer-events-none absolute start-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                  aria-hidden="true"
-                />
-                <input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  type="search"
-                  placeholder="Tyres, brakes, a garage name…"
-                  aria-label="What do you need?"
-                  className="ra-input h-12 w-full border-transparent bg-transparent ps-10 pe-3 md:bg-transparent"
-                />
-              </div>
-
-              <div className="hidden h-7 w-px shrink-0 bg-border md:block" aria-hidden="true" />
-
-              <div className="relative min-w-0 md:w-56">
-                <MapPin
-                  className="pointer-events-none absolute start-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                  aria-hidden="true"
-                />
-                <input
-                  value={place}
-                  onChange={(e) => setPlace(e.target.value)}
-                  placeholder={placeLabel}
-                  aria-label="Where?"
-                  list={market.places.length ? "home-places" : undefined}
-                  className="ra-input h-12 w-full border-transparent bg-transparent ps-10 pe-3"
-                />
-                {market.places.length > 0 && (
-                  <datalist id="home-places">
-                    {market.places.map((p) => (
-                      <option key={`${p.region}-${p.name}`} value={p.name} />
-                    ))}
-                  </datalist>
-                )}
-              </div>
-
-              <button
-                type="submit"
-                disabled={busy}
-                className="ra-btn-primary h-12 shrink-0 md:px-7"
-              >
-                {busy ? "Searching…" : "Search"}
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </button>
-            </div>
-          </form>
-
-          {error && (
-            <p role="alert" className="mt-3 text-sm text-white/90">
-              {error}
-            </p>
-          )}
-
-          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
-            <button
-              type="button"
-              onClick={nearMe}
-              className="ra-tap inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-80"
-            >
-              <LocateFixed className="h-4 w-4" aria-hidden="true" />
-              {geo.status === "prompting" ? "Finding you…" : "Use my current location"}
-            </button>
-            {geo.status === "denied" && (
-              <p className="text-sm text-white/70">
-                No problem — type a {placeLabel.toLowerCase()} above.
-              </p>
-            )}
-          </div>
-
-          {/* Three claims, each of which the product actually keeps. */}
-          <ul className="mt-7 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/75">
-            <li className="inline-flex items-center gap-1.5">
-              <ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />
-              Verified businesses
-            </li>
-            <li className="inline-flex items-center gap-1.5">
-              <Clock className="h-4 w-4 text-primary" aria-hidden="true" />
-              See who is open now
-            </li>
-            <li className="inline-flex items-center gap-1.5">
-              <MessageCircle className="h-4 w-4 text-primary" aria-hidden="true" />
-              Request a booking on WhatsApp
-            </li>
-          </ul>
+        {/* The ink behind the words is what guarantees their contrast; the
+            photograph is an enhancement on the other side of it. */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0B0B0D] via-[#0B0B0D]/85 to-transparent"
+        />
+        {/* Two racing stripes, the red of the X, between the words and the car. */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-y-0 end-[-3rem] -z-10 flex -skew-x-[18deg] gap-2 md:end-[30%]"
+        >
+          <span className="w-4 bg-primary md:w-6" />
+          <span className="w-1.5 bg-primary/70 md:w-2" />
+        </div>
+        <div className="max-w-md p-5 md:p-9">
+          <h2
+            id="promo"
+            className="text-[26px] font-extrabold leading-[1.05] text-white md:text-[36px]"
+          >
+            The right garage, <span className="text-[#FF5A52]">without the phone calls</span>
+          </h2>
+          <p className="mt-2 text-[15px] text-white/80 md:text-base">
+            See who is open, what they charge from, and message them on WhatsApp.
+          </p>
+          <Link to={searchLink} className="ra-btn-primary mt-4 h-11 rounded-full px-5">
+            Explore services
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
         </div>
       </section>
 
-      <div className="ra-shell py-10 md:py-14">
-        <div className="ra-public">
-          {/* ── Services ───────────────────────────────────────────────── */}
-          {categories.length > 0 && (
-            <section aria-labelledby="browse">
-              <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
-                <div>
-                  <p className="ra-eyebrow text-primary-text">Services</p>
-                  <h2
-                    id="browse"
-                    className="mt-2 text-2xl font-bold tracking-tight text-foreground"
-                  >
-                    What do you need doing?
-                  </h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Tap a service to see who does it near you.
-                  </p>
-                </div>
-                <Link
-                  to="/categories"
-                  className="ra-tap inline-flex items-center gap-1 text-sm font-medium text-primary-text hover:underline"
-                >
-                  All services
-                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                </Link>
-              </div>
+      {/* ── Garages ────────────────────────────────────────────────────── */}
+      {list.length > 0 && (
+        <section aria-labelledby="garages" className="mt-8 md:mt-10">
+          <div className="mb-3 flex items-end justify-between gap-2">
+            <h2 id="garages" className="text-[22px] font-bold text-foreground md:text-[26px]">
+              {here ? "Garages near you" : `Top-rated in ${market.shortName}`}
+            </h2>
+            <Link
+              to={searchLink}
+              className="ra-tap inline-flex items-center gap-0.5 text-[15px] font-semibold text-primary-text hover:underline"
+            >
+              View all
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          </div>
+          <div className="grid gap-3 lg:grid-cols-2">
+            {list.map((b) => (
+              <BusinessCard key={b.id} business={b} />
+            ))}
+          </div>
+        </section>
+      )}
 
-              {/*
-                A grid of tiles, not the old scrolling chip strip. Eleven names
-                in a row of pills is a horizontal list nobody scrolls past the
-                third item of; a grid shows every service at once, and an icon
-                makes each one findable without reading.
-              */}
-              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-                {categories.map((c) => {
-                  const count = countFor(c.slug);
-                  return (
-                    <Link
-                      key={c.slug}
-                      to={`/search?category=${c.slug}`}
-                      className="ra-service-tile"
-                    >
-                      <span className="ra-service-icon">
-                        <CategoryIcon name={c.icon} className="h-5 w-5" />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-semibold text-foreground">
-                          {c.name}
-                        </span>
-                        {count !== undefined && (
-                          <span className="block font-mono text-xs tabular-nums text-muted-foreground">
-                            {count} {count === 1 ? "place" : "places"}
-                          </span>
-                        )}
-                      </span>
-                    </Link>
-                  );
-                })}
-              </div>
-            </section>
-          )}
-
-          {/* ── How it works ───────────────────────────────────────────── */}
-          {/*
-            An editorial list, not three cards in a row.
-
-            "Three identical cards, each with an icon in a tinted circle" is the
-            single most recognisable fingerprint of a generated page, and the
-            previous version of this section was exactly that. A numbered list
-            with hairline rules, a big mono numeral and the copy given room reads
-            as something written; the same three facts, arranged by a person.
-          */}
-          <section
-            aria-labelledby="how"
-            className="lg:grid lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-10"
-          >
-            <div className="mb-5 lg:mb-0">
-              <p className="ra-eyebrow text-primary-text">How it works</p>
-              <h2
-                id="how"
-                className="mt-2 text-2xl font-bold tracking-tight text-foreground lg:text-3xl"
-              >
-                Three taps from a problem to a garage that answers.
-              </h2>
-            </div>
-            <ol className="divide-y divide-border border-t border-border">
-              {[
-                {
-                  icon: Search,
-                  title: "Discover",
-                  body: "Search by service and distance. See who is open right now, and how far away they are.",
-                },
-                {
-                  icon: MessageCircle,
-                  title: "Contact",
-                  body: "Message them on WhatsApp, or send a booking request with the date and time you want.",
-                },
-                {
-                  icon: Navigation,
-                  title: "Go",
-                  body: "They reply to confirm. Open directions straight in Google Maps and drive over.",
-                },
-              ].map((s, i) => (
-                <li
-                  key={s.title}
-                  className="grid grid-cols-[3rem_minmax(0,1fr)] gap-4 py-5 sm:grid-cols-[4rem_minmax(0,1fr)]"
-                >
-                  <span
-                    className="font-mono text-2xl font-medium tabular-nums text-primary-text sm:text-3xl"
-                    aria-hidden="true"
-                  >
-                    0{i + 1}
-                  </span>
-                  <div>
-                    <p className="flex items-center gap-2 text-lg font-semibold text-foreground">
-                      <s.icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                      {s.title}
-                    </p>
-                    <p className="mt-1.5 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
-                      {s.body}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </section>
-
-          {/*
-            The supply side of the marketplace, and the reason the Claim flow
-            exists at all. It does not hide in a footer: without businesses there
-            is nothing for a driver to find.
-          */}
-          <section className="ra-cta">
-            <div className="flex flex-wrap items-center justify-between gap-5">
-              <div className="flex items-start gap-3.5">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary-text">
-                  <Store className="h-5 w-5" aria-hidden="true" />
-                </span>
-                <div>
-                  <p className="text-base font-semibold text-foreground">Run a garage?</p>
-                  <p className="mt-1 max-w-md text-sm text-muted-foreground">
-                    You may already be listed. Claim your listing to manage your details, hours and
-                    photos — free while we are building the network.
-                  </p>
-                </div>
-              </div>
-              <Link to="/for-business" className="ra-btn-primary shrink-0">
-                List your business
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
-            </div>
-          </section>
+      {/* ── For owners ─────────────────────────────────────────────────── */}
+      <section className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-secondary p-5 md:mt-10 md:p-6">
+        <div className="flex items-start gap-3.5">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+            <Store className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div>
+            <h2 className="text-lg font-bold text-foreground">Run a garage?</h2>
+            <p className="mt-0.5 max-w-md text-[15px] text-muted-foreground">
+              You may already be listed. Claim your listing to manage your details, hours and photos
+              — free while we are building the network.
+            </p>
+          </div>
         </div>
-      </div>
+        <Link to="/for-business" className="ra-btn ra-btn-outline shrink-0">
+          List your business
+          <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        </Link>
+      </section>
     </div>
   );
 }

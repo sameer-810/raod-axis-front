@@ -42,8 +42,11 @@ export function TrustRow({
   return (
     <div className={cn("ra-trust", className)}>
       {verified && (
-        <span className="ra-trust-item font-medium text-success">
-          <BadgeCheck className="h-4 w-4" aria-hidden="true" />
+        <span className="ra-trust-item font-semibold text-foreground">
+          <BadgeCheck
+            className="h-[18px] w-[18px] fill-verified text-verified [&>path:last-child]:stroke-white"
+            aria-hidden="true"
+          />
           Verified
         </span>
       )}

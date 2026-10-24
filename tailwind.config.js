@@ -63,6 +63,11 @@ export default {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
         },
+        verified: "hsl(var(--verified))",
+        whatsapp: {
+          DEFAULT: "hsl(var(--whatsapp))",
+          foreground: "hsl(var(--whatsapp-foreground))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -105,19 +110,14 @@ export default {
        */
       fontFamily: {
         /**
-         * Instrument Sans for the interface, Bricolage Grotesque for headings.
-         *
-         * Not Inter, and that is the point. Inter — and its close relations — is
-         * the default face of every AI-generated page of 2026; a product set in it
-         * is read as a template before a single word is understood. Instrument
-         * Sans has the same neutrality in the body without the fingerprint, and
-         * Bricolage carries an optical-size axis so a display heading gets tight
-         * counters and a caption gets open ones — the difference between type
-         * that was set and type that was scaled.
+         * Barlow — drawn from highway-sign lettering — for everything; its
+         * semi-condensed cut for headings. `mono` is Barlow too, with tabular
+         * figures (index.css): numbers still line up in columns, without a
+         * typewriter face that read as a template. See DESIGN.md.
          */
-        sans: ['"Instrument Sans"', "system-ui", "-apple-system", "sans-serif"],
-        display: ['"Bricolage Grotesque"', '"Instrument Sans"', "system-ui", "sans-serif"],
-        mono: ['"IBM Plex Mono"', "ui-monospace", "SFMono-Regular", "monospace"],
+        sans: ["Barlow", "system-ui", "-apple-system", "sans-serif"],
+        display: ['"Barlow Semi Condensed"', "Barlow", "system-ui", "sans-serif"],
+        mono: ["Barlow", "system-ui", "sans-serif"],
       },
       /**
        * Overlays only.

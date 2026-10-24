@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Check, Globe } from "lucide-react";
+import { Check, ChevronDown, MapPin } from "lucide-react";
 import { useMarket } from "@/app/market";
 import { Menu } from "@/shared/components/Menu";
 
@@ -45,14 +45,18 @@ export function CountrySwitch() {
         onSelect: () => choose(m.code),
       }))}
       trigger={(props) => (
+        // A place, as the reference shows it: a red pin, the country, a
+        // chevron that says it opens. The accessible name keeps "Country:" so
+        // a screen reader hears what kind of thing it is.
         <button
           type="button"
           {...props}
           aria-label={`Country: ${market.name}`}
-          className="ra-tap flex min-w-[44px] items-center justify-center gap-1.5 rounded-lg px-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          className="ra-tap flex min-w-[44px] items-center justify-center gap-1 rounded-full px-2.5 text-[15px] font-semibold text-foreground transition-colors hover:bg-accent"
         >
-          <Globe className="h-4 w-4" aria-hidden="true" />
+          <MapPin className="h-[18px] w-[18px] text-primary-text" aria-hidden="true" />
           <span>{short(market.shortName)}</span>
+          <ChevronDown className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
         </button>
       )}
     />

@@ -182,7 +182,8 @@ test.describe("Phase 2 · Search", () => {
     // Every remaining card must carry the badge it was filtered on.
     const cards = page.locator("article");
     for (let i = 0; i < (await cards.count()); i++) {
-      await expect(cards.nth(i).getByText("Verified")).toBeVisible();
+      // The blue tick beside the name, announced as "Verified".
+      await expect(cards.nth(i).getByRole("img", { name: "Verified" })).toBeVisible();
     }
   });
 
@@ -270,17 +271,18 @@ test.describe("Phase 2 · The trust row", () => {
     await expect(card).toBeVisible();
     // "Verified" is a claim we can substantiate from a reviewed document.
     // "Unverified" is an accusation we cannot.
-    await expect(card.getByText("Verified")).toBeVisible();
+    await expect(card.getByRole("img", { name: "Verified" })).toBeVisible();
     await expect(page.getByText(/unverified/i)).toHaveCount(0);
   });
 
-  test("distances are set in the monospace family", async ({ page }) => {
+  test("distances are set with tabular figures", async ({ page }) => {
     await page.goto(`/search${NEAR}`);
-    const distance = page.locator("article .font-mono").first();
+    const distance = page.locator("article [data-distance-metres]").first();
     await expect(distance).toBeVisible();
-    const family = await distance.evaluate((el) => getComputedStyle(el).fontFamily);
-    // A column of figures only scans when the digits are the same width.
-    expect(family).toMatch(/plex mono/i);
+    const numeric = await distance.evaluate((el) => getComputedStyle(el).fontVariantNumeric);
+    // A column of figures only scans when the digits are the same width. Once a
+    // monospace face; now the body face's own tabular figures (Phase 15).
+    expect(numeric).toContain("tabular-nums");
   });
 });
 

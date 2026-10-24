@@ -246,9 +246,7 @@ function railChip(active: boolean) {
 function Group({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <fieldset>
-      <legend className="mb-2 text-xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
-        {label}
-      </legend>
+      <legend className="mb-2 text-[14px] font-bold text-foreground">{label}</legend>
       {children}
     </fieldset>
   );

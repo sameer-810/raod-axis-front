@@ -70,11 +70,12 @@ test.describe("Phase 0 · Theme", () => {
   });
 });
 
-test.describe("Phase 0 · The orange rule", () => {
+test.describe("Phase 0 · The brand-red rule", () => {
   /**
    * The rule the whole colour system rests on, and the one most likely to be
-   * undone by a well-meaning edit. #FF7A00 is 2.61:1 against white and 6.86:1
-   * against the brand ink, so a filled orange button MUST take ink-coloured text.
+   * undone by a well-meaning edit. The logo's own red (#FA0101) is 4.14:1 with
+   * white text, so the button red is a step deeper (#E10600, 4.97:1). Once the
+   * brochure orange, which needed ink text; the rule is the same either way.
    */
   test("a primary button reaches AA in both themes", async ({ page }) => {
     for (const theme of ["light", "dark"] as const) {
@@ -96,12 +97,12 @@ test.describe("Phase 0 · The orange rule", () => {
       expect(
         ratio,
         `primary button in ${theme}: ${color} on ${background} is ${ratio.toFixed(2)}:1 — ` +
-          `white text on RoadAxis orange is the classic failure here`,
+          `white text on a too-bright brand red is the classic failure here`,
       ).toBeGreaterThanOrEqual(4.5);
     }
   });
 
-  test("orange as text on a light ground is the darkened token", async ({ page }) => {
+  test("red as text on a light ground is the darkened token", async ({ page }) => {
     await page.goto("/");
     await setTheme(page, "light");
 
@@ -145,13 +146,15 @@ test.describe("Phase 0 · The orange rule", () => {
  */
 
 test.describe("Phase 0 · The trust row", () => {
-  test("the trust row is a shared component, not per-screen markup", async ({ page }) => {
-    // The class is the contract. Everywhere a business appears, the same
-    // component draws the same four facts in the same order — which is what
-    // stops the ordering drifting between the card, the map popup and the
-    // profile header.
+  test("every card lists its facts in one shared order", async ({ page }) => {
+    // One component draws every card's facts — services, place, open or
+    // closed — so the order cannot drift between the home page, the search
+    // and My garages. (Phase 15 replaced the old one-line trust row on cards
+    // with the client's reference layout; the profile still uses that row.)
     await page.goto("/search?lat=53.4808&lng=-2.2426");
-    await expect(page.locator(".ra-trust").first()).toBeVisible();
+    const facts = page.locator("article [data-facts]").first();
+    await expect(facts).toBeVisible();
+    await expect(facts.locator("li").last()).toContainText(/Open now|Closed/);
   });
 });
 

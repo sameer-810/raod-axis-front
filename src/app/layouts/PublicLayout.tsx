@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
-import { Moon, Sun, Heart, Search, LayoutGrid, User } from "lucide-react";
+import { Moon, Sun, Heart, Home, Compass, LayoutGrid, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/app/theme";
 import { useAppSelector } from "@/app/hooks";
@@ -24,7 +24,7 @@ export function PublicLayout() {
   return (
     <div className="flex min-h-full flex-col bg-background">
       <header className="ra-safe-top sticky top-0 z-30 border-b border-border bg-background">
-        <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
+        <div className="mx-auto flex h-16 max-w-[80rem] items-center gap-3 px-4 sm:px-6">
           {/*
             `ra-tap` because the mark is a 28px glyph and this is the link back
             to home from every page — at 34px tall it was the one control on the
@@ -127,7 +127,7 @@ export function PublicLayout() {
         underneath it.
       */}
       <footer className="border-t border-border pb-24 pt-5 md:py-8">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 text-sm text-muted-foreground">
+        <div className="mx-auto flex max-w-[80rem] flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 text-sm text-muted-foreground">
           <p>© {new Date().getFullYear()} RoadAxis</p>
           <nav className="-mx-2 flex flex-wrap gap-x-1 md:mx-0 md:gap-x-5" aria-label="Footer">
             <FooterLink to="/for-business">List your business</FooterLink>
@@ -171,15 +171,18 @@ function PublicLink({ to, children }: { to: string; children: React.ReactNode })
 }
 
 /**
- * Three destinations on the public side, not four. A consumer product this
- * shallow does not have four top-level places to be.
+ * The four places a driver goes, as the client's reference has them: home,
+ * explore (the full search), the garages they saved, and their profile. The
+ * active tab is red with a bar beneath it — colour and position, so it does
+ * not rely on colour alone.
  */
 function PublicTabBar({ signedIn }: { signedIn: boolean }) {
   const tabs = [
-    { to: "/search", label: "Search", icon: Search, end: false },
-    { to: "/categories", label: "Categories", icon: LayoutGrid, end: false },
+    { to: "/", label: "Home", icon: Home, end: true },
+    { to: "/search", label: "Explore", icon: Compass, end: false },
+    { to: "/my-garages", label: "Saved", icon: Heart, end: false },
     signedIn
-      ? { to: "/my-garages", label: "Saved", icon: Heart, end: false }
+      ? { to: "/account", label: "Profile", icon: User, end: false }
       : { to: "/sign-in", label: "Sign in", icon: User, end: false },
   ];
 
@@ -190,14 +193,17 @@ function PublicTabBar({ signedIn }: { signedIn: boolean }) {
           <li key={t.to} className="flex-1">
             <NavLink
               to={t.to}
+              end={t.end}
               className={({ isActive }) =>
                 cn(
-                  "ra-tap flex w-full flex-col items-center justify-center gap-0.5 py-1.5 text-[11px] font-medium transition-colors",
-                  isActive ? "text-primary-text" : "text-muted-foreground",
+                  "ra-tap relative flex w-full flex-col items-center justify-center gap-0.5 py-1.5 text-[12px] font-semibold transition-colors",
+                  isActive
+                    ? "text-primary-text after:absolute after:bottom-0.5 after:h-[3px] after:w-8 after:rounded-full after:bg-primary"
+                    : "text-muted-foreground",
                 )
               }
             >
-              <t.icon className="h-5 w-5" aria-hidden="true" />
+              <t.icon className="h-[22px] w-[22px]" aria-hidden="true" />
               {t.label}
             </NavLink>
           </li>

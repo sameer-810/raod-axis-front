@@ -1,56 +1,61 @@
 import { Link } from "react-router-dom";
-import { Navigation } from "lucide-react";
+import { BadgeCheck, Clock, MapPin, MessageCircle, Navigation, Star, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TrustRow } from "@/shared/components/TrustRow";
 import { Badge } from "@/shared/components/Badge";
 import { CategoryIcon } from "@/shared/components/CategoryIcon";
 import { googleMapsDirections } from "@/shared/lib/maps";
+import { formatDistance, formatNextChange, formatRating } from "@/shared/lib/format";
+import { useMarket } from "@/app/market";
 import { SaveButton } from "@/modules/favourite/components/SaveButton";
 import type { BusinessCard as BusinessCardType } from "../types";
 
 /**
- * One search result — the most-repeated element in the product, so its decisions
- * compound:
+ * One garage in a list — the most-repeated element in the product.
  *
- *  - **The whole card is a link**, with the name as the anchor. The enlarged hit
- *    area is layered on a real `<a href>`, never a replacement for one.
- *  - **Directions sits outside that link**, because for a large share of sessions
- *    it is the terminal action, and burying it a tap deeper costs a page load at
- *    the roadside.
- *  - **The trust row is the same four facts in the same order** as everywhere else.
- *  - **"Unclaimed" is addressed to owners, not drivers** — an invitation, not a
- *    warning about the business.
+ * Laid out the way the client's reference lays it out, because it answers the
+ * questions in the order a driver asks them: what does the place look like,
+ * is it real (the verified tick), what do they do, where are they, are they
+ * open and until when, and then the two things to do about it — message them
+ * on WhatsApp, or drive there.
+ *
+ *  - **The whole card is a link**, with the name as the anchor; the two
+ *    actions sit above that link so pressing them does not open the profile.
+ *  - **The tick is blue and next to the name**, as it is everywhere a person
+ *    has seen one. It is only ever drawn for a business whose claim RoadAxis
+ *    approved against a document.
+ *  - **Closed is stated, with when it opens**, rather than hidden: a driver
+ *    who drives to a shut garage has been misled.
  */
 export function BusinessCard({ business }: { business: BusinessCardType }) {
+  const { marketFor } = useMarket();
+  const market = marketFor(business.country);
   const href = `/business/${business.slug}`;
   const directions = business.coordinates ? googleMapsDirections(business.coordinates) : null;
-
-  /*
-    Category names and the town, joined only where both exist. `filter(Boolean)`
-    rather than interpolating a separator, because a listing with no category
-    rendered "· Manchester" — a dangling punctuation mark that looks like a
-    missing field, on every imported record in the directory.
-  */
-  const subtitle = [
-    business.categories
-      .map((c) => c.name)
-      .slice(0, 2)
-      .join(" · "),
-    business.address.city,
-  ]
-    .filter(Boolean)
+  const rating = formatRating(business.averageRating, business.reviewCount);
+  const distance = formatDistance(business.distanceMetres);
+  const services = business.categories
+    .map((c) => c.name)
+    .slice(0, 3)
     .join(" · ");
+  const place = [business.address.city, business.address.region]
+    .filter(Boolean)
+    .filter((v, i, all) => all.indexOf(v) === i)
+    .join(", ");
+  const when = formatNextChange(business.nextChange, {
+    locale: market.locale,
+    timeZone: market.timezone,
+  });
 
   return (
-    <article className="ra-card flex flex-col">
-      <div className="flex gap-3.5 p-3.5">
+    // A container, so the card lays itself out by its own width rather than the
+    // screen's: two-up in a search grid it is as narrow as on a phone.
+    <article className="ra-card flex flex-col [container-type:inline-size]">
+      <div className="flex gap-3 p-3 [@container(min-width:560px)]:gap-4">
         {/*
-          A fixed-size thumbnail rather than a hero image. A photo of the actual
-          workshop is the fastest trust signal available, but at 390px a
-          full-width image pushes the next result off the screen and turns a
-          scannable list into a carousel.
+          The workshop's own photograph, or its trade's icon on grey — never a
+          stock photo standing in for a named business.
         */}
-        <div className="relative h-[88px] w-[88px] shrink-0 overflow-hidden rounded-xl bg-muted">
+        <div className="relative h-[104px] w-[104px] shrink-0 overflow-hidden rounded-xl bg-muted [@container(min-width:560px)]:h-[124px] [@container(min-width:560px)]:w-[150px]">
           {business.primaryPhotoUrl ? (
             <img
               src={business.primaryPhotoUrl}
@@ -59,85 +64,179 @@ export function BusinessCard({ business }: { business: BusinessCardType }) {
               className="h-full w-full object-cover"
             />
           ) : (
-            /*
-              A designed absence, not a broken-image glyph. Most listings in a
-              seeded directory have no photograph and never will. The trade's own
-              icon on a warm ground says "no photo yet" once; a crossed-out
-              camera says "this is broken" two hundred times.
-            */
             <div className="ra-photo-empty">
-              <CategoryIcon name={business.categories[0]?.icon} className="h-7 w-7" />
+              <CategoryIcon name={business.categories[0]?.icon} className="h-8 w-8" />
               <span className="sr-only">No photo yet</span>
             </div>
+          )}
+          {business.isOpen === true && (
+            <span
+              aria-hidden="true"
+              className="absolute bottom-1.5 start-1.5 inline-flex items-center gap-1 rounded-full bg-black/75 px-2 py-0.5 text-[11px] font-semibold text-white"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-[#22C55E]" />
+              Open now
+            </span>
           )}
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <div className="flex items-start justify-between gap-2">
-            {/* h2, not h3: the page's h1 is the search heading and these are
-                its direct children. Skipping a level makes the document
-                outline unusable for anyone navigating by heading. */}
-            <h2 className="min-w-0 text-[15px] font-semibold leading-snug text-foreground">
-              {/* The real anchor. `after:absolute` stretches its hit area over
-                  the card without turning the card into a div pretending to be
-                  a link. */}
+          <div className="flex items-start justify-between gap-1.5">
+            {/* h2: the page's h1 is the search heading and these are its
+                direct children. */}
+            <h2 className="min-w-0 font-display text-[17px] font-bold leading-tight text-foreground">
               <Link
                 to={href}
                 className="after:absolute after:inset-0 after:content-[''] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {business.name}
               </Link>
-            </h2>
-            <div className="flex shrink-0 items-start gap-1">
-              {business.claimStatus === "unclaimed" && (
-                <Badge className="relative z-10 mt-0.5">Unclaimed</Badge>
+              {business.isVerified && (
+                <>
+                  {/* A word joiner: the tick stays on the line with the last
+                      word of the name, never alone on a line of its own. */}
+                  {"⁠"}
+                  <span
+                    role="img"
+                    aria-label="Verified"
+                    title="Verified by RoadAxis"
+                    className="relative z-10 inline-flex translate-y-[2px] ps-1 text-verified"
+                  >
+                    <BadgeCheck className="h-[18px] w-[18px] fill-current [&>path:last-child]:stroke-white" />
+                  </span>
+                </>
               )}
-              {/*
-                Top-right, where a save control lives on every card in every
-                product a person already uses. It sits above the card's stretched
-                link and stops its own click, or saving a garage would open it.
-              */}
-              <SaveButton
-                businessId={business.id}
-                businessName={business.name}
-                isFavourite={business.isFavourite}
-                className="-mt-1.5 -me-1.5 border-0 bg-transparent"
-              />
-            </div>
+            </h2>
+            <SaveButton
+              businessId={business.id}
+              businessName={business.name}
+              isFavourite={business.isFavourite}
+              className="relative z-10 -mt-1.5 -me-1.5 border-0 bg-transparent"
+            />
           </div>
 
-          {subtitle && <p className="mt-0.5 truncate text-sm text-muted-foreground">{subtitle}</p>}
+          {(rating || business.claimStatus === "unclaimed") && (
+            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+              {rating && (
+                <span className="inline-flex items-center gap-1">
+                  <Star className="h-4 w-4 fill-current text-warning" aria-hidden="true" />
+                  <span className="font-mono font-semibold text-foreground">{rating.value}</span>
+                  <span className="font-mono text-muted-foreground">({rating.count})</span>
+                  <span className="sr-only">
+                    out of 5, from {rating.count} review{rating.count === 1 ? "" : "s"}
+                  </span>
+                </span>
+              )}
+              {business.claimStatus === "unclaimed" && (
+                <Badge className="relative z-10">Unclaimed</Badge>
+              )}
+            </div>
+          )}
 
-          <TrustRow
-            className="mt-auto pt-2"
-            verified={business.isVerified}
-            averageRating={business.averageRating}
-            reviewCount={business.reviewCount}
-            isOpen={business.isOpen ?? undefined}
-            distanceMetres={business.distanceMetres}
-          />
+          <ul
+            data-facts
+            className="mt-1.5 space-y-1 text-[14px] leading-snug text-muted-foreground"
+          >
+            {services && (
+              <li className="flex items-center gap-1.5">
+                <Wrench className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span className="truncate">{services}</span>
+              </li>
+            )}
+            {(place || distance) && (
+              <li className="flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5 shrink-0 text-primary-text" aria-hidden="true" />
+                <span className="truncate">
+                  {place}
+                  {place && distance && " · "}
+                  {distance && (
+                    <span
+                      className="font-mono"
+                      data-distance-metres={business.distanceMetres ?? undefined}
+                    >
+                      {distance}
+                    </span>
+                  )}
+                  {distance && <span className="sr-only"> away</span>}
+                </span>
+              </li>
+            )}
+            {business.isOpen !== null && business.isOpen !== undefined && (
+              <li className="flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span className="truncate">
+                  <span className={cn("font-semibold", business.isOpen && "text-success")}>
+                    {business.isOpen ? "Open now" : "Closed"}
+                  </span>
+                  {when && ` · ${when}`}
+                </span>
+              </li>
+            )}
+          </ul>
         </div>
+
+        <CardActions
+          business={business}
+          directions={directions}
+          className="hidden [@container(min-width:560px)]:flex"
+        />
       </div>
 
-      {directions && (
-        <div className="relative z-10 mt-auto flex border-t border-border">
-          <a
-            href={directions}
-            target="_blank"
-            rel="noopener noreferrer"
-            // The card's stretched link would otherwise swallow this click.
-            onClick={(e) => e.stopPropagation()}
-            className={cn(
-              "ra-tap flex flex-1 items-center justify-center gap-1.5 text-sm font-medium",
-              "text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
-            )}
-          >
-            <Navigation className="h-4 w-4" aria-hidden="true" />
-            Directions
-            <span className="sr-only">to {business.name}, opens Google Maps</span>
-          </a>
-        </div>
-      )}
+      <CardActions
+        business={business}
+        directions={directions}
+        className="border-t border-border p-3 pt-2.5 [@container(min-width:560px)]:hidden"
+        row
+      />
     </article>
+  );
+}
+
+/**
+ * The two terminal actions. WhatsApp first, because a message is how these
+ * businesses already work; Directions second, for the driver who is going
+ * anyway. Beside the details on a wide screen, beneath them on a phone.
+ */
+function CardActions({
+  business,
+  directions,
+  className,
+  row = false,
+}: {
+  business: BusinessCardType;
+  directions: string | null;
+  className?: string;
+  row?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "relative z-10 shrink-0 gap-2",
+        row ? "flex" : "w-[150px] flex-col justify-center",
+        className,
+      )}
+    >
+      <Link
+        to={`/business/${business.slug}/request`}
+        className={cn("ra-btn ra-btn-whatsapp flex-1", !row && "flex-none")}
+      >
+        <MessageCircle className="h-4 w-4" aria-hidden="true" />
+        WhatsApp
+        <span className="sr-only">: request a booking from {business.name}</span>
+      </Link>
+      {directions && (
+        <a
+          href={directions}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className={cn("ra-btn ra-btn-outline flex-1", !row && "flex-none")}
+        >
+          <Navigation className="h-4 w-4" aria-hidden="true" />
+          Directions
+          <span className="sr-only">to {business.name}, opens Google Maps</span>
+        </a>
+      )}
+    </div>
   );
 }

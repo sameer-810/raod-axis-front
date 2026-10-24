@@ -161,3 +161,33 @@ export function initials(name: string | null | undefined): string {
   if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
   return (words[0][0] + words[1][0]).toUpperCase();
 }
+
+/**
+ * "Closes 7:00 pm", "Opens 09:00 tomorrow", "Opens Mon 9:00 am" — the line
+ * under "Open now" / "Closed". The time is the business's own, written the way
+ * its country writes times: 24-hour in the UK, 12-hour in the UAE.
+ */
+export function formatNextChange(
+  change: { open: boolean; at: string | null; inDays: number } | null | undefined,
+  { locale = LOCALE, timeZone = "Europe/London" }: { locale?: string; timeZone?: string } = {},
+): string {
+  if (!change) return "";
+  if (change.at === null) return change.open ? "Open 24 hours" : "";
+  const [h, m] = change.at.split(":").map(Number);
+  const time = new Intl.DateTimeFormat(locale, {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(2026, 0, 1, h, m)));
+  let when = "";
+  if (change.inDays === 1) when = " tomorrow";
+  else if (change.inDays > 1) {
+    const day = new Intl.DateTimeFormat(locale, { weekday: "short", timeZone }).format(
+      new Date(Date.now() + change.inDays * 86_400_000),
+    );
+    when = ` ${day}`;
+  }
+  return change.open
+    ? `Closes ${time}${when}`
+    : `Opens${when} ${time}`.replace("Opens tomorrow", "Opens tomorrow,");
+}

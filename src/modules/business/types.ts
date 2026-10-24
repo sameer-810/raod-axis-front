@@ -36,6 +36,19 @@ interface Trust {
   averageRating: number | null;
   reviewCount: number;
   isOpen: boolean | null;
+  /**
+   * When `isOpen` next changes, on the business's own clock: the closing time
+   * when open, the opening time when shut. Null when the hours are unknown.
+   */
+  nextChange?: NextChange | null;
+}
+
+export interface NextChange {
+  open: boolean;
+  /** "HH:MM" on the business's clock; null for a business that never closes. */
+  at: string | null;
+  /** 0 = today, 1 = tomorrow… */
+  inDays: number;
 }
 
 /** What a search result card needs. Deliberately smaller than the profile. */

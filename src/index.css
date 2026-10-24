@@ -2,164 +2,149 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── RoadAxis — "Graphite / Orange" ─────────────────────────────────────────
-   Not invented. Measured out of the client's own platform brochure by painted
-   area: #FF7A00 accent, #0E1621 ink, #1A232C raised, #F8FAFC / #F3F4F6 grounds,
-   #E5E7EB hairline, #111827 / #374151 / #6B7280 text. Graphite and orange is a
-   genuine automotive-trade palette and is nothing like the blue every SaaS
-   template defaults to.
+/* ─── RoadAxis — "Black / White / Red" ──────────────────────────────────────
+   Taken from the client's own logo (October 2026): a heavy black wordmark with
+   a red X, on white or on black. Red is the logo's and the action colour;
+   black is the ink; white is the ground. The orange of the 2025 brochure was
+   retired when the logo arrived — two brand reds-and-oranges side by side read
+   as nobody having decided.
 
    Colour does one of two jobs here and never a third: it says what something IS
-   (status) or that you can ACT on it (orange). See DESIGN.md.
+   (status) or that you can ACT on it (red). See DESIGN.md.
 ─────────────────────────────────────────────────────────────────────────── */
 
 @layer base {
   :root,
   .light {
-    /*
-     * A warm off-white, not Tailwind's slate-50.
-     *
-     * #F8FAFC is the ground of ten thousand SaaS dashboards and reads as one.
-     * Two points of warmth is enough to feel like paper rather than a screen,
-     * and it suits a trade that works in daylight; it is still neutral enough
-     * that no contrast figure in this file moves by a measurable amount.
-     */
-    --background: 40 25% 98%; /* #FBFAF8 */
-    --foreground: 221 39% 11%; /* #111827 */
+    /* White, as the logo sits on it. Cards are white too and are separated by
+       hairlines; the grey is for tiles and wells, never for the page. */
+    --background: 0 0% 100%;
+    --foreground: 240 6% 7%; /* #111113 — the logo's black, a breath off pure */
     --card: 0 0% 100%;
-    --card-foreground: 221 39% 11%;
+    --card-foreground: 240 6% 7%;
     --popover: 0 0% 100%;
-    --popover-foreground: 221 39% 11%;
+    --popover-foreground: 240 6% 7%;
 
     /**
-     * RoadAxis orange, as a FILL.
+     * The logo's red, as a FILL behind white text.
      *
-     * --primary-foreground is ink, not white, and that is not a stylistic
-     * preference. #FF7A00 carries 2.61:1 against white — a failure of WCAG AA
-     * on the product's primary action, on every screen at once, on an interface
-     * read outdoors. Against the brand's own ink it carries 6.86:1.
+     * The logo itself is #FA0101, which carries 4.14:1 against white — under AA
+     * for the label on a button. #E10600 is the same red a step deeper and
+     * carries 4.97:1. The difference is invisible beside the logo and is the
+     * difference between a button some people cannot read and one they can.
      */
-    --primary: 29 100% 50%; /* #FF7A00 */
-    --primary-foreground: 215 40% 9%; /* #0E1621 — ink on orange */
-    /**
-     * The same orange, as TEXT on a light ground.
-     *
-     * 38% was the first guess and measured 3.92:1 against the #F8FAFC ground —
-     * a near miss, and exactly the kind that ships because it looks fine. 33%
-     * measures 5.22:1. The e2e contrast check is what caught it.
-     */
-    --primary-text: 29 100% 33%;
+    --primary: 2 100% 44%; /* #E10600 */
+    --primary-foreground: 0 0% 100%;
+    /** Red as TEXT: deeper again, so it holds AA on the grey wells too (5.4:1). */
+    --primary-text: 2 100% 40%;
 
-    --secondary: 220 14% 96%; /* #F3F4F6 */
-    --secondary-foreground: 221 39% 11%;
+    --secondary: 240 5% 96%; /* #F4F4F5 — tiles, wells, chips */
+    --secondary-foreground: 240 6% 7%;
 
-    --muted: 220 14% 96%;
-    /*
-     * 44%, not Tailwind's 46%.
-     *
-     * At 46% this passes on a white card (4.83:1) and fails on our own muted
-     * surface (4.39:1) — which is exactly where the neutral Badge puts it, so
-     * every "Unclaimed" chip in the directory was a hair under AA. Secondary
-     * text has to be readable on every ground the design actually uses it on,
-     * and the badge is the tightest of them.
-     */
-    --muted-foreground: 220 9% 44%; /* #666D7A — 5.21:1 on white, 4.73:1 on muted */
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 40%; /* #626268 — 6.0:1 on white, 5.5:1 on muted */
 
-    --accent: 220 14% 93%;
-    --accent-foreground: 217 19% 27%; /* #374151 */
+    --accent: 240 5% 94%;
+    --accent-foreground: 240 5% 20%;
 
-    --destructive: 0 72% 45%;
+    --destructive: 0 72% 42%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 152 62% 28%; /* verified, open, delivered */
+    --success: 145 63% 28%; /* open, delivered */
     --success-foreground: 0 0% 100%;
 
     --warning: 32 95% 38%; /* pending claim, delivery unknown */
     --warning-foreground: 0 0% 100%;
-    /*
-     * Amber on a 10% amber tint — the warning Badge — measured 3.64:1 at full
-     * strength. Darkened until it clears AA on that ground (4.84:1), the same
-     * move `--primary-text` makes for orange. It is not used on solid grounds;
-     * `--warning` still is.
+    --warning-text: 32 95% 27%; /* holds 4.5:1 on its own tint and on a selected (red-tinted) row */
+
+    /**
+     * The verified tick. Blue, as the tick is blue everywhere a person has seen
+     * one; it is the single most valuable mark on a card and it should not have
+     * to be learned. Used as an icon on white (4.3:1) and never as body text.
      */
-    --warning-text: 32 95% 32%;
+    --verified: 214 89% 52%; /* #1877F2 */
 
-    --border: 220 13% 91%; /* #E5E7EB — the brochure's only border */
-    --input: 220 13% 91%;
-    --ring: 29 100% 45%;
-    --radius: 0.625rem;
+    /**
+     * WhatsApp's own green, deepened until white text on it holds AA (5.4:1).
+     * Their brand green #25D366 carries 2.0:1 with white and would fail on the
+     * product's second most-pressed button.
+     */
+    --whatsapp: 146 78% 27%; /* #0F7A3E */
+    --whatsapp-foreground: 0 0% 100%;
 
-    /* A second, quieter ground for grouping inside a card — table headers, the
-       footer of a drawer, a selected row. One step off `--card`, never grey. */
-    --surface-2: 40 20% 97%;
-    /* Motion. One curve, three durations; nothing else is allowed. */
+    --border: 240 6% 90%; /* #E4E4E7 */
+    --input: 240 6% 88%;
+    --ring: 2 100% 44%;
+    --radius: 0.75rem;
+
+    --surface-2: 240 5% 97%;
     --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
     --dur-fast: 120ms;
     --dur-base: 160ms;
     --dur-slow: 220ms;
 
-    /* The rail stays brand-dark in both themes, exactly as the brochure is. */
-    --sidebar: 215 40% 9%;
-    --sidebar-foreground: 220 14% 84%;
-    --sidebar-primary: 29 100% 50%;
-    --sidebar-primary-foreground: 215 40% 9%;
-    --sidebar-accent: 210 26% 14%;
-    --sidebar-accent-foreground: 220 14% 93%;
-    --sidebar-border: 210 22% 20%;
-    --sidebar-ring: 29 100% 50%;
+    /* The console rail is the logo's black in both themes. */
+    --sidebar: 240 6% 7%;
+    --sidebar-foreground: 240 5% 84%;
+    --sidebar-primary: 2 100% 62%; /* red on black, lifted to 5.9:1 */
+    --sidebar-primary-foreground: 240 6% 7%;
+    --sidebar-accent: 240 5% 13%;
+    --sidebar-accent-foreground: 240 5% 94%;
+    --sidebar-border: 240 5% 18%;
+    --sidebar-ring: 2 100% 62%;
   }
 
   .dark {
-    --background: 215 40% 9%; /* #0E1621 */
-    --foreground: 210 20% 92%;
-    --card: 210 26% 14%; /* #1A232C */
-    --card-foreground: 210 20% 92%;
-    --popover: 210 26% 14%;
-    --popover-foreground: 210 20% 92%;
+    --background: 240 6% 6%; /* #0E0E10 */
+    --foreground: 240 5% 94%;
+    --card: 240 5% 10%; /* #18181B */
+    --card-foreground: 240 5% 94%;
+    --popover: 240 5% 10%;
+    --popover-foreground: 240 5% 94%;
 
-    --primary: 29 100% 52%;
-    --primary-foreground: 215 45% 8%;
-    /* On ink, full-strength orange already passes; a touch lighter reads better. */
-    --primary-text: 29 100% 58%;
+    /* The same red fill with white text holds AA on black as on white. */
+    --primary: 2 100% 44%;
+    --primary-foreground: 0 0% 100%;
+    /* Red as text on black needs lifting; #E10600 is 3.9:1 there. */
+    --primary-text: 2 100% 66%;
 
-    --secondary: 210 22% 18%;
-    --secondary-foreground: 210 20% 92%;
+    --secondary: 240 5% 15%;
+    --secondary-foreground: 240 5% 94%;
 
-    --muted: 210 22% 18%;
-    --muted-foreground: 215 15% 66%;
+    --muted: 240 5% 15%;
+    --muted-foreground: 240 5% 68%;
 
-    --accent: 210 24% 18%;
-    --accent-foreground: 210 20% 95%;
+    --accent: 240 5% 17%;
+    --accent-foreground: 240 5% 96%;
 
-    --destructive: 0 72% 58%;
-    --destructive-foreground: 215 45% 8%;
+    --destructive: 0 72% 60%;
+    --destructive-foreground: 240 6% 6%;
 
-    --success: 152 52% 48%;
-    --success-foreground: 215 45% 8%;
+    --success: 145 52% 50%;
+    --success-foreground: 240 6% 6%;
 
     --warning: 35 92% 55%;
-    --warning-foreground: 215 45% 8%;
-    /*
-     * Unchanged from `--warning` in the dark theme, and deliberately so. The
-     * badge's tint is 10% amber over a near-black card, which barely lifts the
-     * ground — the bright amber already measures well past AA there, and
-     * darkening it would make it harder to read, not easier.
-     */
+    --warning-foreground: 240 6% 6%;
     --warning-text: 35 92% 55%;
 
-    --border: 210 20% 20%;
-    --input: 210 20% 20%;
-    --ring: 29 100% 52%;
-    --surface-2: 210 26% 12%;
+    --verified: 214 100% 66%;
 
-    --sidebar: 215 45% 7%;
-    --sidebar-foreground: 220 14% 84%;
-    --sidebar-primary: 29 100% 52%;
-    --sidebar-primary-foreground: 215 45% 8%;
-    --sidebar-accent: 210 26% 13%;
-    --sidebar-accent-foreground: 220 14% 93%;
-    --sidebar-border: 210 22% 16%;
-    --sidebar-ring: 29 100% 52%;
+    --whatsapp: 146 78% 27%;
+    --whatsapp-foreground: 0 0% 100%;
+
+    --border: 240 5% 20%;
+    --input: 240 5% 22%;
+    --ring: 2 100% 62%;
+    --surface-2: 240 5% 12%;
+
+    --sidebar: 240 6% 5%;
+    --sidebar-foreground: 240 5% 84%;
+    --sidebar-primary: 2 100% 62%;
+    --sidebar-primary-foreground: 240 6% 6%;
+    --sidebar-accent: 240 5% 12%;
+    --sidebar-accent-foreground: 240 5% 94%;
+    --sidebar-border: 240 5% 15%;
+    --sidebar-ring: 2 100% 62%;
   }
 
   * {
@@ -168,28 +153,33 @@
   body {
     @apply bg-background text-foreground antialiased;
   }
+  /*
+   * Barlow, and the reason is the name on the logo. Barlow was drawn from the
+   * lettering on highway signs — the type a driver already reads at speed — so
+   * it is legible at a glance, compact enough for a long garage name on a
+   * 390px card, and it belongs to roads rather than to software. Headings in
+   * its semi-condensed cut, heavy, to sit beside the logo's italic weight.
+   */
   html {
     font-family:
-      "Instrument Sans",
+      Barlow,
       system-ui,
       -apple-system,
       sans-serif;
-    font-feature-settings: "cv11", "ss01";
   }
-  /*
-   * Headings in the display face, with the optical size left to the browser.
-   * Bricolage's `opsz` axis is the reason it was chosen: an h1 at 48px and a
-   * card title at 15px are cut differently, not just scaled.
-   */
   h1,
   h2,
   h3 {
-    font-family: "Bricolage Grotesque", "Instrument Sans", system-ui, sans-serif;
-    font-optical-sizing: auto;
-    letter-spacing: -0.01em;
+    font-family: "Barlow Semi Condensed", Barlow, system-ui, sans-serif;
+    letter-spacing: -0.005em;
   }
   h1 {
-    letter-spacing: -0.025em;
+    letter-spacing: -0.01em;
+  }
+  /* Figures line up in columns wherever a number is shown as data. */
+  .font-mono {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
   }
   /*
    * A designed focus ring, everywhere, by default. Components that draw their
@@ -258,7 +248,7 @@ table,
  * every click on the filter buttons above the results.
  */
 .ra-card {
-  @apply relative overflow-hidden rounded-xl border border-border bg-card transition-colors;
+  @apply relative overflow-hidden rounded-2xl border border-border bg-card transition-colors;
 }
 .ra-card:active {
   @apply bg-accent/40;
@@ -412,10 +402,7 @@ table,
  * deliberate at forty copies per screen.
  */
 .ra-photo-empty {
-  @apply flex h-full w-full items-center justify-center text-primary-text/70;
-  background:
-    radial-gradient(120% 120% at 30% 20%, hsl(var(--primary) / 0.16) 0%, transparent 60%),
-    hsl(var(--muted));
+  @apply flex h-full w-full items-center justify-center bg-muted text-muted-foreground;
 }
 
 /* ── Auth panel ────────────────────────────────────────────────────────── */
@@ -440,15 +427,14 @@ table,
 }
 
 /**
- * The eyebrow: a small mono label above a heading.
+ * The small label above a heading — "For drivers", "Step 2 of 2".
  *
- * An editorial device, and one of the cheapest signals that a page was
- * composed by a person. Every heading in a generated layout sits alone; a label
- * that says what *kind* of thing follows — "For drivers", "Step 2 of 2" — is
- * the difference between a template and a document.
+ * Sentence case, the body face, no tracking. It used to be tiny spaced-out
+ * capitals in a monospace, which the client read, correctly, as the look of a
+ * generated page: it is the most copied device in AI-made layouts.
  */
 .ra-eyebrow {
-  @apply font-mono text-[11px] font-medium uppercase tracking-[0.14em];
+  @apply text-[13px] font-semibold;
 }
 
 /* ── Service tiles ─────────────────────────────────────────────────────── */
@@ -498,6 +484,16 @@ table,
   @apply inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors;
   @apply hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   @apply disabled:pointer-events-none disabled:opacity-60;
+}
+
+/** WhatsApp's own action: their green, deepened for white text (5.4:1). */
+.ra-btn-whatsapp {
+  @apply border-transparent bg-whatsapp font-semibold text-whatsapp-foreground hover:bg-whatsapp/90;
+}
+
+/** A secondary action that still has to be found at a glance: a dark outline. */
+.ra-btn-outline {
+  @apply border-foreground/70 font-semibold hover:border-foreground hover:bg-accent;
 }
 
 /**
@@ -641,7 +637,7 @@ table,
   display: none;
 }
 .ra-chip {
-  @apply inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-border bg-card px-3.5 py-2 text-sm font-medium text-muted-foreground transition-colors;
+  @apply inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-border bg-card px-4 py-2 text-[15px] font-semibold text-foreground transition-colors hover:border-foreground/30;
   /*
    * 44, not 40.
    *
@@ -653,6 +649,10 @@ table,
    * rule; it is a number nobody checked.
    */
   min-height: 44px;
+}
+/** The one chip that acts rather than filters — "Near me". */
+.ra-chip-primary {
+  @apply border-primary bg-primary text-primary-foreground hover:border-primary hover:bg-primary/90;
 }
 .ra-chip[aria-pressed="true"],
 .ra-chip[data-active="true"] {

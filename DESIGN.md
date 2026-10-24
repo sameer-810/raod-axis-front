@@ -68,21 +68,22 @@ Six findings that changed decisions here, rather than a literature review.
 
 ## Brand
 
-Taken from `provided RoadAxis_Platform_Brochure.pdf` by measuring the painted area of
-every fill in the document. This is the client's existing identity, not a proposal.
+**Black, white and the logo's red** (October 2026). The client's logo arrived on 15
+October — a heavy black wordmark with a red X — and on 24 October the client said the
+interface did not look like their brand and looked machine-made. Both were true: the
+product was still in the orange of the 2025 brochure, beside a red logo, and set in the
+defaults generated pages share. The palette now comes from the logo.
 
-| Token      | Hex                               | Brochure role                |
-| ---------- | --------------------------------- | ---------------------------- |
-| Accent     | `#FF7A00`                         | Headings, rules, emphasis    |
-| Ink        | `#0E1621`                         | The dominant dark surface    |
-| Ink raised | `#1A232C`                         | Secondary dark panels        |
-| Ground     | `#F8FAFC`                         | Page background              |
-| Surface    | `#F3F4F6`                         | Muted fills                  |
-| Hairline   | `#E5E7EB`                         | Every border in the document |
-| Text       | `#111827` / `#374151` / `#6B7280` | A three-step hierarchy       |
-
-Graphite and orange is a genuine automotive-trade palette — workshop, high-vis, tooling
-— and it is nothing like the blue every SaaS template defaults to. It is kept.
+| Token      | Value                                            | Role                                              |
+| ---------- | ------------------------------------------------ | ------------------------------------------------- |
+| Red (fill) | `#E10600`                                        | Primary buttons, the active tab, "Near me", the X |
+| Red (text) | `hsl(2 100% 40%)` light · `hsl(2 100% 66%)` dark | Links and red words                               |
+| Ink        | `#111113`                                        | Text; the console rail                            |
+| Ground     | `#FFFFFF`                                        | The page and every card                           |
+| Well       | `#F4F4F5`                                        | Service tiles, chips, the owners' panel           |
+| Hairline   | `#E4E4E7`                                        | Every border                                      |
+| Verified   | `#1877F2`                                        | The tick, and nothing else                        |
+| WhatsApp   | `#0F7A3E`                                        | The WhatsApp button, and nothing else             |
 
 ### The logo
 
@@ -102,20 +103,17 @@ The logo's red is not the interface's accent. Orange stays the colour that means
 act here" (below); the red appears only inside the logo. The two sit side by side in the
 header and were checked there in both themes.
 
-### The orange rule, which is not optional
+### The red rule, which is not optional
 
-`#FF7A00` measures **2.61:1** against white and **6.86:1** against `#0E1621`.
+The logo's red, `#FA0101`, measures **4.14:1** with white text — under AA for the label
+of a button. The button red is a step deeper, `#E10600`, at **4.97:1**, a difference
+nobody sees beside the logo. As text on the grey wells it is deepened again
+(`--primary-text`, 5.4:1). On black, red text is lifted instead (`hsl(2 100% 66%)`),
+because `#E10600` is 3.9:1 there. `--primary` is for fills, `--primary-text` for words;
+they are different values on purpose. The e2e contrast checks hold all of it.
 
-The first fails WCAG AA outright. The second passes comfortably. Therefore:
-
-- **A filled orange button takes ink-coloured text, never white.** This is the opposite
-  of the reflex, and the reflex produces a button that a third of users over 40 cannot
-  read in daylight — on a product used outdoors, at the roadside.
-- **Orange as text on a light ground must be darkened** to `hsl(29 100% 38%)`, which
-  reaches 4.6:1. The `--primary` token is for fills; `--primary-text` is for text. They
-  are different values on purpose and are not interchangeable.
-- Full-strength orange on dark is correct and needs no adjustment. This is why the
-  brochure looks right and a naive light-mode port of it would not.
+WhatsApp's own green, `#25D366`, carries 2.0:1 with white; the button uses the same green
+deepened to `#0F7A3E` (5.4:1).
 
 ### Colour discipline
 
@@ -127,10 +125,10 @@ The first fails WCAG AA outright. The second passes comfortably. Therefore:
   is the signal — closed, unclaimed, failed delivery, overdue claim. If everything on a
   screen is coloured, nothing reads as urgent and the one thing that needs attention is
   camouflaged by the four that do not.
-- **The Verified badge is the single most valuable pixel on the public side** and is the
-  one place a status colour appears on a card by default. It is what the entire claim
-  and document-review pipeline exists to produce. Do not spend the same treatment on
-  anything else.
+- **The verified tick is the single most valuable pixel on the public side.** Blue,
+  beside the name, as it is in every product a person already uses — it should not have
+  to be learned. It is drawn only for a business whose claim was approved against a
+  document, and blue is spent on nothing else.
 
 ### Dark mode is first-class
 
@@ -142,28 +140,22 @@ face. Both themes are designed, not one derived from the other.
 
 ## Typography
 
-The brochure's NotoSerif is the PDF exporter's default, not a brand decision, and is not
-inherited.
+**Barlow**, and its semi-condensed cut for headings. Barlow was drawn from the lettering
+on highway signs — the type a driver already reads at speed. It is legible at a glance,
+compact enough for "Al Quoz Tyre & Alignment Centre" on a 390 px card, and it belongs to
+roads rather than to software, which is the point: the previous faces were chosen to
+avoid looking generated and the client still read the result as generated, because the
+faces were not _about_ anything.
 
-- **Interface — `Inter Tight`.** Slightly condensed, so a UK business name like
-  "Bridgewater Tyre & Exhaust Centre" fits a 390 px card without wrapping to three
-  lines, which is the actual constraint on this product's most-repeated element.
-- **Data — `IBM Plex Mono`.** Every distance, price, rating, phone number, date, time and
-  reference is set in mono with `tabular-nums`.
+- **Headings — Barlow Semi Condensed, 700–800**, sitting beside the logo's heavy italic.
+- **Everything else — Barlow, 400–600.**
+- **Figures — Barlow with tabular numerals.** `font-mono` is mapped to Barlow and
+  `.font-mono` switches on `tabular-nums`, so distances, prices and ratings still line up
+  in columns without a typewriter face.
 
-**Never a third family.**
-
-### Why mono is not decoration here
-
-`font-mono` must be _declared_. Left undeclared, Tailwind falls through to Consolas on
-Windows, Menlo on macOS and something else on Linux, and every figure in a product whose
-job is comparing figures renders differently on every machine. It is declared in
-`tailwind.config.js`.
-
-The rule: **anything you compare against another instance of itself is mono.** "1.2 km"
-above "800 m" above "3.4 km" only scans as a column when the digits are the same width.
-
-Weight ladder: 300 secondary · 400 body · 500 interactive · 600–700 headings.
+**No small spaced-out capitals** on the public side. The tiny letter-spaced label above
+a heading is the most copied device in generated layouts; labels are sentence case, in
+the body face.
 
 ---
 
@@ -229,6 +221,29 @@ Rules:
   Claim action attached, and it is styled as neutral information.
 
 ---
+
+## The home page (October 2026)
+
+Built to the client's reference, in this order, because it is the order a driver needs:
+
+1. **Search** — what, and where. One row on a laptop, two on a phone; the "where" stays,
+   because a postcode is how a British driver says where they are.
+2. **Quick filters** — Near me (the one red chip, because it acts), Verified, Open now,
+   Map. Each is a real search one tap away.
+3. **Services as photographs** — the work itself, not icons. Real photographs from
+   Unsplash, stored in the site; a category without one shows its icon.
+4. **One banner** — black, the car, two red stripes. One, not a carousel.
+5. **The garages** — nearest first when the driver has shared where they are, top-rated
+   otherwise, and the heading says which.
+6. **Run a garage?** — the supply side, last.
+
+The garage card answers: what it looks like (photo, "Open now" on it), is it real (tick),
+what they do, where, until when ("Closes 7:00 PM", in the garage's own time zone and
+clock style), and the two actions — **WhatsApp** in green, **Directions** outlined. The
+card lays itself out by its own width (a container query), so two-up in a search grid it
+stacks the actions as a phone does.
+
+The bottom bar is Home · Explore · Saved · Profile, red with a bar beneath when active.
 
 ## Layout — public
 

@@ -1,9 +1,8 @@
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
 import { useFacets } from "../hooks/useBusinesses";
 import { PageLoader } from "@/shared/components/PageLoader";
 import { EmptyState } from "@/shared/components/EmptyState";
-import { CategoryIcon } from "@/shared/components/CategoryIcon";
+import { ServiceTile } from "@/shared/components/ServiceTile";
 import { useSeo } from "@/shared/hooks/useSeo";
 
 /**
@@ -27,9 +26,7 @@ export function CategoriesPage() {
     <div className="ra-shell py-6 md:py-10">
       <div className="ra-public">
         <header>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
-            Browse by service
-          </h1>
+          <h1 className="text-3xl font-bold text-foreground md:text-4xl">Browse by service</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Every category with at least one business listed.
           </p>
@@ -53,30 +50,16 @@ export function CategoriesPage() {
             The same tile as the home page, at a larger size. One component's
             worth of design used twice rather than two near-identical grids.
           */
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {facets.map((f) => (
-              <Link
+              <ServiceTile
                 key={f.slug}
+                slug={f.slug}
+                name={f.name}
+                icon={f.icon}
+                count={f.count}
                 to={`/search?category=${f.slug}`}
-                className="ra-card group flex items-center gap-3.5 p-4 transition-colors hover:border-primary/40 hover:bg-accent"
-              >
-                <span className="ra-service-icon">
-                  <CategoryIcon name={f.icon} className="h-5 w-5" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[15px] font-semibold text-foreground">
-                    {f.name}
-                  </span>
-                  <span className="mt-0.5 block text-sm text-muted-foreground">
-                    <span className="font-mono tabular-nums">{f.count}</span>{" "}
-                    {f.count === 1 ? "business" : "businesses"}
-                  </span>
-                </span>
-                <ArrowRight
-                  className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
-                  aria-hidden="true"
-                />
-              </Link>
+              />
             ))}
           </div>
         )}
