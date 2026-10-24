@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, MessageCircle, CalendarClock } from "lucide-react";
+import { ArrowLeft, CheckCircle2, CalendarClock } from "lucide-react";
+import { WhatsAppIcon } from "@/shared/components/WhatsAppIcon";
 import { getApiErrorMessage, getApiFieldErrors } from "@/shared/api/http";
 import { Field } from "@/shared/components/Field";
 import { PageLoader } from "@/shared/components/PageLoader";
@@ -175,9 +176,9 @@ export function RequestBookingPage() {
                 href={result.request.deepLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="ra-tap inline-flex items-center gap-2 rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                className="ra-btn ra-btn-whatsapp px-5"
               >
-                <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                <WhatsAppIcon className="h-[18px] w-[18px]" />
                 Open WhatsApp to send it
               </a>
               <p className="mt-2 text-xs text-muted-foreground">

@@ -7,10 +7,10 @@ import {
   Store,
   ArrowLeft,
   SearchX,
-  MessageCircle,
   CalendarClock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { WhatsAppIcon } from "@/shared/components/WhatsAppIcon";
 import { TrustRow } from "@/shared/components/TrustRow";
 import { Badge } from "@/shared/components/Badge";
 import { EmptyState } from "@/shared/components/EmptyState";
@@ -96,7 +96,7 @@ export function BusinessProfilePage() {
     .join(", ");
 
   return (
-    <div className="ra-shell py-5 pb-28 md:py-8 lg:pb-10">
+    <div className="ra-shell py-5 pb-44 md:pb-28 md:pt-8 lg:pb-10">
       <Link
         to="/search"
         className="ra-tap -ms-2 inline-flex w-fit items-center gap-1.5 rounded-lg px-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -315,10 +315,7 @@ export function BusinessProfilePage() {
                             {number.phoneFormatted}
                           </span>
                         </span>
-                        <MessageCircle
-                          className="h-5 w-5 shrink-0 text-success"
-                          aria-hidden="true"
-                        />
+                        <WhatsAppIcon className="h-6 w-6 shrink-0 text-[#25D366]" />
                         <span className="sr-only">on WhatsApp, opens in a new tab</span>
                       </a>
                     </li>
@@ -373,8 +370,13 @@ export function BusinessProfilePage() {
         things, and making them scroll back past the opening hours to find
         Directions is the difference between a useful page and a brochure.
       */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background p-3 lg:hidden">
-        <div className="ra-safe-bottom flex gap-2">
+      {/*
+        Above the site's tab bar on a phone, not underneath it. It used to sit
+        at the very bottom with the tab bar drawn over it, so the buttons were
+        half hidden — the client's "drivers need to scroll to find WhatsApp".
+      */}
+      <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] z-30 border-t border-border bg-background p-3 md:bottom-0 lg:hidden">
+        <div className="flex gap-1.5">
           <ProfileActions business={business} />
         </div>
       </div>
@@ -391,19 +393,49 @@ function ProfileActions({
   business,
   stacked = false,
 }: {
-  business: { name: string; slug: string; phone: string | null; directionsUrl: string | null };
+  business: {
+    name: string;
+    slug: string;
+    phone: string | null;
+    directionsUrl: string | null;
+    whatsappNumbers: Array<{ waLink: string; label: string }>;
+  };
   stacked?: boolean;
 }) {
   const shape = stacked ? "w-full" : "flex-1";
+  // The business's primary WhatsApp number, first in the list. On a phone it
+  // sits in the bar pinned to the bottom of the screen, so a driver never has
+  // to scroll to find it — the client asked for exactly that.
+  const whatsapp = business.whatsappNumbers[0];
   return (
     <>
+      {whatsapp && (
+        <a
+          href={whatsapp.waLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn("ra-btn ra-btn-whatsapp", shape, !stacked && "min-w-0 px-2 text-[14px]")}
+        >
+          <WhatsAppIcon className="h-[18px] w-[18px]" />
+          WhatsApp
+          <span className="sr-only"> {business.name}, opens WhatsApp</span>
+        </a>
+      )}
       {/*
         The primary action, and the product's whole purpose. "Request a
         Booking", never "Book" — a driver who turns up expecting a held slot is
         a failure of copywriting (FR-BKG-10).
       */}
-      <Link to={`/business/${business.slug}/request`} className={cn("ra-btn-primary", shape)}>
-        <CalendarClock className="h-4 w-4" aria-hidden="true" />
+      <Link
+        to={`/business/${business.slug}/request`}
+        className={cn(
+          "ra-btn-primary",
+          shape,
+          !stacked && "min-w-0 whitespace-nowrap px-2 text-[14px]",
+        )}
+      >
+        {/* The icon goes on a phone, where the words need the room. */}
+        {stacked && <CalendarClock className="h-4 w-4" aria-hidden="true" />}
         Request a Booking
       </Link>
       {stacked && (
@@ -414,9 +446,14 @@ function ProfileActions({
         </p>
       )}
       {business.phone && (
-        <a href={`tel:${business.phone}`} className={cn("ra-btn", shape)}>
+        <a
+          href={`tel:${business.phone}`}
+          // Under 380px the bar has room for three; Call steps out, and the
+          // number stays one tap away under "Find them".
+          className={cn("ra-btn", stacked ? shape : "w-11 shrink-0 px-0 max-[379px]:hidden")}
+        >
           <Phone className="h-4 w-4" aria-hidden="true" />
-          Call
+          {stacked ? "Call" : <span className="sr-only">Call</span>}
         </a>
       )}
       {business.directionsUrl && (
@@ -424,11 +461,11 @@ function ProfileActions({
           href={business.directionsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className={cn("ra-btn", shape)}
+          className={cn("ra-btn", stacked ? shape : "w-11 shrink-0 px-0")}
         >
           <Navigation className="h-4 w-4" aria-hidden="true" />
-          Directions
-          <span className="sr-only">to {business.name}, opens Google Maps</span>
+          <span className={stacked ? undefined : "sr-only"}>Directions</span>
+          <span className="sr-only"> to {business.name}, opens Google Maps</span>
         </a>
       )}
     </>

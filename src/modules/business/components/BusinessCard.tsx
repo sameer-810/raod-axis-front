@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { BadgeCheck, Clock, MapPin, MessageCircle, Navigation, Star, Wrench } from "lucide-react";
+import { BadgeCheck, Clock, MapPin, Navigation, Star, Wrench } from "lucide-react";
+import { WhatsAppIcon } from "@/shared/components/WhatsAppIcon";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/shared/components/Badge";
 import { CategoryIcon } from "@/shared/components/CategoryIcon";
@@ -220,7 +221,7 @@ function CardActions({
         to={`/business/${business.slug}/request`}
         className={cn("ra-btn ra-btn-whatsapp flex-1", !row && "flex-none")}
       >
-        <MessageCircle className="h-4 w-4" aria-hidden="true" />
+        <WhatsAppIcon className="h-[18px] w-[18px]" />
         WhatsApp
         <span className="sr-only">: request a booking from {business.name}</span>
       </Link>

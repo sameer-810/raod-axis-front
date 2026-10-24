@@ -49,7 +49,9 @@ export function ServiceTile({
         )}
       </span>
       <span className="px-1 pb-1 pt-2 text-center">
-        <span className="block truncate text-[14px] font-semibold leading-tight text-foreground sm:text-[15px]">
+        {/* Two lines rather than an ellipsis: "Air Conditioning" on a 360px
+            phone was "Air Conditi…", which the client caught. */}
+        <span className="flex min-h-[2.4em] items-center justify-center text-[13px] font-semibold leading-[1.2] text-foreground [overflow-wrap:anywhere] sm:text-[15px]">
           {name}
         </span>
         {count !== undefined && (

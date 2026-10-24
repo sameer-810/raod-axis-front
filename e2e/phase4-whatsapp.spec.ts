@@ -206,9 +206,14 @@ test.describe("Phase 4 · What a driver sees", () => {
     await expect(section.getByText("Customer Support")).toBeVisible();
     await expect(section.getByText("Emergency")).toBeVisible();
 
-    const link = page.getByRole("link", { name: /customer support/i });
+    const link = section.getByRole("link", { name: /customer support/i });
     await expect(link).toHaveAttribute("href", /^https:\/\/wa\.me\/447700900718/);
     await expect(link).toHaveAttribute("target", "_blank");
+
+    // And the primary number is one tap away without scrolling: the green
+    // WhatsApp button in the actions (the client's request, October 2026).
+    const quick = page.getByRole("link", { name: /^WhatsApp.*opens WhatsApp/ }).first();
+    await expect(quick).toHaveAttribute("href", /^https:\/\/wa\.me\/447700900718/);
   });
 
   test("a switched-off number disappears from the profile entirely", async ({ page }) => {
