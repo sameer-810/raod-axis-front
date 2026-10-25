@@ -40,7 +40,14 @@ export const businessApi = {
 
   async facets() {
     const res = await http.get<{
-      data: Array<{ id: string; name: string; slug: string; icon: string | null; count: number }>;
+      data: Array<{
+        id: string;
+        name: string;
+        slug: string;
+        icon: string | null;
+        photoUrl?: string | null;
+        count: number;
+      }>;
     }>("/businesses/facets");
     return res.data.data;
   },

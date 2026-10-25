@@ -99,9 +99,9 @@ product shows is traced from the dark-ground one:
   for the favicon and the phone topbar, where a 9:1 wordmark cannot fit. The client's
   artwork has no separate symbol; the X is the one part of it that reads at 16 px.
 
-The logo's red is not the interface's accent. Orange stays the colour that means "you can
-act here" (below); the red appears only inside the logo. The two sit side by side in the
-header and were checked there in both themes.
+Since October 2026 the logo's red is also the interface's accent (one step deeper, below).
+Until then the product was orange beside a red logo, which is what the client meant by
+"not our brand".
 
 ### The red rule, which is not optional
 
@@ -117,8 +117,9 @@ deepened to `#0F7A3E` (5.4:1).
 
 ### Colour discipline
 
-- **Orange means "you can act here"** — primary buttons, the active nav item, focus
-  rings, links. If orange appears on something unclickable, it is wrong.
+- **Red means "you can act here"** — primary buttons, the active tab, focus rings, links.
+  If red appears on something unclickable, it is wrong. (Destructive actions use the
+  same red with a confirmation; they are never the only red on a screen.)
 - **Status colour is functional and reserved**: success, warning, destructive. Never use
   a status colour for emphasis.
 - A card, badge or tile is **neutral by default** and coloured only when the value itself
@@ -410,7 +411,7 @@ Everything above holds. This is what changes below `md` (768 px).
 WCAG 2.2 AA throughout, and three requirements that this product in particular will fail
 without deliberate effort:
 
-1. **The orange rule above.** Get it wrong and the primary action fails contrast on every
+1. **The red rule above.** Get it wrong and the primary action fails contrast on every
    screen at once.
 2. **Sunlight.** This interface is read outdoors. Body text does not go below `#374151`
    on light, and hairlines are never the only thing separating two regions.

@@ -66,9 +66,7 @@ export function DescriptionList({
     <dl className={cn("grid gap-x-6 gap-y-3", columns === 2 && "sm:grid-cols-2", className)}>
       {items.map((it) => (
         <div key={it.label} className="min-w-0">
-          <dt className="text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
-            {it.label}
-          </dt>
+          <dt className="text-[12.5px] font-semibold text-muted-foreground">{it.label}</dt>
           <dd
             className={cn(
               "mt-0.5 break-words text-sm text-foreground",

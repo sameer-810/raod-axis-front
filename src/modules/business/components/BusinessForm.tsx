@@ -393,7 +393,7 @@ export function BusinessForm({
                       className="h-full w-full object-cover"
                     />
                     {i === 0 && (
-                      <span className="absolute start-1.5 top-1.5 rounded bg-primary px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-foreground">
+                      <span className="absolute start-1.5 top-1.5 rounded bg-primary px-1.5 py-0.5 text-[11px] font-semibold text-primary-foreground">
                         Cover
                       </span>
                     )}

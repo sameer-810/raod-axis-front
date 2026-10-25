@@ -70,7 +70,7 @@ export function Sidebar() {
           <>
             <div className="min-w-0 flex-1">
               <Logo onDark className="text-sidebar-foreground" />
-              <p className="mt-1 font-mono text-[10.5px] uppercase tracking-[0.12em] text-sidebar-foreground/45">
+              <p className="mt-1 text-[12.5px] font-medium text-sidebar-foreground/45">
                 {workspace}
               </p>
             </div>
@@ -124,7 +124,7 @@ export function Sidebar() {
         {sections.map((section, i) => (
           <div key={section.heading ?? i}>
             {section.heading && !collapsed && (
-              <p className="mb-1 px-2 font-mono text-[10.5px] font-medium uppercase tracking-[0.12em] text-sidebar-foreground/40">
+              <p className="mb-1 px-2 text-[12.5px] font-semibold text-sidebar-foreground/40">
                 {section.heading}
               </p>
             )}

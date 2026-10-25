@@ -13,6 +13,7 @@ export function ServiceTile({
   slug,
   name,
   icon,
+  photoUrl,
   count,
   to,
   className,
@@ -20,11 +21,13 @@ export function ServiceTile({
   slug: string;
   name: string;
   icon?: string | null;
+  /** Uploaded in Console → Categories; wins over the site's own photo. */
+  photoUrl?: string | null;
   count?: number;
   to: string;
   className?: string;
 }) {
-  const photo = servicePhoto(slug);
+  const photo = servicePhoto(slug, photoUrl);
   return (
     <Link
       to={to}

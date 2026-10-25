@@ -19,6 +19,7 @@
  *   air-conditioning photo-1775848365860-be55fa16c090
  *   engine           photo-1486262715619-67b85e0b08d3
  *   mobile-service   photo-1686412537635-8d8d0d5d1bd5
+ *   wheels           photo-1744223736692-2fe8e10a6dae
  *   promo banner     photo-1747770641554-a1c16ad4821e (mirrored)
  */
 const PHOTOS = new Set([
@@ -33,8 +34,17 @@ const PHOTOS = new Set([
   "air-conditioning",
   "engine",
   "mobile-service",
+  "wheels",
 ]);
 
-export function servicePhoto(slug: string | null | undefined): string | null {
+/**
+ * The picture for a service: one uploaded in the console wins, then the
+ * site's own, then nothing (and the tile shows the icon).
+ */
+export function servicePhoto(
+  slug: string | null | undefined,
+  uploaded?: string | null,
+): string | null {
+  if (uploaded) return uploaded;
   return slug && PHOTOS.has(slug) ? `/images/services/${slug}.webp` : null;
 }

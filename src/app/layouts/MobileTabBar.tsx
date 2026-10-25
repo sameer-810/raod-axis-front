@@ -75,7 +75,7 @@ export function MobileTabBar() {
           {sections.map((section, i) => (
             <div key={section.heading ?? i}>
               {section.heading && (
-                <p className="pb-1.5 font-mono text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                <p className="pb-1.5 text-[12.5px] font-semibold text-muted-foreground">
                   {section.heading}
                 </p>
               )}

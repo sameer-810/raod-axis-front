@@ -297,7 +297,7 @@ export function DataTable<T>({
                         })
                       }
                       className={cn(
-                        "ra-focus group -mx-1 inline-flex h-7 items-center gap-1 rounded px-1 uppercase tracking-[0.06em] hover:text-foreground",
+                        "ra-focus group -mx-1 inline-flex h-7 items-center gap-1 rounded px-1 hover:text-foreground",
                         col.align === "end" && "flex-row-reverse",
                       )}
                     >

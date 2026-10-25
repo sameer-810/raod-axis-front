@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Plus, Trash2, Lightbulb, Tags } from "lucide-react";
+import { useRef, useState } from "react";
+import { Plus, Trash2, Lightbulb, Tags, ImagePlus, ImageOff } from "lucide-react";
 import { toast } from "@/shared/lib/toast";
 import { getApiErrorMessage } from "@/shared/api/http";
 import { Badge } from "@/shared/components/Badge";
@@ -13,6 +13,8 @@ import { Switch } from "@/shared/components/Switch";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { RowMenu } from "@/shared/components/Menu";
 import { CategoryIcon } from "@/shared/components/CategoryIcon";
+import { servicePhoto } from "@/shared/lib/servicePhotos";
+import { mediaApi } from "@/modules/business/api/mediaApi";
 import type { Category } from "@/modules/business/types";
 import {
   useAdminCategories,
@@ -39,6 +41,69 @@ export function AdminCategoriesPage() {
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<Category | null>(null);
+  /** The category a photo is being chosen for; the one file input serves every row. */
+  const photoFor = useRef<Category | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState<string | null>(null);
+
+  function choosePhoto(c: Category) {
+    photoFor.current = c;
+    fileInput.current?.click();
+  }
+
+  async function onPhotoChosen(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    const c = photoFor.current;
+    e.target.value = "";
+    if (!file || !c) return;
+    setUploading(c.id);
+    try {
+      const media = await mediaApi.upload(file, "photo");
+      await update.mutateAsync({ id: c.id, payload: { photoId: media.id } });
+      toast.success(`Photo added to ${c.name}`);
+    } catch (err) {
+      toast.error(getApiErrorMessage(err));
+    } finally {
+      setUploading(null);
+    }
+  }
+
+  async function removePhoto(c: Category) {
+    try {
+      await update.mutateAsync({ id: c.id, payload: { photoId: null } });
+      toast.success(`Photo removed from ${c.name}`);
+    } catch (err) {
+      toast.error(getApiErrorMessage(err));
+    }
+  }
+
+  /** What the tile on the site shows, so the console shows the same. */
+  const thumb = (c: Category, size: string) => {
+    const photo = servicePhoto(c.slug, c.photoUrl);
+    return photo ? (
+      <img
+        src={photo}
+        alt=""
+        aria-hidden="true"
+        className={`${size} shrink-0 rounded-md bg-muted object-cover ${uploading === c.id ? "opacity-50" : ""}`}
+      />
+    ) : (
+      <span className={`ra-service-icon ${size} rounded-md`}>
+        <CategoryIcon name={c.icon ?? c.name} className="h-4 w-4" />
+      </span>
+    );
+  };
+
+  const photoActions = (c: Category) => [
+    {
+      label: c.photoUrl ? "Change photo" : "Add photo",
+      icon: ImagePlus,
+      onSelect: () => choosePhoto(c),
+    },
+    ...(c.photoUrl
+      ? [{ label: "Remove photo", icon: ImageOff, onSelect: () => void removePhoto(c) }]
+      : []),
+  ];
 
   async function add(e: React.FormEvent) {
     e.preventDefault();
@@ -88,9 +153,7 @@ export function AdminCategoriesPage() {
       wrap: true,
       cell: (c) => (
         <span className="flex items-center gap-2.5">
-          <span className="ra-service-icon h-7 w-7 rounded-md">
-            <CategoryIcon name={c.icon ?? c.name} className="h-3.5 w-3.5" />
-          </span>
+          {thumb(c, "h-9 w-12")}
           <span className="font-medium text-foreground">{c.name}</span>
           {!c.isActive && <Badge tone="warning">Hidden</Badge>}
         </span>
@@ -178,6 +241,8 @@ export function AdminCategoriesPage() {
             density="comfortable"
             minWidth={520}
             rowActions={(c) => [
+              ...photoActions(c),
+              { type: "separator" as const },
               {
                 label: c.isActive ? "Hide from the public" : "Show publicly",
                 onSelect: () => void toggle(c, !c.isActive),
@@ -196,9 +261,7 @@ export function AdminCategoriesPage() {
             }
             mobileRow={(c) => (
               <div className="ra-card flex items-center gap-3 p-3.5">
-                <span className="ra-service-icon h-9 w-9">
-                  <CategoryIcon name={c.icon ?? c.name} className="h-4 w-4" />
-                </span>
+                {thumb(c, "h-11 w-14")}
                 <div className="min-w-0 flex-1">
                   <p className="flex items-center gap-2 text-sm font-medium text-foreground">
                     {c.name}
@@ -213,6 +276,8 @@ export function AdminCategoriesPage() {
                 />
                 <RowMenu
                   items={[
+                    ...photoActions(c),
+                    { type: "separator" as const },
                     {
                       label: "Delete",
                       icon: Trash2,
@@ -266,6 +331,16 @@ export function AdminCategoriesPage() {
           )}
         </SectionCard>
       </div>
+
+      {/* One hidden input for every row: the row's menu says which category. */}
+      <input
+        ref={fileInput}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        aria-label="Photo for the category"
+        onChange={(e) => void onPhotoChosen(e)}
+      />
 
       <Dialog open={open} onClose={() => setOpen(false)} title="Add category" size="sm">
         {form}

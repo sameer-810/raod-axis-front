@@ -25,9 +25,7 @@ export function Timeline({
     <div className={cn("space-y-6", className)}>
       {groups.map((g) => (
         <section key={g.label} aria-label={g.label}>
-          <p className="mb-2 ps-11 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
-            {g.label}
-          </p>
+          <p className="mb-2 ps-11 text-[12.5px] font-semibold text-muted-foreground">{g.label}</p>
           <ol className="ra-timeline">
             {g.entries.map((e) => (
               <li key={e.id} className="relative py-2 pe-2 ps-11">

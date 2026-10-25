@@ -229,6 +229,7 @@ export function HomePage() {
                 slug={c.slug}
                 name={c.name}
                 icon={c.icon}
+                photoUrl={c.photoUrl}
                 count={countFor(c.slug)}
                 to={`/search?category=${c.slug}`}
               />

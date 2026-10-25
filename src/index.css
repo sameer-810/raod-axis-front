@@ -812,7 +812,7 @@ table,
   @apply w-full border-collapse text-[13px];
 }
 .ra-table th {
-  @apply h-9 whitespace-nowrap border-b border-border bg-surface-2 px-3 text-start text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground;
+  @apply h-9 whitespace-nowrap border-b border-border bg-surface-2 px-3 text-start text-[12.5px] font-semibold text-muted-foreground;
 }
 .ra-table th:first-child,
 .ra-table td:first-child {

@@ -57,6 +57,7 @@ export function CategoriesPage() {
                 slug={f.slug}
                 name={f.name}
                 icon={f.icon}
+                photoUrl={f.photoUrl}
                 count={f.count}
                 to={`/search?category=${f.slug}`}
               />

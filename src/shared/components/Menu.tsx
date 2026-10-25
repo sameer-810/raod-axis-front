@@ -213,7 +213,7 @@ export function Menu({
                 return (
                   <p
                     key={i}
-                    className="px-2 pb-1 pt-1.5 text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground"
+                    className="px-2 pb-1 pt-1.5 text-[12.5px] font-semibold text-muted-foreground"
                   >
                     {it.label}
                   </p>

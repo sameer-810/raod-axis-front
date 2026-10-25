@@ -306,7 +306,7 @@ export function AdminWhatsAppLogsPage() {
               </p>
             )}
             <div>
-              <h3 className="mb-2 text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+              <h3 className="mb-2 text-[12.5px] font-semibold text-muted-foreground">
                 What Meta reported
               </h3>
               {open.history.length === 0 ? (

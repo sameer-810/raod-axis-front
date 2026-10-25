@@ -226,7 +226,7 @@ export function PrivacyPage() {
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-left text-sm">
                   <thead>
-                    <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
+                    <tr className="border-b border-border text-[13px] font-semibold text-muted-foreground">
                       <th scope="col" className="py-2 pe-4 font-medium">
                         What
                       </th>

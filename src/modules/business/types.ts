@@ -3,6 +3,8 @@ export interface Category {
   name: string;
   slug: string;
   icon: string | null;
+  /** A photograph uploaded in the console for the service tile. */
+  photoUrl?: string | null;
   description: string | null;
   sortOrder: number;
   isActive: boolean;

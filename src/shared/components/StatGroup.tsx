@@ -35,9 +35,7 @@ export function Stat({
 
   return (
     <div className={cn("ra-tile min-w-0", className)}>
-      <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
-        {label}
-      </p>
+      <p className="text-[12.5px] font-semibold text-muted-foreground">{label}</p>
       <div className="mt-2.5 flex items-baseline gap-2">
         <p
           className={cn(
