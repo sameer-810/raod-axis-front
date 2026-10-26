@@ -10,6 +10,7 @@ import {
   Star,
   Upload,
   Users,
+  Globe2,
 } from "lucide-react";
 import type { Role } from "@/modules/auth/authSlice";
 
@@ -184,6 +185,14 @@ const SECTIONS: MenuSection[] = [
         roles: ["admin"],
         shortcut: "g s",
         keywords: ["users", "people", "staff", "deactivate", "erase", "delete"],
+      },
+      {
+        label: "Countries",
+        to: "/admin/countries",
+        icon: Globe2,
+        roles: ["admin"],
+        shortcut: "g k",
+        keywords: ["uk", "uae", "markets", "open", "pause", "launch", "country"],
       },
       {
         label: "Audit Log",

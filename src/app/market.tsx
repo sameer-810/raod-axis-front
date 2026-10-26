@@ -76,8 +76,13 @@ function readCache(): MarketList | undefined {
 interface MarketContextValue {
   /** The country being browsed. */
   market: Market;
-  /** Every country that is switched on. */
+  /** Every country open to the public — the site's country switch. */
   markets: Market[];
+  /**
+   * Every country this server serves, open or paused. The console's filters
+   * and forms use this, so a paused country's listings can still be edited.
+   */
+  allMarkets: Array<Market & { live: boolean }>;
   /** The server's own default country, once it has said. */
   defaultCode: string | null;
   /** False until the server's list — or a remembered copy of it — is in hand. */
@@ -107,10 +112,16 @@ export function MarketProvider({ children }: { children: ReactNode }) {
     initialData: readCache,
     // The remembered copy is for the first paint only; always check it.
     initialDataUpdatedAt: 0,
-    staleTime: 30 * 60 * 1000,
+    // Five minutes, not thirty: a country can be opened or paused from the
+    // console, and an open tab should notice within a few page views.
+    staleTime: 5 * 60 * 1000,
   });
 
   const markets = useMemo(() => (data?.markets?.length ? data.markets : [FIRST_MARKET]), [data]);
+  const allMarkets = useMemo(
+    () => (data?.all?.length ? data.all : markets.map((m) => ({ ...m, live: true }))),
+    [data, markets],
+  );
   const stored = useSyncExternalStore(marketStore.subscribe, marketStore.get, () => null);
 
   const market = useMemo(() => {
@@ -158,23 +169,25 @@ export function MarketProvider({ children }: { children: ReactNode }) {
 
   const setMarket = useCallback((code: string) => marketStore.set(code, { remember: true }), []);
 
+  // From every served country: a listing in a paused one still has its own rules.
   const marketFor = useCallback(
     (code: string | null | undefined) =>
-      markets.find((m) => m.code === String(code ?? "").toUpperCase()) ?? market,
-    [markets, market],
+      allMarkets.find((m) => m.code === String(code ?? "").toUpperCase()) ?? market,
+    [allMarkets, market],
   );
 
   const value = useMemo<MarketContextValue>(
     () => ({
       market,
       markets,
+      allMarkets,
       defaultCode: data?.default ?? null,
       ready: Boolean(data),
       hasChoice: markets.length > 1,
       setMarket,
       marketFor,
     }),
-    [market, markets, data, setMarket, marketFor],
+    [market, markets, allMarkets, data, setMarket, marketFor],
   );
 
   return <MarketContext.Provider value={value}>{children}</MarketContext.Provider>;

@@ -36,6 +36,7 @@ const ENTITY_TYPES = [
   { value: "claim", label: "Claims" },
   { value: "user", label: "Accounts" },
   { value: "category", label: "Categories" },
+  { value: "country", label: "Countries" },
 ];
 const ACTIONS = [
   { value: "", label: "All actions" },
@@ -48,6 +49,8 @@ const ACTIONS = [
   { value: "user.erased", label: "Account erased" },
   { value: "user.created", label: "Staff account created" },
   { value: "whatsapp_message.retried", label: "Message re-sent" },
+  { value: "country.paused", label: "Country paused" },
+  { value: "country.opened", label: "Country opened" },
 ];
 
 /** "Today", "Yesterday", then the date. */

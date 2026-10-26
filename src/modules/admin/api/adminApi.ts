@@ -217,3 +217,26 @@ export const adminCategoryApi = {
     return res.data.data;
   },
 };
+
+/** One served country, as the console's Countries page shows it (D-043). */
+export interface CountryOverview {
+  code: string;
+  name: string;
+  /** As it reads in a sentence: "the UAE". */
+  shortName: string;
+  live: boolean;
+  isDefault: boolean;
+  listings: { live: number; total: number };
+}
+
+export const adminCountryApi = {
+  async overview() {
+    const res = await http.get<{ data: CountryOverview[] }>("/markets/admin");
+    return res.data.data;
+  },
+
+  async setLive(code: string, live: boolean) {
+    const res = await http.patch<{ data: CountryOverview[] }>(`/markets/${code}`, { live });
+    return res.data.data;
+  },
+};

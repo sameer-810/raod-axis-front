@@ -614,6 +614,7 @@ export function BusinessForm({
                 // A garage does not move between countries. Its currency, its
                 // clock and how its phone number is read would all move with it.
                 countryLocked={isEdit}
+                anyCountry
                 onLocated={(lat, lng) => void checkDuplicates(lat, lng)}
               />
               {duplicates.length > 0 && (

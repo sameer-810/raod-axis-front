@@ -52,6 +52,7 @@ export function AddressFields({
   errors,
   voice,
   countryLocked = false,
+  anyCountry = false,
   onLocated,
 }: {
   value: AddressDraft;
@@ -59,10 +60,17 @@ export function AddressFields({
   errors: Record<string, string>;
   voice: "you" | "it";
   countryLocked?: boolean;
+  /**
+   * Offer every country the server serves, paused ones included. The console's
+   * form does; the public registration form offers only open countries.
+   */
+  anyCountry?: boolean;
   /** Called when a lookup has placed the business, for duplicate checks. */
   onLocated?: (latitude: number, longitude: number) => void;
 }) {
-  const { markets, hasChoice, marketFor } = useMarket();
+  const { markets: open, allMarkets, marketFor } = useMarket();
+  const markets = anyCountry ? allMarkets : open;
+  const hasChoice = markets.length > 1;
   const market = marketFor(value.country);
   const byPostcode = market.address.postcode === "required";
   const [note, setNote] = useState<string | null>(null);

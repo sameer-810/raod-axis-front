@@ -100,6 +100,11 @@ const AdminBusinessFormPage = lazy(() =>
     default: m.AdminBusinessFormPage,
   })),
 );
+const AdminCountriesPage = lazy(() =>
+  import("./modules/admin/pages/AdminCountriesPage").then((m) => ({
+    default: m.AdminCountriesPage,
+  })),
+);
 const AdminCategoriesPage = lazy(() =>
   import("./modules/admin/pages/AdminCategoriesPage").then((m) => ({
     default: m.AdminCategoriesPage,
@@ -257,6 +262,7 @@ export default function App() {
           <Route path="whatsapp-logs" element={<AdminWhatsAppLogsPage />} />
           <Route path="audit" element={<AdminAuditPage />} />
           <Route path="users" element={<AdminUsersPage />} />
+          <Route path="countries" element={<AdminCountriesPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

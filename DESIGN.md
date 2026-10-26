@@ -319,6 +319,15 @@ never assumed in silence.**
   numbers are mono, tabular and right-aligned, heading included, so a column of them can
   be read down. The rows add up to the cards above them and a test holds them to it.
 
+### Opening and pausing a country (D-043)
+
+Console → Countries: one row per served country with an "Open to the public" switch.
+Opening is immediate; pausing asks first and says exactly what will disappear (its live
+listings, its search and pages, owner sign-up) and what will not (nothing is deleted).
+The last open country's switch is disabled, with the reason written under the table. The
+public site uses `markets` (open countries); the console's filters and the listing
+form use `allMarkets` (every served country, paused ones marked).
+
 ## Layout — portal and console
 
 The console is a different product from the public side and gets its own scale. A driver

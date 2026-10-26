@@ -53,7 +53,9 @@ export function AdminBusinessesPage() {
    * for a listing should find it wherever it is.
    */
   const [country, setCountry] = useState("");
-  const { markets, hasChoice } = useMarket();
+  // Every served country, paused ones included: their listings are still yours to manage.
+  const { allMarkets: markets } = useMarket();
+  const hasChoice = markets.length > 1;
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [suspending, setSuspending] = useState<BusinessCard[] | null>(null);
@@ -297,7 +299,10 @@ export function AdminBusinessesPage() {
             }}
             options={[
               { value: "", label: "All countries" },
-              ...markets.map((m) => ({ value: m.code, label: m.name })),
+              ...markets.map((m) => ({
+                value: m.code,
+                label: m.live ? m.name : `${m.name} (paused)`,
+              })),
             ]}
           />
         )}

@@ -43,5 +43,8 @@ export interface Market {
 
 export interface MarketList {
   default: string;
+  /** Open to the public. */
   markets: Market[];
+  /** Every country this server serves, open or paused (D-043). */
+  all?: Array<Market & { live: boolean }>;
 }

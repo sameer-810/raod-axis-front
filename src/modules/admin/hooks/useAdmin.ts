@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   adminBusinessApi,
   adminCategoryApi,
+  adminCountryApi,
   adminOwnershipApi,
   adminUserApi,
   type AdminBusinessQuery,
@@ -173,4 +174,25 @@ export function useUpdateCategory() {
 export function useDeleteCategory() {
   const invalidate = useInvalidateCategories();
   return useMutation({ mutationFn: adminCategoryApi.remove, onSuccess: invalidate });
+}
+
+// ── Countries ──────────────────────────────────────────────────────────────
+
+const COUNTRY_KEY = ["admin", "countries"] as const;
+
+export function useAdminCountries() {
+  return useQuery({ queryKey: COUNTRY_KEY, queryFn: adminCountryApi.overview });
+}
+
+/** Opening or pausing a country changes the site's own country list too. */
+export function useSetCountryLive() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ code, live }: { code: string; live: boolean }) =>
+      adminCountryApi.setLive(code, live),
+    onSuccess: (data) => {
+      qc.setQueryData(COUNTRY_KEY, data);
+      void qc.invalidateQueries({ queryKey: ["markets"] });
+    },
+  });
 }
