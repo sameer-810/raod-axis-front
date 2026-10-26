@@ -14,7 +14,8 @@ function toParams(f: Partial<SearchFilters>) {
   if (typeof f.lat === "number" && typeof f.lng === "number") {
     params.lat = String(f.lat);
     params.lng = String(f.lng);
-    if (f.radius) params.radius = String(f.radius);
+    // "any" unless a distance was chosen: the server's own default is a limit.
+    params.radius = f.radius ? String(f.radius) : "any";
   }
   if (f.openNow) params.openNow = "true";
   if (f.verifiedOnly) params.verifiedOnly = "true";

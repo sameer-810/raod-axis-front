@@ -9,7 +9,6 @@ import {
   MapPin,
   ArrowRight,
   ChevronRight,
-  Store,
   LayoutGrid,
 } from "lucide-react";
 import { useGeolocation } from "@/shared/hooks/useGeolocation";
@@ -125,51 +124,57 @@ export function HomePage() {
           Independent garages across {market.shortName}
         </p>
 
+        {/* What and where on one line at every width (client, Oct 2026). On a
+            phone the icons go and the button becomes a magnifier, which is
+            what pays for two boxes side by side at 360 px. */}
         <form
           onSubmit={submit}
-          className="mt-4 overflow-hidden rounded-2xl border border-border bg-card md:mt-6 md:flex md:items-center md:p-1.5"
+          className="mt-4 flex items-center rounded-2xl border border-border bg-card p-1 transition-colors focus-within:border-primary md:mt-6 md:p-1.5"
         >
-          <div className="relative min-w-0 md:flex-1">
+          <div className="relative min-w-0 flex-1">
             <Search
-              className="pointer-events-none absolute start-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
+              className="pointer-events-none absolute start-4 top-1/2 hidden h-5 w-5 -translate-y-1/2 text-muted-foreground sm:block"
               aria-hidden="true"
             />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               type="search"
-              placeholder="Search service or garage"
+              placeholder="Service or garage"
               aria-label="What do you need?"
-              className="h-14 w-full bg-transparent pe-3 ps-12 text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
+              className="h-11 w-full bg-transparent pe-1 ps-2.5 text-base sm:pe-2 text-foreground placeholder:text-[14px] placeholder:text-muted-foreground focus:outline-none sm:h-12 sm:ps-12 sm:placeholder:text-base"
             />
           </div>
-          <div className="h-px bg-border md:mx-1 md:h-8 md:w-px" aria-hidden="true" />
-          <div className="flex items-center gap-2 pe-2 md:w-[22rem] md:pe-0">
-            <div className="relative min-w-0 flex-1">
-              <MapPin
-                className="pointer-events-none absolute start-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary-text"
-                aria-hidden="true"
-              />
-              <input
-                value={place}
-                onChange={(e) => setPlace(e.target.value)}
-                placeholder={placeLabel}
-                aria-label="Where?"
-                list={market.places.length ? "home-places" : undefined}
-                className="h-14 w-full bg-transparent pe-2 ps-12 text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
-              />
-              {market.places.length > 0 && (
-                <datalist id="home-places">
-                  {market.places.map((p) => (
-                    <option key={`${p.region}-${p.name}`} value={p.name} />
-                  ))}
-                </datalist>
-              )}
-            </div>
-            <button type="submit" disabled={busy} className="ra-btn-primary h-11 shrink-0 px-5">
-              {busy ? "Searching…" : "Search"}
-            </button>
+          <div className="h-7 w-px shrink-0 bg-border" aria-hidden="true" />
+          <div className="relative min-w-0 flex-1 md:max-w-[22rem]">
+            <MapPin
+              className="pointer-events-none absolute start-4 top-1/2 hidden h-5 w-5 -translate-y-1/2 text-primary-text sm:block"
+              aria-hidden="true"
+            />
+            <input
+              value={place}
+              onChange={(e) => setPlace(e.target.value)}
+              placeholder={placeLabel}
+              aria-label="Where?"
+              list={market.places.length ? "home-places" : undefined}
+              className="h-11 w-full bg-transparent pe-1 ps-2.5 text-base sm:pe-2 text-foreground placeholder:text-[14px] placeholder:text-muted-foreground focus:outline-none sm:h-12 sm:ps-12 sm:placeholder:text-base"
+            />
+            {market.places.length > 0 && (
+              <datalist id="home-places">
+                {market.places.map((p) => (
+                  <option key={`${p.region}-${p.name}`} value={p.name} />
+                ))}
+              </datalist>
+            )}
           </div>
+          <button
+            type="submit"
+            disabled={busy}
+            className="inline-flex h-11 min-w-[44px] shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-0 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-60 sm:h-12 sm:px-6"
+          >
+            <Search className="h-5 w-5 sm:hidden" aria-hidden="true" />
+            <span className="sr-only sm:not-sr-only">{busy ? "Searching…" : "Search"}</span>
+          </button>
         </form>
 
         {error && (
@@ -179,24 +184,24 @@ export function HomePage() {
         )}
 
         {/* The quick filters, each a real search a tap away. */}
-        <div className="ra-chips mt-4 md:mx-0 md:flex-wrap md:px-0">
-          <button type="button" onClick={nearMe} className="ra-chip ra-chip-primary">
-            <LocateFixed className="h-4 w-4" aria-hidden="true" />
-            {geo.status === "prompting" ? "Finding you…" : "Near me"}
+        <div className="mt-3 flex gap-1.5 sm:mt-4 sm:gap-2">
+          <button type="button" onClick={nearMe} className="ra-chip ra-chip-primary ra-quick">
+            <LocateFixed className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" aria-hidden="true" />
+            {geo.status === "prompting" ? "Finding…" : "Near me"}
           </button>
-          <Link to="/search?verified=true" className="ra-chip">
-            <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+          <Link to="/search?verified=true" className="ra-chip ra-quick">
+            <ShieldCheck className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" aria-hidden="true" />
             Verified
           </Link>
-          <Link to="/search?openNow=true" className="ra-chip">
-            <Clock className="h-4 w-4" aria-hidden="true" />
+          <Link to="/search?openNow=true" className="ra-chip ra-quick">
+            <Clock className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" aria-hidden="true" />
             Open now
           </Link>
           <Link
             to={`${searchLink}${searchLink.includes("?") ? "&" : "?"}view=map`}
-            className="ra-chip"
+            className="ra-chip ra-quick"
           >
-            <MapIcon className="h-4 w-4" aria-hidden="true" />
+            <MapIcon className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" aria-hidden="true" />
             Map
           </Link>
         </div>
@@ -313,22 +318,24 @@ export function HomePage() {
         </section>
       )}
 
-      {/* ── For owners ─────────────────────────────────────────────────── */}
-      <section className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-secondary p-5 md:mt-10 md:p-6">
-        <div className="flex items-start gap-3.5">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <Store className="h-5 w-5" aria-hidden="true" />
-          </span>
-          <div>
-            <h2 className="text-lg font-bold text-foreground">Run a garage?</h2>
-            <p className="mt-0.5 max-w-md text-[15px] text-muted-foreground">
-              You may already be listed. Claim your listing to manage your details, hours and photos
-              — free while we are building the network.
-            </p>
-          </div>
-        </div>
-        <Link to="/for-business" className="ra-btn ra-btn-outline shrink-0">
-          List your business
+      {/* ── For owners ─────────────────────────────────────────────────────
+          As the client drew it (October 2026): a plain card, a question, one
+          line, and one red link. */}
+      <section
+        aria-labelledby="owners"
+        className="mt-8 rounded-2xl border border-border bg-card p-5 md:mt-10 md:p-6"
+      >
+        <h2 id="owners" className="text-[20px] font-bold text-foreground md:text-[22px]">
+          Own an automotive business?
+        </h2>
+        <p className="mt-1.5 text-[15px] text-muted-foreground">
+          You may already be listed. Register or claim your business.
+        </p>
+        <Link
+          to="/for-business"
+          className="ra-tap mt-2 inline-flex items-center gap-1.5 text-[16px] font-semibold text-primary-text hover:underline"
+        >
+          Register or Claim Your Business
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </Link>
       </section>

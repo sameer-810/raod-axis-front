@@ -13,7 +13,7 @@ import { Switch } from "@/shared/components/Switch";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { RowMenu } from "@/shared/components/Menu";
 import { CategoryIcon } from "@/shared/components/CategoryIcon";
-import { servicePhoto } from "@/shared/lib/servicePhotos";
+import { serviceImage } from "@/shared/lib/servicePhotos";
 import { mediaApi } from "@/modules/business/api/mediaApi";
 import type { Category } from "@/modules/business/types";
 import {
@@ -79,13 +79,13 @@ export function AdminCategoriesPage() {
 
   /** What the tile on the site shows, so the console shows the same. */
   const thumb = (c: Category, size: string) => {
-    const photo = servicePhoto(c.slug, c.photoUrl);
-    return photo ? (
+    const image = serviceImage(c.slug, c.photoUrl);
+    return image ? (
       <img
-        src={photo}
+        src={image.src}
         alt=""
         aria-hidden="true"
-        className={`${size} shrink-0 rounded-md bg-muted object-cover ${uploading === c.id ? "opacity-50" : ""}`}
+        className={`${size} shrink-0 rounded-md ${image.kind === "icon" ? "bg-[#F4F4F5] object-contain p-0.5" : "bg-muted object-cover"} ${uploading === c.id ? "opacity-50" : ""}`}
       />
     ) : (
       <span className={`ra-service-icon ${size} rounded-md`}>

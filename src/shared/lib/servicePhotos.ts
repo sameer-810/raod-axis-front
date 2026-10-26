@@ -1,28 +1,13 @@
 /**
- * A photograph for each service, by category slug.
+ * The picture on each service tile.
  *
- * Real photographs of the work, from Unsplash (free for commercial use, no
- * attribution required), cropped square and kept in `public/images/services`
- * so a tile never waits on a third party. A category the list does not know —
- * one added in the console next month — falls back to its icon, never to a
- * stranger's photo.
- *
- * Sources, for the record (images.unsplash.com/<id>):
- *   tyres            photo-1655198739321-edc210858ab5
- *   batteries        photo-1597766347634-277bf2c89c32
- *   oil-servicing    photo-1487754180451-c456f719a1fc
- *   brakes           photo-1770834807387-820280f8270b
- *   mechanic         photo-1615906655593-ad0386982a0f
- *   recovery         photo-1730514784243-f0e7f09c9f50
- *   car-wash         photo-1608506375591-b90e1f955e4b
- *   wheel-alignment  photo-1593699199342-59b40e08f0ac
- *   air-conditioning photo-1775848365860-be55fa16c090
- *   engine           photo-1486262715619-67b85e0b08d3
- *   mobile-service   photo-1686412537635-8d8d0d5d1bd5
- *   wheels           photo-1744223736692-2fe8e10a6dae
- *   promo banner     photo-1747770641554-a1c16ad4821e (mirrored)
+ * The built-in pictures are the client's own category icons (26 October 2026):
+ * twelve 3D illustrations, background cut out, square, in
+ * `public/images/categories`. They replaced the stock photographs of October.
+ * A photo uploaded in Console → Categories wins over either; a category with
+ * neither shows its icon glyph.
  */
-const PHOTOS = new Set([
+const ICONS = new Set([
   "tyres",
   "batteries",
   "oil-servicing",
@@ -37,14 +22,20 @@ const PHOTOS = new Set([
   "wheels",
 ]);
 
-/**
- * The picture for a service: one uploaded in the console wins, then the
- * site's own, then nothing (and the tile shows the icon).
- */
-export function servicePhoto(
+export interface ServiceImage {
+  src: string;
+  /**
+   * `photo` fills the frame (an uploaded photograph); `icon` sits whole on a
+   * light plate, in both themes — the cut-outs carry soft shadows that read as
+   * grey haloes on black.
+   */
+  kind: "photo" | "icon";
+}
+
+export function serviceImage(
   slug: string | null | undefined,
   uploaded?: string | null,
-): string | null {
-  if (uploaded) return uploaded;
-  return slug && PHOTOS.has(slug) ? `/images/services/${slug}.webp` : null;
+): ServiceImage | null {
+  if (uploaded) return { src: uploaded, kind: "photo" };
+  return slug && ICONS.has(slug) ? { src: `/images/categories/${slug}.webp`, kind: "icon" } : null;
 }

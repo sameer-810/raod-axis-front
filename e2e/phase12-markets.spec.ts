@@ -236,7 +236,7 @@ test.describe("Phase 12 · Each country's own directory", () => {
     await place.fill("jumeirah");
     await place.press("Enter");
 
-    await expect(page.getByRole("button", { name: /of Jumeirah, Dubai/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /near Jumeirah, Dubai/i })).toBeVisible();
     await expect(page.getByRole("link", { name: fixture.uae.name }).first()).toBeVisible({
       timeout: 20_000,
     });
@@ -279,7 +279,7 @@ test.describe("Phase 12 · Each country's own directory", () => {
 
     await page.getByRole("button", { name: /use my location/i }).click();
     await expect(page).toHaveURL(/lat=25\.207/);
-    await expect(page.getByRole("button", { name: /of your location/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /near your location/i })).toBeVisible();
   });
 });
 

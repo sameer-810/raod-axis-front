@@ -72,7 +72,7 @@ test.describe("Phase 16 · A photograph for every service", () => {
         .click();
       const chooser = page.waitForEvent("filechooser");
       await page.getByRole("menuitem", { name: /^add photo$/i }).click();
-      await (await chooser).setFiles("public/images/services/car-wash.webp");
+      await (await chooser).setFiles("public/images/promo-car.webp");
       await expect(page.getByText(`Photo added to ${name}`)).toBeVisible({ timeout: 30_000 });
 
       // The menu now offers to change or remove it.
@@ -88,7 +88,7 @@ test.describe("Phase 16 · A photograph for every service", () => {
       const photo = tilePhoto(page, name);
       await expect(photo).toHaveCount(1);
       const src = await photo.getAttribute("src");
-      expect(src, "the uploaded file, not the site's own").not.toContain("/images/services/");
+      expect(src, "the uploaded file, not the site's own").not.toContain("/images/categories/");
       expect(src).toMatch(/^https?:\/\//);
 
       // And it can be taken away again: back to the icon.

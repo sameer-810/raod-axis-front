@@ -154,9 +154,10 @@ faces were not _about_ anything.
   `.font-mono` switches on `tabular-nums`, so distances, prices and ratings still line up
   in columns without a typewriter face.
 
-**No small spaced-out capitals** on the public side. The tiny letter-spaced label above
-a heading is the most copied device in generated layouts; labels are sentence case, in
-the body face.
+**No small spaced-out capitals** anywhere — the public side since October 2026, the
+console since Phase 16. The tiny letter-spaced label above a heading is the most copied
+device in generated layouts; labels are sentence case, in the body face. The only
+uppercase left is initials in avatars.
 
 ---
 
@@ -227,16 +228,22 @@ Rules:
 
 Built to the client's reference, in this order, because it is the order a driver needs:
 
-1. **Search** — what, and where. One row on a laptop, two on a phone; the "where" stays,
-   because a postcode is how a British driver says where they are.
+1. **Search** — what, and where, on **one row at every width** (client, 26 October). The
+   "where" stays, because a postcode is how a British driver says where they are. On a
+   phone the icons go and Search is a magnifier; placeholders are 14 px, typed text 16 px.
 2. **Quick filters** — Near me (the one red chip, because it acts), Verified, Open now,
-   Map. Each is a real search one tap away.
-3. **Services as photographs** — the work itself, not icons. Real photographs from
-   Unsplash, stored in the site; a category without one shows its icon.
+   Map. Each is a real search one tap away, and all four fit a 360 px phone (`.ra-quick`).
+3. **Services as the client's icons** — twelve 3D illustrations supplied on 26 October,
+   cut out and shown whole on a light plate in both themes. A photo uploaded in the
+   console replaces one and fills its frame; a category with neither shows its glyph.
 4. **One banner** — black, the car, two red stripes. One, not a carousel.
 5. **The garages** — nearest first when the driver has shared where they are, top-rated
    otherwise, and the heading says which.
-6. **Run a garage?** — the supply side, last.
+6. **Own an automotive business?** — the supply side, last: a plain card and one red
+   link, as the client drew it.
+
+Distance is a filter a driver may choose, not one they must: a search near a place is
+nearest first with no limit until they pick one (D-042).
 
 The garage card answers: what it looks like (photo, "Open now" on it), is it real (tick),
 what they do, where, until when ("Closes 7:00 PM", in the garage's own time zone and

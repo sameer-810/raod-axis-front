@@ -5,8 +5,6 @@ import { businessApi, categoryApi } from "../api/businessApi";
 import { useMarket } from "@/app/market";
 import type { SearchFilters, SortOption } from "../types";
 
-const DEFAULT_RADIUS = 5000;
-
 export function useCategories() {
   return useQuery({
     queryKey: ["categories"],
@@ -67,7 +65,8 @@ export function useSearchFilters() {
       city: params.get("city") ?? "",
       lat: lat ? Number(lat) : undefined,
       lng: lng ? Number(lng) : undefined,
-      radius: Number(params.get("radius") ?? DEFAULT_RADIUS),
+      // Absent unless the driver chose one: distance is optional (client, Oct 2026).
+      radius: params.get("radius") ? Number(params.get("radius")) : undefined,
       openNow: params.get("openNow") === "true",
       verifiedOnly: params.get("verified") === "true",
       minRating: params.get("minRating") ? Number(params.get("minRating")) : undefined,
@@ -104,9 +103,7 @@ export function useSearchFilters() {
         if ("city" in patch) set("city", patch.city);
         if ("lat" in patch) set("lat", patch.lat?.toString());
         if ("lng" in patch) set("lng", patch.lng?.toString());
-        if ("radius" in patch) {
-          set("radius", patch.radius === DEFAULT_RADIUS ? "" : String(patch.radius));
-        }
+        if ("radius" in patch) set("radius", patch.radius ? String(patch.radius) : "");
         if ("openNow" in patch) set("openNow", patch.openNow ? "true" : "");
         if ("verifiedOnly" in patch) set("verified", patch.verifiedOnly ? "true" : "");
         if ("minRating" in patch) set("minRating", patch.minRating?.toString());
@@ -138,6 +135,7 @@ export function useSearchFilters() {
     (filters.openNow ? 1 : 0) +
     (filters.verifiedOnly ? 1 : 0) +
     (filters.minRating ? 1 : 0) +
+    (filters.radius ? 1 : 0) +
     (filters.city ? 1 : 0);
 
   const clearAll = useCallback(() => {
@@ -153,5 +151,5 @@ export function useSearchFilters() {
     setParams(next);
   }, [params, setParams]);
 
-  return { filters, update, activeCount, clearAll, DEFAULT_RADIUS };
+  return { filters, update, activeCount, clearAll };
 }

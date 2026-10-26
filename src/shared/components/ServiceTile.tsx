@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { CategoryIcon } from "@/shared/components/CategoryIcon";
-import { servicePhoto } from "@/shared/lib/servicePhotos";
+import { serviceImage } from "@/shared/lib/servicePhotos";
 
 /**
  * A service, as a photograph of the work with its name under it — the tile the
@@ -27,7 +27,7 @@ export function ServiceTile({
   to: string;
   className?: string;
 }) {
-  const photo = servicePhoto(slug, photoUrl);
+  const image = serviceImage(slug, photoUrl);
   return (
     <Link
       to={to}
@@ -36,14 +36,22 @@ export function ServiceTile({
         className,
       )}
     >
-      <span className="relative block aspect-[4/3] overflow-hidden rounded-xl bg-muted">
-        {photo ? (
+      <span
+        className={cn(
+          "relative block aspect-[4/3] overflow-hidden rounded-xl",
+          image?.kind === "icon" ? "bg-[#F4F4F5]" : "bg-muted",
+        )}
+      >
+        {image ? (
           <img
-            src={photo}
+            src={image.src}
             alt=""
             aria-hidden="true"
             loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-slow group-hover:scale-[1.04]"
+            className={cn(
+              "h-full w-full transition-transform duration-slow group-hover:scale-[1.04]",
+              image.kind === "icon" ? "object-contain p-1.5 sm:p-2" : "object-cover",
+            )}
           />
         ) : (
           <span className="flex h-full w-full items-center justify-center text-muted-foreground">

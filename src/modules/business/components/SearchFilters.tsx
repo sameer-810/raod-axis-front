@@ -85,6 +85,16 @@ export function SearchFiltersPanel({
       {hasLocation && (
         <Group label="Distance">
           <div className={cn(rail ? "grid grid-cols-3 gap-1.5" : "ra-chips")}>
+            {/* "Any" first and chosen until the driver narrows it: distance is
+                a filter they can use, not one they have to (client, Oct 2026). */}
+            <button
+              type="button"
+              onClick={() => onChange({ radius: undefined })}
+              aria-pressed={!filters.radius}
+              className={rail ? railChip(!filters.radius) : "ra-chip"}
+            >
+              Any
+            </button>
             {RADII.map((r) => (
               <button
                 key={r}

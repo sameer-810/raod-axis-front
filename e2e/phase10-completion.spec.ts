@@ -796,10 +796,7 @@ test.describe("Phase 10 · Small things the specification asked for by name", ()
     // A filter change keeps the view, because it is the same search.
     await page.goto("/search?view=map");
     await settle(page);
-    await page
-      .getByPlaceholder(/a garage name/i)
-      .first()
-      .fill("tyres");
+    await page.getByLabel("Search for a service or business").fill("tyres");
     await page.keyboard.press("Enter");
     await expect(page).toHaveURL(/q=tyres/);
     await expect(page).toHaveURL(/view=map/);
@@ -980,8 +977,13 @@ test.describe("Phase 10 · Staff passwords — FR-AUT-06", () => {
     await page.goto("/admin/users");
     await settle(page);
     await page.getByRole("searchbox", { name: "Search accounts" }).fill(fixture.driver!.user.email);
-    await page.waitForLoadState("networkidle").catch(() => undefined);
-    await page.getByRole("button", { name: `Actions for ${fixture.driver!.user.name}` }).click();
+    // The search is debounced: wait for it to narrow the list to this one driver,
+    // or a leftover account with the same name from an earlier run is clicked.
+    const actions = page
+      .getByRole("button", { name: `Actions for ${fixture.driver!.user.name}` })
+      .filter({ visible: true });
+    await expect(actions).toHaveCount(1);
+    await actions.click();
     await expect(page.getByRole("menuitem", { name: "Switch off account" })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: "Send password link" })).toHaveCount(0);
   });

@@ -141,7 +141,8 @@ export interface SearchFilters {
   city: string;
   lat?: number;
   lng?: number;
-  radius: number;
+  /** Metres. Absent means any distance: nearest first, nobody cut off. */
+  radius?: number;
   openNow: boolean;
   verifiedOnly: boolean;
   minRating?: number;
@@ -156,6 +157,7 @@ export interface SearchMeta {
   hasPrevPage: boolean;
   page: number;
   limit: number;
-  radiusMetres: number;
+  /** Null when the search was at any distance. */
+  radiusMetres: number | null;
   hasLocation: boolean;
 }

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useGeolocation } from "@/shared/hooks/useGeolocation";
+import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 import { geocodePlace, isInside } from "@/shared/lib/geocode";
 import { useMarket } from "@/app/market";
 import { formatDistance } from "@/shared/lib/format";
@@ -78,6 +79,8 @@ export function SearchPage() {
   // postcodes, a city or district where there are not.
   const placeName =
     market.address.postcode === "required" ? "Town or postcode" : market.address.cityLabel;
+  /** Under 640 px the two boxes share one row, so their hints are shorter. */
+  const narrow = useMediaQuery("(max-width: 639px)");
   /** Set when the driver asked for their own position, so a wrong country can be explained. */
   const askedForLocation = useRef(false);
 
@@ -171,39 +174,41 @@ export function SearchPage() {
           is the control people reach for after reading three cards, and
           scrolling back to the top to find it is the friction this removes. */}
       <div className="ra-toolbar">
-        <div className="ra-shell flex flex-col gap-2 py-3 sm:flex-row sm:items-center md:py-3.5">
-          <div className="relative min-w-0 flex-1">
-            <Search
-              className="pointer-events-none absolute start-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <input
-              type="search"
-              value={filters.search}
-              onChange={(e) => update({ search: e.target.value })}
-              placeholder="Tyres, brakes, a garage name…"
-              aria-label="Search for a service or business"
-              className="ra-input h-11 w-full ps-10 pe-3"
-            />
-          </div>
-
-          {/* Location and Filters share a row on a phone. Stacked, the toolbar
-              was three rows tall and pushed the first result off a 390px
-              screen — which is the exact failure this whole layout exists to
-              fix, reproduced at the other end of the range. */}
-          <div className="flex gap-2 sm:contents">
+        {/* One row at every width (client, Oct 2026): what and where share one
+            box, with "use my location" at its end, and Filters beside it. Two
+            rows of 44 px controls was a third of a phone screen before the
+            first result. */}
+        <div className="ra-shell flex items-center gap-2 py-2.5 md:py-3">
+          <div className="flex min-w-0 flex-1 items-stretch rounded-xl border border-input bg-card transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-ring">
+            <div className="relative min-w-0 flex-1">
+              <Search
+                className="pointer-events-none absolute start-3.5 top-1/2 hidden h-4 w-4 -translate-y-1/2 text-muted-foreground sm:block"
+                aria-hidden="true"
+              />
+              <input
+                type="search"
+                value={filters.search}
+                onChange={(e) => update({ search: e.target.value })}
+                placeholder={narrow ? "Service or garage" : "Tyres, brakes, a garage name…"}
+                aria-label="Search for a service or business"
+                className="h-11 w-full rounded-s-xl bg-transparent pe-2 ps-3 text-sm focus:outline-none sm:ps-10 placeholder:text-[14px]"
+              />
+            </div>
+            <span className="my-2 w-px shrink-0 bg-border" aria-hidden="true" />
             {!hasLocation ? (
               <form
                 onSubmit={submitPlace}
-                className="flex min-w-0 flex-1 gap-2 sm:w-auto sm:flex-none"
+                className="flex min-w-0 flex-1 items-center sm:max-w-[18rem]"
               >
                 <input
                   value={placeInput}
                   onChange={(e) => setPlaceInput(e.target.value)}
-                  placeholder={placeName}
+                  placeholder={
+                    narrow && market.address.postcode === "required" ? "Town/postcode" : placeName
+                  }
                   aria-label={placeName}
                   list={market.places.length ? "search-places" : undefined}
-                  className="ra-input h-11 min-w-0 flex-1 px-3 sm:w-44"
+                  className="h-11 min-w-0 flex-1 bg-transparent pe-1 ps-3 text-sm focus:outline-none placeholder:text-[14px]"
                 />
                 {market.places.length > 0 && (
                   <datalist id="search-places">
@@ -216,11 +221,11 @@ export function SearchPage() {
                   type="button"
                   onClick={useMyLocation}
                   disabled={locating || geo.status === "prompting"}
-                  className="ra-tap flex shrink-0 items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-3.5 text-sm font-medium transition-colors hover:bg-accent disabled:opacity-60"
+                  title="Use my location"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-e-xl text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
                 >
                   <LocateFixed className="h-4 w-4" aria-hidden="true" />
-                  <span className="hidden sm:inline">Use my location</span>
-                  <span className="sr-only sm:hidden">Use my location</span>
+                  <span className="sr-only">Use my location</span>
                 </button>
               </form>
             ) : (
@@ -233,40 +238,49 @@ export function SearchPage() {
               <button
                 type="button"
                 onClick={() => {
-                  update({ lat: undefined, lng: undefined });
+                  update({ lat: undefined, lng: undefined, radius: undefined });
                   setPlaceLabel(null);
                   geo.clear();
                 }}
-                className="ra-tap flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-border bg-card px-3.5 text-sm transition-colors hover:bg-accent sm:w-auto sm:flex-none"
+                className="flex h-11 min-w-0 flex-1 items-center gap-1.5 rounded-e-xl pe-3 ps-3 text-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:max-w-[18rem]"
               >
                 <MapPin className="h-4 w-4 shrink-0 text-primary-text" aria-hidden="true" />
                 <span className="min-w-0 flex-1 truncate text-start text-muted-foreground">
-                  Within{" "}
-                  <span className="font-mono tabular-nums">{formatDistance(filters.radius)}</span>
-                  {placeLabel ? ` of ${placeLabel}` : ""}
+                  {filters.radius ? (
+                    <>
+                      Within{" "}
+                      <span className="font-mono tabular-nums">
+                        {formatDistance(filters.radius)}
+                      </span>
+                      {placeLabel ? ` of ${placeLabel}` : ""}
+                    </>
+                  ) : (
+                    `Near ${placeLabel ?? "you"}`
+                  )}
                 </span>
                 <span className="shrink-0 text-xs font-medium text-primary-text">Change</span>
               </button>
             )}
-
-            {/* Filters live behind a button on a phone and in the rail above lg. */}
-            <button
-              type="button"
-              onClick={() => setFilterSheet(true)}
-              className={cn(
-                "ra-tap flex shrink-0 items-center justify-center gap-1.5 rounded-xl border px-3.5 text-sm font-medium transition-colors lg:hidden",
-                activeCount > 0
-                  ? "border-primary bg-primary/10 text-primary-text"
-                  : "border-border bg-card text-foreground hover:bg-accent",
-              )}
-            >
-              <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
-              Filters
-              {/* A silently filtered list reads as a list with records missing,
-                so whatever is behind the sheet reports its count. */}
-              {activeCount > 0 && <span className="font-mono tabular-nums">{activeCount}</span>}
-            </button>
           </div>
+
+          {/* Filters live behind a button below lg and in the rail above it.
+              An icon on a phone, with its name for screen readers. */}
+          <button
+            type="button"
+            onClick={() => setFilterSheet(true)}
+            className={cn(
+              "ra-tap flex min-w-[44px] shrink-0 items-center justify-center gap-1.5 rounded-xl border px-2.5 text-sm font-medium transition-colors sm:px-3.5 lg:hidden",
+              activeCount > 0
+                ? "border-primary bg-primary/10 text-primary-text"
+                : "border-border bg-card text-foreground hover:bg-accent",
+            )}
+          >
+            <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+            <span className="sr-only sm:not-sr-only">Filters</span>
+            {/* A silently filtered list reads as a list with records missing,
+                so whatever is behind the sheet reports its count. */}
+            {activeCount > 0 && <span className="font-mono tabular-nums">{activeCount}</span>}
+          </button>
         </div>
 
         {(placeError || (geo.status === "denied" && !hasLocation)) && (
@@ -335,21 +349,32 @@ export function SearchPage() {
                 icon={SearchX}
                 title="Nothing here yet"
                 description={
-                  hasLocation
+                  hasLocation && filters.radius
                     ? `No businesses within ${formatDistance(filters.radius)}${
-                        activeCount ? " matching your filters" : ""
-                      }. Try a wider distance${activeCount ? " or clear a filter" : ""}.`
-                    : `Try a different search term, or add a ${placeName.toLowerCase()} to see what's nearby.`
+                        activeCount > 1 ? " matching your filters" : ""
+                      }. Try any distance${activeCount > 1 ? " or clear a filter" : ""}.`
+                    : hasLocation
+                      ? `Nothing matches${activeCount ? " your filters" : " that search"}. Try a different search term${activeCount ? " or clear a filter" : ""}.`
+                      : `Try a different search term, or add a ${placeName.toLowerCase()} to see what's nearby.`
                 }
                 action={
                   <>
-                    {hasLocation && filters.radius < 10000 && (
+                    {hasLocation && filters.radius && (
                       <button
                         type="button"
-                        onClick={() => update({ radius: 10000 })}
+                        onClick={() => update({ radius: undefined })}
                         className="ra-btn-primary"
                       >
-                        Search within {formatDistance(10000)}
+                        Search any distance
+                      </button>
+                    )}
+                    {filters.search && (
+                      <button
+                        type="button"
+                        onClick={() => update({ search: "" })}
+                        className="ra-btn"
+                      >
+                        Clear the search
                       </button>
                     )}
                     {activeCount > 0 && (
@@ -541,7 +566,7 @@ function ResultCount({
   meta?: { total: number };
   isLoading: boolean;
   hasLocation: boolean;
-  radius: number;
+  radius?: number;
 }) {
   if (isLoading) return <p className="text-sm text-muted-foreground">Searching…</p>;
   if (!meta) return null;
@@ -551,7 +576,11 @@ function ResultCount({
         {meta.total}
       </span>{" "}
       {meta.total === 1 ? "business" : "businesses"}
-      {hasLocation ? ` within ${formatDistance(radius)}` : ""}
+      {hasLocation && radius
+        ? ` within ${formatDistance(radius)}`
+        : hasLocation
+          ? ", nearest first"
+          : ""}
     </p>
   );
 }

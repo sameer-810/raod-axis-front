@@ -194,17 +194,19 @@ test.describe("Phase 2 · Search", () => {
     await expect(page.getByText(/nothing here yet/i)).toBeVisible();
     await expect(
       page
-        .getByRole("button", { name: /search within/i })
-        .or(page.getByRole("button", { name: /clear filters/i })),
+        .getByRole("button", { name: /any distance/i })
+        .or(page.getByRole("button", { name: /clear the search/i }))
+        .or(page.getByRole("button", { name: /clear filters/i }))
+        .first(),
     ).toBeVisible();
   });
 
   test("widening the radius from the empty state recovers results", async ({ page }) => {
     await page.goto(`/search${NEAR}&radius=500&category=recovery`);
-    const widen = page.getByRole("button", { name: /search within/i });
+    const widen = page.getByRole("button", { name: /any distance/i });
     if (await widen.isVisible().catch(() => false)) {
       await widen.click();
-      await expect(page).toHaveURL(/radius=10000/);
+      await expect(page).not.toHaveURL(/radius=/);
     }
   });
 
@@ -223,13 +225,14 @@ test.describe("Phase 2 · Location is offered, never demanded", () => {
     await expect(page.getByLabel("Town or postcode")).toBeVisible();
   });
 
-  test("a postcode is geocoded into a radius search", async ({ page }) => {
+  test("a postcode is geocoded into a location search", async ({ page }) => {
     await page.goto("/search");
     await page.getByLabel("Town or postcode").fill("M1 1LN");
     await page.getByLabel("Town or postcode").press("Enter");
 
     await expect(page).toHaveURL(/lat=53\./, { timeout: 20_000 });
-    await expect(page.getByText(/within/i).first()).toBeVisible();
+    // Nearest first, with no distance limit until one is chosen (D-042).
+    await expect(page.getByRole("button", { name: /^near /i })).toBeVisible();
   });
 
   test("an unfindable place says so and leaves search working", async ({ page }) => {

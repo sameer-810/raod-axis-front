@@ -658,6 +658,19 @@ table,
 .ra-chip[data-active="true"] {
   @apply border-primary bg-primary text-primary-foreground;
 }
+/**
+ * The home page's four quick filters, in one row on a 360 px phone. The client
+ * could not see "Map" without scrolling (October 2026). Smaller type and
+ * padding, never a shorter target: the 44 px floor above still holds.
+ */
+.ra-quick {
+  @apply min-w-0 flex-1 justify-center gap-1 px-1.5 text-[13px];
+}
+@media (min-width: 640px) {
+  .ra-quick {
+    @apply flex-none gap-1.5 px-4 text-[15px];
+  }
+}
 
 /**
  * Identity disc — initials, standing in for the anchor column a table would
