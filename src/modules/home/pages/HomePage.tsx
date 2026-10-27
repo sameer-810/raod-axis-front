@@ -16,6 +16,7 @@ import { geocodePlace, isInside } from "@/shared/lib/geocode";
 import { useMarket } from "@/app/market";
 import { useSeo } from "@/shared/hooks/useSeo";
 import { ServiceTile } from "@/shared/components/ServiceTile";
+import { Logo } from "@/shared/components/Logo";
 import { BusinessCard } from "@/modules/business/components/BusinessCard";
 import {
   useBusinessSearch,
@@ -278,18 +279,21 @@ export function HomePage() {
           <span className="w-4 bg-primary md:w-6" />
           <span className="w-1.5 bg-primary/70 md:w-2" />
         </div>
-        <div className="max-w-md p-5 md:p-9">
+        {/* The client's wording (27 October 2026): the wordmark, one line in
+            capitals with its second half in red, one sentence, one button. */}
+        <div className="max-w-lg p-5 md:max-w-2xl md:p-9">
+          <Logo onDark />
           <h2
             id="promo"
-            className="text-[26px] font-extrabold leading-[1.05] text-white md:text-[36px]"
+            className="mt-3 text-[26px] font-extrabold uppercase leading-[1.05] text-white md:text-[36px]"
           >
-            The right garage, <span className="text-[#FF5A52]">without the phone calls</span>
+            Find trusted <span className="text-[#FF5A52]">services nearby</span>
           </h2>
           <p className="mt-2 text-[15px] text-white/80 md:text-base">
-            See who is open, what they charge from, and message them on WhatsApp.
+            Discover local garages, explore services, and connect directly.
           </p>
-          <Link to={searchLink} className="ra-btn-primary mt-4 h-11 rounded-full px-5">
-            Explore services
+          <Link to={searchLink} className="ra-btn-primary mt-4 h-11 px-5">
+            Explore Services
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Link>
         </div>
