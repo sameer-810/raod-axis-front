@@ -636,7 +636,7 @@ test.describe("Phase 7 · Usable without a mouse", () => {
     while (guard++ < 40) {
       const isSubmit = await page.evaluate(() => {
         const el = document.activeElement as HTMLElement | null;
-        return el?.tagName === "BUTTON" && /send request/i.test(el.textContent ?? "");
+        return el?.tagName === "BUTTON" && /send booking request/i.test(el.textContent ?? "");
       });
       if (isSubmit) break;
       await page.keyboard.press("Tab");

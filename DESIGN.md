@@ -319,6 +319,16 @@ never assumed in silence.**
   numbers are mono, tabular and right-aligned, heading included, so a column of them can
   be read down. The rows add up to the cards above them and a test holds them to it.
 
+### The booking form (D-044)
+
+Built to the client's template: the garage, then what, when, and a note. Date tiles are
+two rows of seven; on a phone they sit at 44 px wide or so, and stay usable because they
+are 64 px tall. Time slots are three across on a phone, five above 640 px. Nothing is
+selected for the driver except today: a time they did not choose must not reach a garage.
+The line beside "Select the time" states the garage's real hours for that day and never
+a fixed range. The date field itself is laid over the More dates tile, so a tap opens the
+phone's own calendar.
+
 ### Opening and pausing a country (D-043)
 
 Console → Countries: one row per served country with an "Open to the public" switch.

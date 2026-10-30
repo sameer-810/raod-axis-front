@@ -153,9 +153,9 @@ async function fillRequest(page: Page, service = "Tyre replacement", daysAhead =
 
   await page.getByLabel("What do you need?").selectOption(service);
   await page.getByLabel("Preferred date").fill(date);
-  await page.getByLabel("Preferred time").fill("10:30");
+  await page.getByRole("button", { name: "10 AM - 11 AM" }).click();
   await page.getByLabel(/anything they should know/i).fill("Front nearside, 205/55 R16");
-  await page.getByRole("button", { name: /send request/i }).click();
+  await page.getByRole("button", { name: /send booking request/i }).click();
   return date;
 }
 
@@ -179,7 +179,7 @@ test.describe("Phase 5 · The wall, and getting through it", () => {
     // The page itself is open. Verification belongs after the commitment.
     await expect(page).not.toHaveURL(/sign-in/);
     await expect(page.getByRole("heading", { name: /request a booking/i })).toBeVisible();
-    await expect(page.getByText(/doesn't hold a slot/i)).toBeVisible();
+    await expect(page.getByText(/will confirm your booking via whatsapp/i)).toBeVisible();
 
     await fillRequest(page);
     await expect(page).toHaveURL(/\/sign-in\?returnTo=/);
@@ -237,9 +237,9 @@ test.describe("Phase 5 · Sending a request", () => {
     await signInAsDriver(page, "past");
     await page.goto(`/business/${business.slug}/request`);
 
+    await page.getByRole("button", { name: "10 AM - 11 AM" }).click();
     await page.getByLabel("Preferred date").fill("2020-01-01");
-    await page.getByLabel("Preferred time").fill("10:30");
-    await page.getByRole("button", { name: /send request/i }).click();
+    await page.getByRole("button", { name: /send booking request/i }).click();
 
     await expect(page.getByText(/already passed|hasn't passed/i)).toBeVisible();
     await expect(page.getByRole("heading", { name: /request sent/i })).toHaveCount(0);
@@ -536,5 +536,109 @@ test.describe("Phase 5 · Accessibility", () => {
         ).toBeLessThanOrEqual(1);
       }
     }
+  });
+});
+
+test.describe("Phase 19 · The form the client drew", () => {
+  test("hours run to 10 PM, and the night is one slot", async ({ page }) => {
+    const { business } = await seedBookableBusiness("Slots");
+    await page.goto(`/business/${business.slug}/request`);
+
+    await expect(page.getByRole("button", { name: "8 AM - 9 AM" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "9 PM - 10 PM" })).toBeVisible();
+    // Nothing hourly after ten: that is what the night slot is for.
+    await expect(page.getByRole("button", { name: "10 PM - 11 PM" })).toHaveCount(0);
+    await expect(page.getByText("10:00 PM – 8:00 AM")).toBeVisible();
+    await expect(page.getByRole("button", { name: /night time/i })).toHaveCount(1);
+  });
+
+  test("the card names the garage and opens a chat on WhatsApp", async ({ page }) => {
+    const { business } = await seedBookableBusiness("Card");
+    await page.goto(`/business/${business.slug}/request`);
+
+    const card = page.getByRole("region", { name: `About ${business.name}` });
+    await expect(card.getByText(business.name)).toBeVisible();
+    await expect(card.getByRole("link", { name: /chat on whatsapp/i })).toHaveAttribute(
+      "href",
+      /wa\.me/,
+    );
+  });
+
+  test("a night request goes through, and is told back in words", async ({ page }) => {
+    const { business } = await seedBookableBusiness("Night");
+    await signInAsDriver(page, "night");
+    await page.goto(`/business/${business.slug}/request`);
+
+    await page.getByRole("button", { name: /select night time/i }).click();
+    await expect(page.getByRole("button", { name: /night time selected/i })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await page.getByRole("button", { name: /send booking request/i }).click();
+
+    await expect(page.getByRole("heading", { name: /request sent/i })).toBeVisible();
+    await expect(page.getByText(/Night, 10 PM - 8 AM/)).toBeVisible();
+  });
+
+  test("with no time chosen, it says so rather than guessing one", async ({ page }) => {
+    const { business } = await seedBookableBusiness("NoTime");
+    await signInAsDriver(page, "notime");
+    await page.goto(`/business/${business.slug}/request`);
+
+    await expect(page.getByRole("button", { name: "9 AM - 10 AM" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+    await page.getByRole("button", { name: /send booking request/i }).click();
+    await expect(page.getByText("Choose a time")).toBeVisible();
+    await expect(page.getByRole("heading", { name: /request sent/i })).toHaveCount(0);
+  });
+
+  test("a later date shows on the More dates tile", async ({ page }) => {
+    const { business } = await seedBookableBusiness("Later");
+    await page.goto(`/business/${business.slug}/request`);
+    await expect(page.getByRole("button", { pressed: true }).first()).toBeVisible();
+
+    const later = new Date(Date.now() + 40 * 86_400_000).toISOString().slice(0, 10);
+    await page.getByLabel("Preferred date").fill(later);
+
+    // No tile in the fortnight stays chosen once a later date is picked.
+    await expect(page.locator("button[aria-pressed='true'][aria-label]")).toHaveCount(0);
+    await expect(page.getByText("More dates")).toHaveCount(0);
+  });
+
+  test("an hour that has gone today cannot be chosen, and tomorrow's can", async ({ page }) => {
+    const { business } = await seedBookableBusiness("Gone");
+    // 3:30 PM in Manchester, in a month with no clock change to think about.
+    await page.clock.setFixedTime(new Date("2031-01-15T15:30:00Z"));
+    await page.goto(`/business/${business.slug}/request`);
+
+    await expect(page.getByRole("button", { name: "2 PM - 3 PM" })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "3 PM - 4 PM" })).toBeEnabled();
+    await expect(page.getByRole("button", { name: /select night time/i })).toBeEnabled();
+
+    await page.getByRole("button", { name: "Thursday 16 January" }).click();
+    await expect(page.getByRole("button", { name: "2 PM - 3 PM" })).toBeEnabled();
+  });
+
+  test("the note counts up to its limit", async ({ page }) => {
+    const { business } = await seedBookableBusiness("Note");
+    await page.goto(`/business/${business.slug}/request`);
+
+    await expect(page.getByText("0/500")).toBeVisible();
+    await page.getByLabel(/anything they should know/i).fill("Front tyres");
+    await expect(page.getByText("11/500")).toBeVisible();
+    await expect(page.getByLabel(/anything they should know/i)).toHaveAttribute("maxlength", "500");
+  });
+
+  test("the fortnight fits a phone without scrolling sideways", async ({ page }) => {
+    const { business } = await seedBookableBusiness("Fit");
+    await page.setViewportSize({ width: 360, height: 780 });
+    await page.goto(`/business/${business.slug}/request`);
+    await expect(page.getByText("More dates")).toBeVisible();
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(0);
   });
 });

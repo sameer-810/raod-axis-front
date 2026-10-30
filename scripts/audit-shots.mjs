@@ -86,7 +86,7 @@ await shoot(NEAR, "ui-search-phone.png", { w: 390, h: 844 });
 await shoot("/categories", "ui-categories.png");
 await shoot(`/business/${featured.slug}`, "ui-profile-laptop.png");
 await shoot(`/business/${featured.slug}`, "b-profile-phone.png", { w: 390, h: 844 });
-await shoot(`/business/${featured.slug}/request`, "b-request.png");
+await shoot(`/business/${featured.slug}/request`, "b-request.png", { h: 1500 });
 await shoot("/for-business", "ui-forbusiness.png");
 await shoot(`/business/${featured.slug}/claim`, "b-claim.png");
 await shoot("/register-business", "b-register.png");

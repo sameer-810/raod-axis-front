@@ -445,8 +445,8 @@ if (sessions["raj.mehta"]) {
     after: async (p) => {
       await p.getByLabel("What do you need?").selectOption({ label: "Diagnostics" });
       await p.getByLabel("Preferred date").fill(date);
-      await p.getByLabel("Preferred time").fill("10:00");
-      await p.getByRole("button", { name: "Send request" }).click();
+      await p.getByRole("button", { name: "10 AM - 11 AM" }).click();
+      await p.getByRole("button", { name: "Send Booking Request" }).click();
       await p.getByText("Request sent").first().waitFor();
     },
   });
