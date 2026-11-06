@@ -5,7 +5,7 @@ import {
   type APIRequestContext,
   type Page,
 } from "@playwright/test";
-import { API, expectNoHorizontalOverflow, expectTouchTargets } from "./helpers";
+import { API, expectNoHorizontalOverflow, expectTouchTargets, requestEmailCode } from "./helpers";
 
 /**
  * Phase 5 — the core loop, through the real interface.
@@ -93,9 +93,7 @@ async function signInAsDriver(page: Page, slot: string) {
   const phone = await freePhone();
 
   await page.goto("/sign-in");
-  await page.getByLabel("Email address").fill(email);
-  await page.getByLabel("WhatsApp number").fill(phone);
-  await page.getByRole("button", { name: /send me a code/i }).click();
+  await requestEmailCode(page, email, phone);
   await expect(page.getByRole("heading", { name: /enter your codes/i })).toBeVisible();
 
   const digits = (
@@ -237,6 +235,15 @@ test.describe("Phase 5 · Sending a request", () => {
     await signInAsDriver(page, "past");
     await page.goto(`/business/${business.slug}/request`);
 
+    // A slot chosen on a future day first: on today's date a morning slot is
+    // greyed out once the morning has gone, so choosing it there only worked
+    // before 10 AM. Then the date is moved into the past, which is the point.
+    const ahead = new Date(Date.now() + 2 * 86_400_000);
+    await page
+      .getByLabel("Preferred date")
+      .fill(
+        new Date(ahead.getTime() - ahead.getTimezoneOffset() * 60000).toISOString().slice(0, 10),
+      );
     await page.getByRole("button", { name: "10 AM - 11 AM" }).click();
     await page.getByLabel("Preferred date").fill("2020-01-01");
     await page.getByRole("button", { name: /send booking request/i }).click();

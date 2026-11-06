@@ -1,5 +1,5 @@
 import { test, expect, request as pwRequest, type Page } from "@playwright/test";
-import { API, expectNoHorizontalOverflow } from "./helpers";
+import { API, expectNoHorizontalOverflow, requestEmailCode } from "./helpers";
 
 /**
  * Phase 1 — identity, through the real interface.
@@ -64,9 +64,7 @@ async function visibleCodes(page: Page): Promise<string[]> {
 
 async function signInAsDriver(page: Page, email: string, phone: string, name: string) {
   await page.goto("/sign-in");
-  await page.getByLabel("Email address").fill(email);
-  await page.getByLabel("WhatsApp number").fill(phone);
-  await page.getByRole("button", { name: /send me a code/i }).click();
+  await requestEmailCode(page, email, phone);
 
   await expect(page.getByRole("heading", { name: /enter your codes/i })).toBeVisible();
   const digits = await visibleCodes(page);
@@ -149,9 +147,7 @@ test.describe("Phase 1 · Driver sign-in", () => {
     await page.evaluate(() => localStorage.clear());
 
     await page.goto("/sign-in");
-    await page.getByLabel("Email address").fill(email);
-    await page.getByLabel("WhatsApp number").fill(phone);
-    await page.getByRole("button", { name: /send me a code/i }).click();
+    await requestEmailCode(page, email, phone);
 
     await expect(page.getByRole("heading", { name: /enter your codes/i })).toBeVisible();
     await expect(page.getByLabel("Your name")).toHaveCount(0);
@@ -163,9 +159,7 @@ test.describe("Phase 1 · Driver sign-in", () => {
     // this product.
     const { email, phone } = await freshIdentity("c");
     await page.goto("/sign-in?returnTo=%2Fportal");
-    await page.getByLabel("Email address").fill(email);
-    await page.getByLabel("WhatsApp number").fill(phone);
-    await page.getByRole("button", { name: /send me a code/i }).click();
+    await requestEmailCode(page, email, phone);
     await expect(page.getByRole("heading", { name: /enter your codes/i })).toBeVisible();
 
     const digits = await visibleCodes(page);
@@ -183,9 +177,7 @@ test.describe("Phase 1 · Driver sign-in", () => {
   test("a wrong code is explained, not just refused", async ({ page }) => {
     const { email, phone } = await freshIdentity("d");
     await page.goto("/sign-in");
-    await page.getByLabel("Email address").fill(email);
-    await page.getByLabel("WhatsApp number").fill(phone);
-    await page.getByRole("button", { name: /send me a code/i }).click();
+    await requestEmailCode(page, email, phone);
     await expect(page.getByRole("heading", { name: /enter your codes/i })).toBeVisible();
 
     await page.getByLabel("Your name").fill("E2E Driver D");
@@ -203,9 +195,7 @@ test.describe("Phase 1 · Driver sign-in", () => {
   test("the page says which channels a code actually reached", async ({ page }) => {
     const { email, phone } = await freshIdentity("e");
     await page.goto("/sign-in");
-    await page.getByLabel("Email address").fill(email);
-    await page.getByLabel("WhatsApp number").fill(phone);
-    await page.getByRole("button", { name: /send me a code/i }).click();
+    await requestEmailCode(page, email, phone);
 
     // Without credentials the WhatsApp code cannot be delivered, and the page
     // must say so rather than tell someone to wait for a message that was never
@@ -216,9 +206,7 @@ test.describe("Phase 1 · Driver sign-in", () => {
   test("both code fields are required", async ({ page }) => {
     const { email, phone } = await freshIdentity("f");
     await page.goto("/sign-in");
-    await page.getByLabel("Email address").fill(email);
-    await page.getByLabel("WhatsApp number").fill(phone);
-    await page.getByRole("button", { name: /send me a code/i }).click();
+    await requestEmailCode(page, email, phone);
     await expect(page.getByRole("heading", { name: /enter your codes/i })).toBeVisible();
 
     await page.getByRole("button", { name: /^sign in$/i }).click();
@@ -341,9 +329,7 @@ test.describe("Phase 1 · Sign-in on a phone", () => {
   test("the code step fits without sideways scroll", async ({ page }) => {
     const { email, phone } = await freshIdentity("i");
     await page.goto("/sign-in");
-    await page.getByLabel("Email address").fill(email);
-    await page.getByLabel("WhatsApp number").fill(phone);
-    await page.getByRole("button", { name: /send me a code/i }).click();
+    await requestEmailCode(page, email, phone);
     await expect(page.getByRole("heading", { name: /enter your codes/i })).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
@@ -351,9 +337,7 @@ test.describe("Phase 1 · Sign-in on a phone", () => {
   test("code fields bring up the number pad and do not zoom iOS", async ({ page }) => {
     const { email, phone } = await freshIdentity("j");
     await page.goto("/sign-in");
-    await page.getByLabel("Email address").fill(email);
-    await page.getByLabel("WhatsApp number").fill(phone);
-    await page.getByRole("button", { name: /send me a code/i }).click();
+    await requestEmailCode(page, email, phone);
     await expect(page.getByRole("heading", { name: /enter your codes/i })).toBeVisible();
 
     const field = page.getByLabel("Code from WhatsApp");

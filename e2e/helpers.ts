@@ -173,3 +173,15 @@ export async function setTheme(page: Page, theme: "light" | "dark") {
     )
     .toBe(theme);
 }
+
+/**
+ * The email route on the driver sign-in page (D-046): the mobile number at the
+ * top, then "Email", then the address. Every spec that signs a driver in by
+ * email goes through here, so the next change to the page is one edit.
+ */
+export async function requestEmailCode(page: Page, email: string, phone: string) {
+  await page.getByLabel("Mobile number").fill(phone);
+  await page.getByRole("button", { name: /^email$/i }).click();
+  await page.getByLabel("Email address").fill(email);
+  await page.getByRole("button", { name: /send code to my email/i }).click();
+}

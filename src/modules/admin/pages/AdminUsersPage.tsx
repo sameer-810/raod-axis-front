@@ -177,7 +177,7 @@ export function AdminUsersPage() {
     {
       key: "email",
       header: "Email",
-      cell: (u) => <span className="text-muted-foreground">{u.email}</span>,
+      cell: (u) => <span className="text-muted-foreground">{u.email ?? "—"}</span>,
     },
     { key: "role", header: "Role", cell: (u) => <RoleBadge role={u.role} /> },
     {

@@ -105,6 +105,11 @@ const AdminCountriesPage = lazy(() =>
     default: m.AdminCountriesPage,
   })),
 );
+const AdminSignInMethodsPage = lazy(() =>
+  import("./modules/admin/pages/AdminSignInMethodsPage").then((m) => ({
+    default: m.AdminSignInMethodsPage,
+  })),
+);
 const AdminCategoriesPage = lazy(() =>
   import("./modules/admin/pages/AdminCategoriesPage").then((m) => ({
     default: m.AdminCategoriesPage,
@@ -263,6 +268,7 @@ export default function App() {
           <Route path="audit" element={<AdminAuditPage />} />
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="countries" element={<AdminCountriesPage />} />
+          <Route path="sign-in" element={<AdminSignInMethodsPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

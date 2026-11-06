@@ -338,6 +338,7 @@ async function shoot(
 
 await shoot(admin, "/admin", "admin-overview.png");
 await shoot(admin, "/admin/users", "admin-users.png");
+await shoot(admin, "/admin/sign-in", "admin-sign-in-methods.png");
 if (sessions["tom.ellis"]) {
   await shoot(sessions["tom.ellis"], "/account", "account-phone.png", { w: 390, h: 844 });
 }
@@ -464,17 +465,16 @@ await guide(null, "/sign-in", "signin-code.png", {
       const json = await response.json();
       if (json.data) {
         delete json.data.devCodes;
-        json.data.delivery = { email: true, whatsapp: false };
-        json.data.channels = { ...json.data.channels, email: true, whatsapp: false };
+        // A code by text message, as it reads once Twilio is connected (D-046).
+        json.data.delivery = { email: false, whatsapp: false, sms: true };
       }
       await route.fulfill({ response, json });
     });
   },
   after: async (p) => {
-    await p.getByLabel("Email address").fill("sam.okafor@example.com");
-    await p.getByLabel("WhatsApp number").fill("07700 900123");
-    await p.getByRole("button", { name: "Send me a code" }).click();
-    await p.getByLabel("Code from your email").waitFor();
+    await p.getByLabel("Mobile number").fill("7700 900123");
+    await p.getByRole("button", { name: /send code by sms/i }).click();
+    await p.getByLabel("Code from your text message").waitFor();
   },
 });
 // The page an owner lands on from their invitation. With no email service the

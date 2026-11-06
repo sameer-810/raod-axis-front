@@ -11,6 +11,7 @@ import {
   Upload,
   Users,
   Globe2,
+  KeyRound,
 } from "lucide-react";
 import type { Role } from "@/modules/auth/authSlice";
 
@@ -193,6 +194,15 @@ const SECTIONS: MenuSection[] = [
         roles: ["admin"],
         shortcut: "g k",
         keywords: ["uk", "uae", "markets", "open", "pause", "launch", "country"],
+      },
+      {
+        label: "Sign-in methods",
+        shortLabel: "Sign-in",
+        to: "/admin/sign-in",
+        icon: KeyRound,
+        roles: ["admin"],
+        shortcut: "g m",
+        keywords: ["whatsapp", "sms", "text", "twilio", "email", "google", "login", "code", "otp"],
       },
       {
         label: "Audit Log",

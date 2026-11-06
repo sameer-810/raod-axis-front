@@ -20,6 +20,7 @@ export function AuthShell({
   points,
   backTo = "/",
   backLabel = "Back to RoadAxis",
+  formOnlyOnMobile = false,
   children,
 }: {
   /** Small mono label above the headline: who this door is for. */
@@ -29,12 +30,18 @@ export function AuthShell({
   points: string[];
   backTo?: string;
   backLabel?: string;
+  /**
+   * Leave the dark strip out below `lg`, so a phone opens straight onto the
+   * form. The driver sign-in, to the client's design (D-046): it is reached
+   * mid-booking, and the strip pushed the number field below the fold.
+   */
+  formOnlyOnMobile?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <div className="min-h-[calc(100vh-3.5rem)] lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
       {/* ── Brand panel ─────────────────────────────────────────────── */}
-      <aside className="ra-auth-panel">
+      <aside className={formOnlyOnMobile ? "ra-auth-panel hidden lg:block" : "ra-auth-panel"}>
         <img src={HERO} alt="" aria-hidden="true" className="ra-auth-panel-image" />
         <div className="relative flex h-full flex-col justify-between p-6 lg:p-10">
           <Link

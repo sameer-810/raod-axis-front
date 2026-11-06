@@ -2,16 +2,27 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Mail, MessageCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  Mail,
+  MessageSquareText,
+  ShieldCheck,
+  Smartphone,
+  SquareCheck,
+} from "lucide-react";
 import axios from "axios";
 import { getApiErrorMessage } from "@/shared/api/http";
 import { Field } from "@/shared/components/Field";
-import { PhoneField } from "@/shared/components/PhoneField";
 import { LegalNote } from "@/shared/components/LegalNote";
+import { WhatsAppIcon } from "@/shared/components/WhatsAppIcon";
 import { useSeo } from "@/shared/hooks/useSeo";
+import { useMarket } from "@/app/market";
+import { cn } from "@/lib/utils";
 import { AuthShell } from "../components/AuthShell";
 import { CodeField } from "../components/CodeField";
 import { GoogleButton } from "../components/GoogleButton";
+import { MobileNumberField } from "../components/MobileNumberField";
+import { looksLikeMobile, toInternational } from "../lib/phoneNumber";
 import { GoogleCancelled, requestGoogleToken } from "../lib/googleIdentity";
 import {
   useAuth,
@@ -21,40 +32,70 @@ import {
   useVerifyCodes,
 } from "../hooks/useAuth";
 import {
+  emailField,
   googleDetailsSchema,
-  requestCodesSchema,
   verifyBothCodesSchema,
   verifyEmailCodeSchema,
   verifyWhatsAppCodeSchema,
   type GoogleDetailsForm,
-  type RequestCodesForm,
   type VerifyCodesForm,
 } from "../validations/auth.validation";
-import type { CodeChallenge, GoogleSignInPayload, GoogleSignInResult } from "../types";
+import type {
+  CodeChallenge,
+  GoogleSignInPayload,
+  GoogleSignInResult,
+  PhoneChannel,
+  RequestCodesPayload,
+  SignInMethod,
+} from "../types";
+
+/** A booking form the driver left to sign in, by its path. */
+const BOOKING_PATH = /^\/business\/[^/]+\/request\/?$/;
 
 /**
- * Driver sign-in. Two steps, one screen each, with copy that explains itself at
- * every point — this is the only wall in the public product.
+ * Driver sign-in, to the client's design of 5 November 2026 (D-046).
  *
- * How many codes is the server's decision, carried on the challenge. With the
- * WhatsApp service connected there are two, because the phone is what a garage
- * messages back and an unverified number means a real business contacts a
- * stranger. Without it there is one, to the email. The page asks for whichever
- * the challenge names and never mentions a message that was not sent.
+ * The mobile number comes first, because it is what a garage replies to. A
+ * code to it — by WhatsApp or by text message, the driver's choice — is the
+ * whole sign-in: no email, no password. Email and "Continue with Google" are
+ * there too, and they still need the number, which the driver has already
+ * typed at the top.
  *
- * "Continue with Google" (D-039) replaces the emailed code and nothing else.
- * Google proves the address; the WhatsApp number is still asked for when the
- * account has none, and still proved by its code where numbers are — on the
- * same code screen, which then asks for that one code.
+ * Which buttons appear is the server's decision (`/auth/providers`): a method
+ * is offered when it is connected and an administrator has not switched it
+ * off in the console. With one phone method, the choice disappears and the
+ * button just says where the code goes.
+ *
+ * How many codes a challenge needs is also the server's decision, carried on
+ * the challenge. The code screen asks for exactly those, names only the
+ * messages that were actually sent, and asks for a name only the first time.
  */
 export function SignInPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const returnTo = params.get("returnTo");
+  const fromBooking = Boolean(returnTo && BOOKING_PATH.test(returnTo));
   const { complete, isSignedIn } = useAuth();
+  const { market, markets, setMarket } = useMarket();
+
+  const [countryCode, setCountryCode] = useState(market.code);
+  const country = markets.find((m) => m.code === countryCode) ?? market;
+  const [number, setNumber] = useState("");
+  const [numberError, setNumberError] = useState<string | undefined>();
+  const numberRef = useRef<HTMLInputElement>(null);
+
+  /** The email route, opened by its button. */
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState<string | undefined>();
+  const emailRef = useRef<HTMLInputElement>(null);
+
   const [challenge, setChallenge] = useState<CodeChallenge | null>(null);
-  const [identity, setIdentity] = useState<RequestCodesForm | null>(null);
+  /** What was asked for, so "Send a new code" can ask again. */
+  const lastRequest = useRef<RequestCodesPayload | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [pending, setPending] = useState<SignInMethod | null>(null);
+
   /** After Google: who they are, while the page asks for what Google does not know. */
   const [google, setGoogle] = useState<{
     accessToken: string;
@@ -62,14 +103,27 @@ export function SignInPage() {
     isNew: boolean;
     name: string;
   } | null>(null);
-  const [googleBusy, setGoogleBusy] = useState(false);
-  /** The last thing sent to /auth/google, so "Send a new code" can send it again. */
+  /** The challenge came through Google, which already gave the name. */
+  const [viaGoogle, setViaGoogle] = useState(false);
   const lastGoogle = useRef<GoogleSignInPayload | null>(null);
 
   const request = useRequestCodes();
   const verify = useVerifyCodes();
   const googleSignIn = useGoogleSignIn();
-  const { data: providers } = useAuthProviders();
+  const { data: providers, isLoading: providersLoading } = useAuthProviders();
+
+  /**
+   * What to draw. A server from before D-046 says nothing about methods; it
+   * offered the email route and, with a client id, Google.
+   */
+  const methods: Record<SignInMethod, boolean> = providers?.methods ?? {
+    whatsapp: false,
+    sms: false,
+    email: true,
+    google: Boolean(providers?.google),
+  };
+  const phoneMethods = (["whatsapp", "sms"] as PhoneChannel[]).filter((m) => methods[m]);
+  const otherMethods = methods.email || (methods.google && Boolean(providers?.google));
 
   useSeo({
     title: "Sign in",
@@ -77,21 +131,18 @@ export function SignInPage() {
       "Sign in to RoadAxis with a one-time code to send booking requests and save the garages you trust.",
   });
 
-  /** Two codes only when the challenge says so. Before one exists, assume one. */
-  const needsWhatsAppCode = Boolean(challenge?.channels?.whatsapp);
-  /** No emailed code when Google has already proved the address. */
-  const needsEmailCode = challenge?.channels?.email !== false;
+  const needsEmailCode = Boolean(challenge?.channels?.email);
+  const phoneChannel: PhoneChannel | null =
+    challenge?.phoneChannel ??
+    (challenge?.channels?.sms ? "sms" : challenge?.channels?.whatsapp ? "whatsapp" : null);
+  const needsPhoneCode = Boolean(phoneChannel);
 
-  const identityForm = useForm<RequestCodesForm>({
-    resolver: zodResolver(requestCodesSchema),
-    defaultValues: { email: "", phone: "" },
-  });
   const codeForm = useForm<VerifyCodesForm>({
     // Chosen per render, so the rule always matches the fields on screen.
     resolver: zodResolver(
       !needsEmailCode
         ? verifyWhatsAppCodeSchema
-        : needsWhatsAppCode
+        : needsPhoneCode
           ? verifyBothCodesSchema
           : verifyEmailCodeSchema,
     ),
@@ -103,12 +154,9 @@ export function SignInPage() {
   });
 
   /**
-   * Someone who arrives *already* signed in is moved along.
-   *
-   * The arrival state is captured once, in a ref: reacting to `isSignedIn`
-   * becoming true would also fire for someone who has just signed in on this
-   * page, on top of the navigation `complete()` already performed — which it
-   * did, as a `window.location.replace` that reloaded the entire bundle.
+   * Someone who arrives *already* signed in is moved along. Captured once, in a
+   * ref: reacting to `isSignedIn` would also fire for someone who has just
+   * signed in on this page, on top of the navigation `complete()` performed.
    */
   const arrivedSignedIn = useRef(isSignedIn);
   useEffect(() => {
@@ -117,16 +165,57 @@ export function SignInPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function onRequest(values: RequestCodesForm) {
+  useEffect(() => {
+    if (emailOpen) emailRef.current?.focus();
+  }, [emailOpen]);
+
+  /** The number as the server stores it, or null after saying what is wrong. */
+  function checkedNumber(): string | null {
+    if (!number.trim()) {
+      setNumberError("Enter your mobile number");
+      numberRef.current?.focus();
+      return null;
+    }
+    if (!looksLikeMobile(number)) {
+      setNumberError("That doesn't look like a mobile number");
+      numberRef.current?.focus();
+      return null;
+    }
+    setNumberError(undefined);
+    return toInternational(country.dialCode, number);
+  }
+
+  async function ask(payload: RequestCodesPayload) {
     setFormError(null);
+    setPending(payload.channel);
     try {
-      const result = await request.mutateAsync(values);
+      const result = await request.mutateAsync(payload);
+      lastRequest.current = payload;
+      setViaGoogle(false);
       setChallenge(result);
-      setIdentity(values);
       codeForm.reset({ emailCode: "", phoneCode: "", name: "" });
     } catch (err) {
       setFormError(getApiErrorMessage(err));
+    } finally {
+      setPending(null);
     }
+  }
+
+  function sendToPhone(channel: PhoneChannel) {
+    const phone = checkedNumber();
+    if (phone) void ask({ channel, phone });
+  }
+
+  function sendToEmail(e?: React.FormEvent) {
+    e?.preventDefault();
+    const phone = checkedNumber();
+    const parsed = emailField.safeParse(email);
+    setEmailError(parsed.success ? undefined : parsed.error.issues[0]?.message);
+    if (!parsed.success) {
+      if (phone) emailRef.current?.focus();
+      return;
+    }
+    if (phone) void ask({ channel: "email", email: parsed.data, phone });
   }
 
   async function onVerify(values: VerifyCodesForm) {
@@ -136,7 +225,7 @@ export function SignInPage() {
       const session = await verify.mutateAsync({
         challengeId: challenge.challengeId,
         emailCode: needsEmailCode ? values.emailCode : undefined,
-        phoneCode: needsWhatsAppCode ? values.phoneCode : undefined,
+        phoneCode: needsPhoneCode ? values.phoneCode : undefined,
         name: values.name || undefined,
       });
       complete(session, returnTo);
@@ -158,9 +247,9 @@ export function SignInPage() {
         isNew: result.isNew,
         name: result.name,
       });
-      detailsForm.reset({ name: result.name, phone: "" });
+      detailsForm.reset({ name: result.name, phone: payload.phone ?? "" });
     } else {
-      setIdentity({ email: google?.email ?? "", phone: payload.phone ?? "" });
+      setViaGoogle(true);
       setChallenge(result.challenge);
       codeForm.reset({ emailCode: "", phoneCode: "", name: "" });
     }
@@ -169,20 +258,23 @@ export function SignInPage() {
   async function onGoogle() {
     if (!providers?.google) return;
     setFormError(null);
-    setGoogleBusy(true);
+    setPending("google");
     try {
       const accessToken = await requestGoogleToken(providers.google.clientId);
-      await continueWithGoogle({ accessToken });
+      // The number typed at the top, when there is one: it saves the driver a
+      // second screen. The server ignores it for an account that has a number.
+      const phone = looksLikeMobile(number) ? toInternational(country.dialCode, number) : undefined;
+      await continueWithGoogle({ accessToken, ...(phone ? { phone } : {}) });
     } catch (err) {
       // Closing Google's window is a change of mind, not an error.
       if (err instanceof GoogleCancelled) return;
       setFormError(
         axios.isAxiosError(err)
           ? getApiErrorMessage(err)
-          : "Google sign-in isn't available right now. Sign in with your email instead.",
+          : "Google sign-in isn't available right now. Choose another way to sign in.",
       );
     } finally {
-      setGoogleBusy(false);
+      setPending(null);
     }
   }
 
@@ -192,7 +284,7 @@ export function SignInPage() {
     try {
       await continueWithGoogle({
         accessToken: google.accessToken,
-        phone: values.phone,
+        phone: toInternational(country.dialCode, values.phone),
         name: google.isNew ? values.name : undefined,
       });
     } catch (err) {
@@ -202,7 +294,7 @@ export function SignInPage() {
 
   async function resend() {
     setFormError(null);
-    if (!needsEmailCode && lastGoogle.current) {
+    if (viaGoogle && lastGoogle.current) {
       try {
         await continueWithGoogle(lastGoogle.current);
       } catch (err) {
@@ -210,8 +302,41 @@ export function SignInPage() {
       }
       return;
     }
-    if (identity) await onRequest(identity);
+    if (lastRequest.current) await ask(lastRequest.current);
   }
+
+  function changeCountry(code: string) {
+    setCountryCode(code);
+    setNumberError(undefined);
+    // The site follows: a driver choosing UAE +971 is in the UAE.
+    setMarket(code);
+  }
+
+  const backToBooking = fromBooking && returnTo && (
+    <Link
+      to={returnTo}
+      className="ra-tap -ml-2 mb-3 flex w-fit items-center gap-1.5 rounded-lg px-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+    >
+      <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+      Back to booking
+    </Link>
+  );
+
+  const numberField = (
+    <MobileNumberField
+      ref={numberRef}
+      label="Mobile number"
+      markets={markets}
+      country={country}
+      onCountryChange={changeCountry}
+      value={number}
+      onChange={(v) => {
+        setNumber(v);
+        if (numberError) setNumberError(undefined);
+      }}
+      error={numberError}
+    />
+  );
 
   return (
     <AuthShell
@@ -228,6 +353,7 @@ export function SignInPage() {
         "Garages reply to the number you sign in with, so it has to be yours.",
         "Save the garages you trust and see every request you've sent.",
       ]}
+      formOnlyOnMobile
     >
       {!challenge && google ? (
         <>
@@ -248,7 +374,7 @@ export function SignInPage() {
           <p className="mt-2 text-sm text-muted-foreground">
             Google has confirmed{" "}
             <span className="font-medium text-foreground break-all">{google.email}</span>. Garages
-            reply on WhatsApp, so we need your number too.
+            reply to your mobile number, so we need it too.
           </p>
 
           <form
@@ -265,11 +391,19 @@ export function SignInPage() {
                 {...detailsForm.register("name")}
               />
             )}
-            <PhoneField
-              label="WhatsApp number"
+            <MobileNumberField
+              label="Mobile number"
+              markets={markets}
+              country={country}
+              onCountryChange={changeCountry}
+              value={detailsForm.watch("phone")}
+              onChange={(v) =>
+                detailsForm.setValue("phone", v, {
+                  shouldValidate: detailsForm.formState.isSubmitted,
+                })
+              }
               hint="Businesses reply to you on this number, so it has to be right."
               error={detailsForm.formState.errors.phone?.message}
-              {...detailsForm.register("phone")}
             />
 
             {formError && <FormError>{formError}</FormError>}
@@ -286,77 +420,188 @@ export function SignInPage() {
         </>
       ) : !challenge ? (
         <>
-          <p className="ra-eyebrow text-muted-foreground">Driver sign-in</p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground">Sign in</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {providers?.google
-              ? "Continue with Google, or we'll send you a code. No password to remember."
-              : "We'll send you a sign-in code. No password to remember."}
-          </p>
+          {backToBooking}
 
-          {providers?.google && (
-            <>
-              <GoogleButton onClick={onGoogle} busy={googleBusy} className="mt-6" />
-              {/* Decoration: the email form below is labelled on its own. */}
+          <div className="text-center">
+            <span
+              aria-hidden="true"
+              className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted text-foreground"
+            >
+              <span className="relative">
+                <Smartphone className="h-8 w-8" strokeWidth={1.6} />
+                <ShieldCheck
+                  className="absolute -bottom-1 -right-2 h-4 w-4 rounded-full bg-muted"
+                  strokeWidth={2}
+                />
+              </span>
+            </span>
+            <h1 className="mt-4 text-[1.7rem] font-bold leading-tight tracking-tight text-foreground">
+              {fromBooking
+                ? "Verify your mobile number to continue"
+                : "Sign in with your mobile number"}
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {fromBooking
+                ? "One quick step to continue your booking request."
+                : "Garages reply to this number, so we check it's yours. No password."}
+            </p>
+          </div>
+
+          <div className="mt-6">{numberField}</div>
+
+          {phoneMethods.length > 0 && (
+            <div className="mt-1">
+              <p className="text-sm text-muted-foreground">
+                {phoneMethods.length > 1
+                  ? "Choose how you would like to receive your code."
+                  : "We'll send you a code to sign in."}
+              </p>
+              {phoneMethods.length > 1 && (
+                <p className="mt-3 text-sm font-semibold text-foreground">Send code by:</p>
+              )}
               <div
-                aria-hidden="true"
-                className="mt-5 flex items-center gap-3 text-xs text-muted-foreground"
+                className={cn(
+                  "mt-2 grid gap-3",
+                  phoneMethods.length > 1 ? "grid-cols-2" : "grid-cols-1",
+                )}
               >
-                <span className="h-px flex-1 bg-border" />
-                or use your email
-                <span className="h-px flex-1 bg-border" />
+                {phoneMethods.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => sendToPhone(m)}
+                    disabled={pending !== null}
+                    className="ra-btn h-12 font-semibold"
+                    aria-label={m === "whatsapp" ? "Send code by WhatsApp" : "Send code by SMS"}
+                  >
+                    {m === "whatsapp" ? (
+                      <WhatsAppIcon className="h-6 w-6 text-whatsapp" />
+                    ) : (
+                      <MessageSquareText className="h-6 w-6 text-success" aria-hidden="true" />
+                    )}
+                    {pending === m
+                      ? "Sending…"
+                      : phoneMethods.length > 1
+                        ? m === "whatsapp"
+                          ? "WhatsApp"
+                          : "SMS"
+                        : m === "whatsapp"
+                          ? "Send code by WhatsApp"
+                          : "Send code by SMS"}
+                  </button>
+                ))}
               </div>
-              {formError && !identityForm.formState.isSubmitted && (
-                <div className="mt-4">
-                  <FormError>{formError}</FormError>
+            </div>
+          )}
+
+          {formError && (
+            <div className="mt-4">
+              <FormError>{formError}</FormError>
+            </div>
+          )}
+
+          {otherMethods && (
+            <>
+              {phoneMethods.length > 0 && (
+                // Decoration: every button below is labelled on its own.
+                <div
+                  aria-hidden="true"
+                  className="mt-6 flex items-center gap-3 text-sm text-muted-foreground"
+                >
+                  <span className="h-px flex-1 bg-border" />
+                  or
+                  <span className="h-px flex-1 bg-border" />
                 </div>
               )}
+
+              {emailOpen ? (
+                <form onSubmit={sendToEmail} className="mt-5 space-y-1" noValidate>
+                  <Field
+                    ref={emailRef}
+                    label="Email address"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (emailError) setEmailError(undefined);
+                    }}
+                    error={emailError}
+                  />
+                  <button
+                    type="submit"
+                    className="ra-btn-primary w-full"
+                    disabled={pending !== null}
+                  >
+                    {pending === "email" ? "Sending…" : "Send code to my email"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmailOpen(false);
+                      setEmailError(undefined);
+                    }}
+                    className="ra-tap w-full rounded-lg text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    Use another way
+                  </button>
+                </form>
+              ) : (
+                <div
+                  className={cn(
+                    "mt-5 grid gap-3",
+                    methods.email && methods.google && providers?.google
+                      ? "grid-cols-2"
+                      : "grid-cols-1",
+                  )}
+                >
+                  {methods.email && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormError(null);
+                        setEmailOpen(true);
+                      }}
+                      disabled={pending !== null}
+                      className="ra-btn h-12 font-semibold"
+                    >
+                      <Mail className="h-5 w-5" aria-hidden="true" />
+                      Email
+                    </button>
+                  )}
+                  {methods.google && providers?.google && (
+                    <GoogleButton onClick={onGoogle} busy={pending === "google"} className="h-12" />
+                  )}
+                </div>
+              )}
+
+              <p className="mt-2 text-center text-sm text-muted-foreground">
+                We'll ask for your mobile number once, so garages can reply to you.
+              </p>
             </>
           )}
 
-          <form
-            onSubmit={identityForm.handleSubmit(onRequest)}
-            className={providers?.google ? "mt-3 space-y-1" : "mt-6 space-y-1"}
-            noValidate
-          >
-            <Field
-              label="Email address"
-              type="email"
-              autoComplete="email"
-              placeholder="you@example.com"
-              error={identityForm.formState.errors.email?.message}
-              {...identityForm.register("email")}
-            />
-            <PhoneField
-              label="WhatsApp number"
-              hint="Businesses reply to you on this number, so it has to be right."
-              error={identityForm.formState.errors.phone?.message}
-              {...identityForm.register("phone")}
-            />
+          {!providersLoading && phoneMethods.length === 0 && !otherMethods && (
+            <div className="mt-4">
+              <FormError>
+                Signing in isn't available right now. Please try again a little later.
+              </FormError>
+            </div>
+          )}
 
-            {formError && (identityForm.formState.isSubmitted || !providers?.google) && (
-              <FormError>{formError}</FormError>
-            )}
+          {fromBooking && (
+            <p className="mt-5 flex items-center gap-3 rounded-xl bg-muted px-4 py-3 text-sm text-foreground">
+              <SquareCheck className="h-5 w-5 shrink-0" aria-hidden="true" />
+              Your booking details will be saved while you verify.
+            </p>
+          )}
 
-            {/*
-              Never disabled while someone is typing. Pre-emptively disabling a
-              submit button is a documented anti-pattern: the user cannot tell
-              which rule they have failed, only that nothing happens. Validate on
-              submit and say what is wrong.
-            */}
-            <button
-              type="submit"
-              className="ra-btn-primary mt-2 w-full"
-              disabled={request.isPending}
-            >
-              {request.isPending ? "Sending…" : "Send me a code"}
-            </button>
-            <LegalNote action="continuing" className="pt-2 text-center" />
-          </form>
+          <LegalNote action="continuing" className="mt-5 text-center" />
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
+          <p className="mt-5 text-center text-sm text-muted-foreground">
             Run a garage?{" "}
-            <Link to="/staff/sign-in" className="font-medium text-primary-text hover:underline">
+            <Link to="/staff/sign-in" className="font-semibold text-primary-text hover:underline">
               Business sign-in
             </Link>
           </p>
@@ -375,22 +620,24 @@ export function SignInPage() {
             Change details
           </button>
 
-          <p className="ra-eyebrow text-muted-foreground">Step 2 of 2</p>
+          <p className="ra-eyebrow text-muted-foreground">Last step</p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground">
-            {needsWhatsAppCode && needsEmailCode ? "Enter your codes" : "Enter your code"}
+            {needsPhoneCode && needsEmailCode ? "Enter your codes" : "Enter your code"}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            {!needsEmailCode
-              ? "We've sent a code to your WhatsApp, so we know the number is yours. It expires in "
-              : needsWhatsAppCode
-                ? "Two codes, one to each place, so we know both reach you. They expire in "
-                : "We've emailed you a code. It expires in "}
+            {needsPhoneCode && needsEmailCode
+              ? "Two codes, one to each place, so we know both reach you. They expire in "
+              : needsEmailCode
+                ? "We've emailed you a code. It expires in "
+                : phoneChannel === "sms"
+                  ? "We've texted a code to your phone, so we know the number is yours. It expires in "
+                  : "We've sent a code to your WhatsApp, so we know the number is yours. It expires in "}
             <span className="font-mono tabular-nums">{challenge.expiresInMinutes}</span> minutes.
           </p>
 
           {/*
             Only claim a message was sent where it actually was. Telling someone
-            to wait for a WhatsApp that never left the building is worse than
+            to wait for a message that never left the building is worse than
             saying nothing.
           */}
           <ul className="mt-4 space-y-1.5 text-sm">
@@ -398,14 +645,19 @@ export function SignInPage() {
               <DeliveryLine
                 icon={Mail}
                 ok={challenge.delivery.email}
-                target={identity?.email || "your email"}
+                target={lastRequest.current?.email || "your email"}
               />
             )}
-            {needsWhatsAppCode && (
+            {needsPhoneCode && (
               <DeliveryLine
-                icon={MessageCircle}
-                ok={challenge.delivery.whatsapp}
-                target={identity?.phone || "your WhatsApp"}
+                icon={phoneChannel === "sms" ? MessageSquareText : WhatsAppIcon}
+                ok={Boolean(
+                  phoneChannel === "sms" ? challenge.delivery.sms : challenge.delivery.whatsapp,
+                )}
+                target={
+                  (viaGoogle ? lastGoogle.current?.phone : lastRequest.current?.phone) ||
+                  (phoneChannel === "sms" ? "your phone" : "your WhatsApp")
+                }
               />
             )}
           </ul>
@@ -422,7 +674,8 @@ export function SignInPage() {
                 {challenge.devCodes.email && challenge.devCodes.phone && " · "}
                 {challenge.devCodes.phone && (
                   <>
-                    WhatsApp code <span className="font-mono">{challenge.devCodes.phone}</span>
+                    {phoneChannel === "sms" ? "Text" : "WhatsApp"} code{" "}
+                    <span className="font-mono">{challenge.devCodes.phone}</span>
                   </>
                 )}
               </p>
@@ -430,7 +683,8 @@ export function SignInPage() {
           )}
 
           <form onSubmit={codeForm.handleSubmit(onVerify)} className="mt-6 space-y-1" noValidate>
-            {challenge.isNew && needsEmailCode && (
+            {/* Asked for once, on a first sign-in; Google already gave it. */}
+            {challenge.isNew && !viaGoogle && (
               <Field
                 label="Your name"
                 autoComplete="name"
@@ -445,16 +699,18 @@ export function SignInPage() {
                 label="Code from your email"
                 // Only one field may claim one-time-code, or the platform's
                 // autofill has two candidates and picks arbitrarily. With two
-                // fields it belongs to the WhatsApp one, which is the message a
+                // fields it belongs to the phone one, which is the message a
                 // phone offers to fill in.
-                autoComplete={needsWhatsAppCode ? "off" : "one-time-code"}
+                autoComplete={needsPhoneCode ? "off" : "one-time-code"}
                 error={codeForm.formState.errors.emailCode?.message}
                 {...codeForm.register("emailCode")}
               />
             )}
-            {needsWhatsAppCode && (
+            {needsPhoneCode && (
               <CodeField
-                label="Code from WhatsApp"
+                label={
+                  phoneChannel === "sms" ? "Code from your text message" : "Code from WhatsApp"
+                }
                 autoComplete="one-time-code"
                 error={codeForm.formState.errors.phoneCode?.message}
                 {...codeForm.register("phoneCode")}
@@ -479,7 +735,7 @@ export function SignInPage() {
             >
               {request.isPending || googleSignIn.isPending
                 ? "Sending…"
-                : needsWhatsAppCode && needsEmailCode
+                : needsPhoneCode && needsEmailCode
                   ? "Send new codes"
                   : "Send a new code"}
             </button>

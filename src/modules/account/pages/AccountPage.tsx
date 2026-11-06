@@ -104,8 +104,9 @@ export function AccountPage() {
         <DescriptionList
           items={[
             { label: "Name", value: user.name },
-            { label: "Email", value: user.email },
-            { label: "WhatsApp number", value: user.phone ?? "—", mono: Boolean(user.phone) },
+            // A driver who signed in by phone alone has no address (D-046).
+            { label: "Email", value: user.email ?? "—" },
+            { label: "Mobile number", value: user.phone ?? "—", mono: Boolean(user.phone) },
             {
               label: "Account type",
               value: isDriver ? "Driver" : isAdmin ? "Administrator" : "Business owner",

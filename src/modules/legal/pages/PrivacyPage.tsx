@@ -112,10 +112,11 @@ export function PrivacyPage() {
                 device so the next search is quicker.
               </p>
               <p>
-                <strong>If you sign in as a driver.</strong> Your name, your email address and your
-                WhatsApp number. We need the email to send your sign-in code
-                {bothCodes ? " and the number to send a second code that proves it is yours" : ""},
-                and the number so the garage you contact can reply to you.
+                <strong>If you sign in as a driver.</strong> Your name and your mobile number, and
+                your email address if you choose to sign in with it. We send a sign-in code to the
+                number by WhatsApp or by text message, whichever you pick, or to your email
+                {bothCodes ? " with a second code to the number that proves it is yours" : ""}. We
+                need the number so the garage you contact can reply to you.
               </p>
               {providers?.google && (
                 <p>
@@ -175,9 +176,10 @@ export function PrivacyPage() {
                   </>,
                   <>
                     <strong>The companies that run the service for us</strong>: our hosting and
-                    database providers, the service that stores photographs, our email provider, and
-                    WhatsApp (Meta) when a message is sent through our business account. They act on
-                    our instructions and may not use your information for their own purposes.
+                    database providers, the service that stores photographs, our email provider, our
+                    text-message provider (Twilio) when you ask for a code by text, and WhatsApp
+                    (Meta) when a message is sent through our business account. They act on our
+                    instructions and may not use your information for their own purposes.
                   </>,
                 ]}
               />

@@ -321,20 +321,23 @@ test.describe("Phase 12 · A driver signing in from the UAE", () => {
     await browse(page, "AE");
     await page.goto("/sign-in");
 
-    const phone = page.getByLabel("WhatsApp number");
-    await expect(phone).toHaveAttribute("placeholder", "050 123 4567");
+    const phone = page.getByLabel("Mobile number");
+    // The dial code is beside the field, so the example has no trunk zero (D-046).
+    await expect(phone).toHaveAttribute("placeholder", "50 123 4567");
     // The country the number will be read in is on the screen, not implied.
     await expect(page.getByText("+971", { exact: true })).toBeVisible();
-    await expect(page.getByText(/Outside the UAE\? Start with \+/)).toBeVisible();
+    await expect(page.getByRole("button", { name: /country code: UAE \+971/i })).toBeVisible();
 
+    // Typed the local way, with the zero: it is dropped, not doubled.
     const local = `050 ${String(Math.floor(Math.random() * 9_000_000) + 1_000_000)}`;
-    await page.getByLabel("Email address").fill(`${TAG}.driver${Date.now() % 10000}@e2e.test`);
     await phone.fill(local);
+    await page.getByRole("button", { name: /^email$/i }).click();
+    await page.getByLabel("Email address").fill(`${TAG}.driver${Date.now() % 10000}@e2e.test`);
 
     const [sent, answered] = await Promise.all([
       page.waitForRequest((r) => r.url().includes("/auth/otp/request")),
       page.waitForResponse((r) => r.url().includes("/auth/otp/request")),
-      page.getByRole("button", { name: "Send me a code" }).click(),
+      page.getByRole("button", { name: /send code to my email/i }).click(),
     ]);
     expect(sent.headers()["x-market"]).toBe("AE");
     expect(answered.status()).toBe(202);
@@ -357,7 +360,7 @@ test.describe("Phase 12 · A driver signing in from the UAE", () => {
   test("the UK side shows the UK's dial code and example", async ({ page }) => {
     await browse(page, "GB");
     await page.goto("/sign-in");
-    await expect(page.getByLabel("WhatsApp number")).toHaveAttribute("placeholder", "07700 900123");
+    await expect(page.getByLabel("Mobile number")).toHaveAttribute("placeholder", "7700 900123");
     await expect(page.getByText("+44", { exact: true })).toBeVisible();
   });
 });

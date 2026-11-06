@@ -5,7 +5,7 @@ import {
   type APIRequestContext,
   type Page,
 } from "@playwright/test";
-import { API, expectNoHorizontalOverflow, expectTouchTargets } from "./helpers";
+import { API, expectNoHorizontalOverflow, expectTouchTargets, requestEmailCode } from "./helpers";
 
 /**
  * Phase 6 — reviews, saved garages, analytics, SEO and bulk import.
@@ -73,9 +73,7 @@ async function signInAsDriver(page: Page, slot: string) {
   const phone = await freePhone();
 
   await page.goto("/sign-in");
-  await page.getByLabel("Email address").fill(email);
-  await page.getByLabel("WhatsApp number").fill(phone);
-  await page.getByRole("button", { name: /send me a code/i }).click();
+  await requestEmailCode(page, email, phone);
   await expect(page.getByRole("heading", { name: /enter your codes/i })).toBeVisible();
 
   const digits = (

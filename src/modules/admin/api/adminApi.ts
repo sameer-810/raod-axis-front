@@ -229,6 +229,37 @@ export interface CountryOverview {
   listings: { live: number; total: number };
 }
 
+/**
+ * One way for drivers to sign in, as Console → Sign-in methods shows it (D-046).
+ * `connection`: `connected` really sends; `test` does not send but codes are
+ * shown on screen (a development or review server); `not_connected` cannot
+ * reach anybody. A method is offered when it is `enabled` and not `not_connected`.
+ */
+export interface SignInMethodOverview {
+  method: "whatsapp" | "sms" | "email" | "google";
+  label: string;
+  enabled: boolean;
+  connection: "connected" | "test" | "not_connected";
+  available: boolean;
+  /** What the server needs for it, for whoever sets the server up. */
+  needs: string;
+}
+
+export const adminSignInApi = {
+  async overview() {
+    const res = await http.get<{ data: SignInMethodOverview[] }>("/auth/sign-in-methods");
+    return res.data.data;
+  },
+
+  async setEnabled(method: SignInMethodOverview["method"], enabled: boolean) {
+    const res = await http.patch<{ data: SignInMethodOverview[] }>(
+      `/auth/sign-in-methods/${method}`,
+      { enabled },
+    );
+    return res.data.data;
+  },
+};
+
 export const adminCountryApi = {
   async overview() {
     const res = await http.get<{ data: CountryOverview[] }>("/markets/admin");

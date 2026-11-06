@@ -6,7 +6,7 @@ import {
   type Page,
   type TestInfo,
 } from "@playwright/test";
-import { API, expectNoHorizontalOverflow, expectTouchTargets } from "./helpers";
+import { API, expectNoHorizontalOverflow, expectTouchTargets, requestEmailCode } from "./helpers";
 
 /**
  * Phase 10 — completion.
@@ -414,9 +414,7 @@ test.describe("Phase 10 · Sign-in works without the WhatsApp service", () => {
     const phone = await freePhone();
 
     await page.goto("/sign-in");
-    await page.getByLabel("Email address").fill(email);
-    await page.getByLabel("WhatsApp number").fill(phone);
-    await page.getByRole("button", { name: /send me a code/i }).click();
+    await requestEmailCode(page, email, phone);
 
     // One code, and the page says one — singular, with no second field and no
     // line about a WhatsApp message that was never sent.

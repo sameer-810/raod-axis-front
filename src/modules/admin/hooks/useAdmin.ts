@@ -3,6 +3,8 @@ import {
   adminBusinessApi,
   adminCategoryApi,
   adminCountryApi,
+  adminSignInApi,
+  type SignInMethodOverview,
   adminOwnershipApi,
   adminUserApi,
   type AdminBusinessQuery,
@@ -193,6 +195,31 @@ export function useSetCountryLive() {
     onSuccess: (data) => {
       qc.setQueryData(COUNTRY_KEY, data);
       void qc.invalidateQueries({ queryKey: ["markets"] });
+    },
+  });
+}
+
+const SIGN_IN_KEY = ["admin", "sign-in-methods"] as const;
+
+/** Console → Sign-in methods (D-046). */
+export function useAdminSignInMethods() {
+  return useQuery({ queryKey: SIGN_IN_KEY, queryFn: adminSignInApi.overview });
+}
+
+/** Switching a method changes what the sign-in page offers, so its answer is dropped too. */
+export function useSetSignInMethod() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      method,
+      enabled,
+    }: {
+      method: SignInMethodOverview["method"];
+      enabled: boolean;
+    }) => adminSignInApi.setEnabled(method, enabled),
+    onSuccess: (data) => {
+      qc.setQueryData(SIGN_IN_KEY, data);
+      void qc.invalidateQueries({ queryKey: ["auth-providers"] });
     },
   });
 }

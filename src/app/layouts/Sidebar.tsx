@@ -155,7 +155,7 @@ export function Sidebar() {
           label="Account"
           align="start"
           items={[
-            { type: "label", label: user?.email ?? "" },
+            { type: "label", label: user?.email ?? user?.phone ?? "" },
             // Where a password is changed. It was nowhere: an account could be
             // signed in to and out of, and nothing else.
             {

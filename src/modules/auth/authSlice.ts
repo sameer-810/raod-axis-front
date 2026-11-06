@@ -16,7 +16,8 @@ export type Role = "driver" | "business_owner" | "admin";
 export interface AuthUser {
   id: string;
   name: string;
-  email: string;
+  /** Null for a driver who signed in with their mobile number alone (D-046). */
+  email: string | null;
   phone?: string;
   role: Role;
   /** Businesses this owner may manage. Empty for drivers and admins. */

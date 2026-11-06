@@ -81,8 +81,9 @@ test.describe.serial("Phase 14 · Continue with Google", () => {
     await expect(button).toBeVisible();
     const box = await button.boundingBox();
     expect(box!.height).toBeGreaterThanOrEqual(44);
-    // The email form is still there for everyone without Google.
-    await expect(page.getByLabel("Email address")).toBeVisible();
+    // Every other way in is still there for everyone without Google.
+    await expect(page.getByRole("button", { name: /^email$/i })).toBeVisible();
+    await expect(page.getByLabel("Mobile number")).toBeVisible();
     expect(fromGoogle, "the page loaded Google's script before anybody asked").toHaveLength(0);
   });
 
@@ -106,7 +107,7 @@ test.describe.serial("Phase 14 · Continue with Google", () => {
     // Name and email only, and always the account chooser.
     expect(requested).toEqual([{ scope: "openid email profile", prompt: "select_account" }]);
 
-    await page.getByLabel("WhatsApp number").fill(await freePhone());
+    await page.getByLabel("Mobile number").fill(await freePhone());
     await page.getByRole("button", { name: "Continue" }).click();
 
     // The WhatsApp code alone: there is no emailed code to wait for.
@@ -152,7 +153,9 @@ test.describe.serial("Phase 14 · Continue with Google", () => {
     await page.getByRole("button", { name: "Continue with Google" }).click();
     await expect(page.getByRole("button", { name: "Continue with Google" })).toBeEnabled();
     await expect(page.getByRole("alert")).toHaveCount(0);
-    await expect(page.getByRole("heading", { name: "Sign in", exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Sign in with your mobile number" }),
+    ).toBeVisible();
   });
 
   test("a staff address is turned away, and told where to go", async ({ page }) => {
@@ -183,6 +186,6 @@ test.describe.serial("Phase 14 · Continue with Google", () => {
     await expect(page.getByRole("heading", { name: "One more thing" })).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await expectTouchTargets(page, "after Google");
-    await expect(page.getByLabel("WhatsApp number")).toHaveCSS("font-size", "16px");
+    await expect(page.getByLabel("Mobile number")).toHaveCSS("font-size", "16px");
   });
 });

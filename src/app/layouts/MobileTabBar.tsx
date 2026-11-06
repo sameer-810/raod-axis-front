@@ -67,7 +67,7 @@ export function MobileTabBar() {
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-foreground">{user?.name}</p>
               <p className="truncate text-xs capitalize text-muted-foreground">
-                {user?.role?.replace("_", " ")} · {user?.email}
+                {user?.role?.replace("_", " ")} · {user?.email ?? user?.phone}
               </p>
             </div>
           </div>

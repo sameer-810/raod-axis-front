@@ -14,13 +14,19 @@ export interface CodeChallenge {
    * Which codes this sign-in is waiting on. The server decides: two when the
    * WhatsApp service is connected, the emailed one alone when it is not.
    */
-  channels: { email: boolean; whatsapp: boolean };
+  channels: { email: boolean; whatsapp: boolean; sms?: boolean };
+  /**
+   * How the code to the phone travelled, or null when none was sent. A phone
+   * sign-in (D-046) chooses WhatsApp or SMS; the code proving the number on an
+   * email or Google sign-in always goes by WhatsApp.
+   */
+  phoneChannel?: PhoneChannel | null;
   /**
    * Which channels the codes actually reached. The interface names only the ones
    * that worked — telling someone to wait for a message that was never sent is
    * worse than saying nothing.
    */
-  delivery: { email: boolean; whatsapp: boolean };
+  delivery: { email: boolean; whatsapp: boolean; sms?: boolean };
   /**
    * Development and CI only. The server refuses to populate this in production
    * regardless of configuration, so a build that shows it there is impossible
@@ -29,8 +35,16 @@ export interface CodeChallenge {
   devCodes?: { email?: string; phone?: string };
 }
 
-/** Which sign-in providers this deployment offers. */
+export type PhoneChannel = "whatsapp" | "sms";
+export type SignInMethod = PhoneChannel | "email" | "google";
+
+/**
+ * Which ways in this deployment offers right now: connected on the server and
+ * not switched off in the console (D-046). `methods` is absent from a server
+ * older than D-046, which offered email and, with a client id, Google.
+ */
 export interface AuthProviders {
+  methods?: Record<SignInMethod, boolean>;
   google: { clientId: string } | null;
 }
 
@@ -49,8 +63,13 @@ export type GoogleSignInResult =
   | { status: "phone_required"; isNew: boolean; email: string; name: string }
   | { status: "code_required"; challenge: CodeChallenge };
 
+/**
+ * `whatsapp` / `sms`: a code to the number, and nothing else (D-046).
+ * `email`: a code to the address, with the number beside it.
+ */
 export interface RequestCodesPayload {
-  email: string;
+  channel: PhoneChannel | "email";
+  email?: string;
   phone: string;
 }
 
